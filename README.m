@@ -1,6 +1,6 @@
 %{
 
-Pipeline for the spatial organization project
+Pipeline for the Spatial Organization project
 
 - written by Erin Conrad, 2017, University of Pennsylvania
 - uses scripts from Sam Tomlinson (to generate spike sequences) and Radek
