@@ -1,4 +1,4 @@
-function sequences = getSequencesErin(spikes, xyChan)
+function [sequences,discarded] = getSequencesErin(spikes, xyChan)
 
 %{
  
@@ -23,6 +23,11 @@ minSeqLength = 3;
 % multiple channels at the same time
 maxPercTies = 0.7; 
 
+discarded.origNum = 0; % number of original sequences pre-rejection
+discarded.total =  0; % total number of rejected sequences
+discarded.length = 0; % number of sequences rejected because too short
+discarded.ties = 0; % number of sequences rejected because too many ties
+discarded.remaining = 0; % number of sequences remaining at the end
 
 %% Make sequences
 nchans = length(xyChan);
@@ -54,6 +59,9 @@ for row = 2:size(spikes,1)
 
     % Terminating spike reached- match matrix lengths, add sequence of overall if >= 3 steps
     else
+        
+        % add it to total num of original sequences
+        discarded.origNum = discarded.origNum + 1;
         
         % If it's a long enough spike sequence
         if size(currseq,1) >= minSeqLength
@@ -93,7 +101,14 @@ for row = 2:size(spikes,1)
                 % and the new sequence
                 overall = [overall, currseq];
 
+            else
+                discarded.ties = discarded.ties + 1;
+                discarded.total = discarded.total + 1;
+            
             end
+        else
+            discarded.length = discarded.length + 1;
+            discarded.total = discarded.total + 1;
         end
 
         % Update head and currseq
@@ -111,6 +126,7 @@ end
 overall = reorder_tiesErin(overall, xyChan);
 
 % Extract sequences for each chan, apply spatial partition restrictions
+discarded.remaining = 0;
  for lead = 1:nchans   
  % loop through each channel
 
@@ -133,10 +149,11 @@ overall = reorder_tiesErin(overall, xyChan);
     part  = spatialConstraint(temp, xyChan);
     sequences{lead} = part;
     
+    discarded.remaining = discarded.remaining + size(part,2)/2;
 
-end
+ end
     
-
+ discarded.percentdiscarded = discarded.total/discarded.origNum;
 
 
 end

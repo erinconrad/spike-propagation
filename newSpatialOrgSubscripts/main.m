@@ -59,7 +59,7 @@ for s = 1:length(segments)
     disp((s/length(segments))*100)
     
     % Extract spike sequences from the gdf  
-    Patient.sequences{1,s} = getSequencesErin(gdf(start_row:end_row,:), Patient.xyChan);
+    [Patient.sequences{1,s},Patient.discarded{1,s}] = getSequencesErin(gdf(start_row:end_row,:), Patient.xyChan);
     
     % Store IEEG indices
     Patient.indices{1,s} = [start_row, end_row];
@@ -76,6 +76,19 @@ if 1 == 0 % NEED TO FIGURE THIS OUT
 [Patient.statistics,Patient.centroids,Patient.mpv,Patient.repeats,...
     Patient.network]= get_stats(Patient, chans, interval, nRandomNetworks); % Erin now passes interval and nRandomNetworks
 end
+
+% get and print total number of sequences remaining and percent discarded
+totalSeq = 0;
+totalDisc = 0;
+for i = 1:size(Patient.discarded)
+   totalSeq = totalSeq + Patient.discarded{i}.remaining;
+   totalDisc = totalDisc +  Patient.discarded{i}.total;
+end
+
+percentDisc = totalDisc/(totalSeq+totalDisc)*100;
+
+fprintf('There are %d total sequences remaining. %1.1f percent were discarded for violating rules\n',...
+    totalSeq,percentDisc);
 
 %Output patient data 
 save([resultLoc,ptname,'_sequences.mat'],'Patient')  
