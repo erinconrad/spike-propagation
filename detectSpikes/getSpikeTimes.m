@@ -1,9 +1,26 @@
-clear
+function gdf = getSpikeTimes(desiredTimes,dataName,electrodeFile)
 
 %{
-This is my primary function to detect spikes and output them to a gdf file
-with spike times and locations. It uses the spike detection algorithm by
-Janca et al. 2014, which detects transient changes in a signal envelope.
+This is my primary function to detect spikes and output them to a gdf 
+with spike times and locations. gdf is an nx2 array, where n is the number
+of spikes, the first column has the channel location of the spike and the
+2nd column has the time (in seconds) of the spike
+
+You can either call it without arguments, in which case it will use the
+hardcoded EEG file listed below to pull from, or you can pass it arguments
+from another script.
+
+It has the ability to use one of two spike detection algorithms: 
+- an algorithm by Janca et al. 2014, which detects transient changes in a
+signal envelope. I modified this slightly because this begins by
+downsampling the data to 200 Hz, which I don't want (higher resolution
+important for picking out the order of spikes in the sequence). I also
+changed the default filter type from Chebyshev II to FIR because it
+appeared to work better with the higher frequency.
+- an algorithm that was used in Eric Marsh's lab, which I believe was
+written by Camilo Bermudez 7/31/13, and appears to work by finding peaks in
+high frequency data and then requires that the peaks have a minimum
+amplitude and appropriate duration. I have not modifed this at all yet
 
 Janca et al paper:
 Janca, Radek, et al. "Detection of interictal epileptiform discharges using signal envelope distribution modelling: application to epileptic and non-epileptic intracranial recordings." Brain topography 28.1 (2015): 172-183.
@@ -11,30 +28,48 @@ Janca, Radek, et al. "Detection of interictal epileptiform discharges using sign
 %}
 
 %% Parameters to change each time
-dataName = 'HUP78_phaseII-Annotations'; % the report you want to look at
-desiredTimes = [267000,268000]; %[267329,267419]; % the first and last seconds you want to look at 
+whichDetector = 1; %1 = modified Janca detector, 2 = Bermudez detector
+
+% If you didn't pass it a data file, then use the one written here
+if nargin == 0
+    dataName = 'HUP78_phaseII-Annotations'; % the report you want to look at
+end
+
+if nargin == 0
+electrodeFile = 'HUP078_T1_19971218_electrode_labels.csv';
+end
+
+% if you didn't pass it start and stop times, use the times written here
+if nargin == 0
+    % These times are in seconds and correspond to the ieeg.org times
+    desiredTimes = [267000,267100]; %[267375,267415]; is a seizure % the first and last seconds you want to look at 
+end
+
+% the file to write to (will only write if you didn't pass it arguments)
+outFile = 'gdfTemp2.mat';
+
+% Bermudez algorithm parameters
+tmul=13; % threshold multiplier
+absthresh=300;
 
 %% Parameters that probably don't need to change each time
 ignore = 1; % should we ignore any electrodes? This breaks if I say no.
 
-% call path thing
+% call path file (this defines the locations of various files)
 spikePaths
 
-% file with names of channels to ignore
 %% Load EEG data info
-
 % calling this with 0 and 0 means I will just get basic info like sampling
 % rate and channel labels
 data = getiEEGData(dataName,0,0);  
 
 
-%% Load pt file
+%% Load pt file (contains seizure times and which electrodes to ignore - like EKG leads)
 ptInfo = loadjson(jsonfile);
 
 %% Select correct patient
 % requires parsing because the name of the patient in json file is
 % different from iEEG
-
 % only look at the part of the name before the _
 C = strsplit(dataName,'_');
 ptname = C{1};
@@ -105,7 +140,6 @@ if ignore == 1
 
 end
 
-if 1== 1
 
 %% Prep what data I want to look at
 
@@ -129,36 +163,64 @@ end
 % get the data from those indices and channels (ignoring ignored channels)
 data = getiEEGData(dataName,channels,indices);
 
-%% Do cleaning
+%% Do cleaning?
 % What should I do?
 
 %% Run spike detector
+if whichDetector == 1
 
-% This is the spike detector from Janca et al 2014
-[out,MARKER,envelope,background,discharges,envelope_pdf] = ...
-    spike_detector_hilbert_v16_byISARG(data.values,data.fs);
-
-%% reorder spikes by time
-[timeSort,I] = sort(out.pos);
-chanSort = out.chan(I);
-
-
-%% Save spike times
-% note that this only has data from the unignored channels
-fn = data.name;
-if isempty(out.pos) == 1
-   fprintf('No spikes detected\n');
-else
-   fprintf('Detected %d spikes\n',length(out.pos));
-   gdf = [chanSort,timeSort];
+    % This is the spike detector from Janca et al 2014, edited by me as
+    % above
+    [out,~,~,~,~,~] = spike_detector_Erin(data.values,data.fs);
+    
+    % reorder spikes by time
+    [timeSort,I] = sort(out.pos);
+    chanSort = out.chan(I);
+    
+    % make gdf
+    if isempty(out.pos) == 1
+        fprintf('No spikes detected\n');
+    else
+        fprintf('Detected %d spikes\n',length(out.pos));
+        gdf = [chanSort,timeSort];
+    end
+    
+elseif whichDetector == 2
+        
+    % This calls the Bermudez detector
+    % fspk2 is currently located in my tools folder (on the default path).
+    % I have not edited this at all at this point.
+    gdf = fspk2(data.values,tmul,absthresh,length(channels),data.fs);
+    
+    % put it in seconds
+    gdf(:,2) = gdf(:,2)/data.fs;
+    
+    if isempty(gdf) == 1
+        fprintf('No spikes detected\n');
+    else
+        fprintf('Detected %d spikes\n',size(gdf,1));
+        out.pos = gdf(:,2); out.chan = gdf(:,1);
+    end
+    
 end
-save([gdfFolder ptname '_gdf.mat'], 'gdf','unignoredChLabels');
 
-%% Sample plot
-if 1 == 0
-indicesToPlot = 6000:10000;
-chsToPlot = [10,60];
-plotSpikeTimes(data,out,indicesToPlot,chsToPlot)
+
+
+if nargin == 0
+    %% Save spike times
+    % note that this only has data from the unignored channels
+    save([gdfFolder outFile], 'gdf','unignoredChLabels');
+
+    %% Sample plot
+    if 1 == 1
+    figure
+    indicesToPlot = 10000:14000;
+    chsToPlot = [68];
+    plotSpikeTimes(data,out,indicesToPlot,chsToPlot)
+    end
 end
+
+%% make the list of channel locations
+chanLocUseGdf(unignoredChLabels,electrodeFile);
 
 end

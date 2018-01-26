@@ -5,22 +5,31 @@
 
 %}
 
-function part = spatialConstraint(temp, xyChan)
-
-minConcurrentFreq = 0.15;
-maxDist = 4;
+function part = spatialConstraint(temp, xyChan, ...
+    minConcurrentFreq, maxDist, minSpikesCloseEnough)
 
 part = [];
 
 %% Create vector of all nonzero entries in temp matrix (used later)
 
-% each row is a spike (or zero padding) and then each column is a channel
-% number going through all the different sequences
+
+% This is just an array of channel numbers corresponding to the spikes for
+% each spike sequence, starting with the next channel after the first. So
+% it is nxm, where n is the number of spikes in the sequence (padded with
+% zeros) and m is the number of sequences.
 entries  = temp(2:end,1:2:end);
 
-% not sure what this does
+
+% This reshapes entries from an nxm (number of spikes x number
+% of sequences) array to a 1x(n*m) array, where it goes Channel according
+% to first spike from first sequence, then channel from first spike from
+% 2nd sequence, ..., then channel from 2nd spike from 1st sequence, then
+% channel from 2nd spike from 2nd seq, etc. I think the point is just to
+% get a single dimension array to very easily count (down below) how often
+% a given channel shows up in the head channels sequences
 entries = reshape(entries.',1,numel(entries));
 
+% remove zeros
 entries(entries==0)=[];
 
 %% Test whether each spike falls in legal location
@@ -47,7 +56,8 @@ for c = 1:2:size(temp,2)
         
         % if the 2 channels are NOT within the allowable distance from each
         % other
-        if sqrt((xyzPrevChan-xyzCurrChan).^2) < maxDist
+        if sqrt(sum((xyzPrevChan-xyzCurrChan).^2)) > maxDist
+            
 
             % Test for frequency in temp matrix. This is a test of how
             % often the current test channel shows up in the spike trains
@@ -58,7 +68,8 @@ for c = 1:2:size(temp,2)
             % spike trains
             if length(occurances) / length(entries) < minConcurrentFreq
                 
-                % Remove spike from sequence
+                % Remove spike from sequence. Note that I have not yet
+                % removed the subsequent spikes in the sequence
                 col(r)   = [];
                 ticks(r) = [];
                 r = r+0;        % do not increment row
@@ -77,8 +88,9 @@ for c = 1:2:size(temp,2)
     end
     
     
-    % If there are more than 2 spikes??
-    if length(col) >= 3
+    % If, after this, there are still enough spikes in the sequence,
+    % include the sequence
+    if length(col) >= minSpikesCloseEnough
         % Add dummy zeros, concactenate
         diff = length(col) - size(part,1);
         if diff < 0

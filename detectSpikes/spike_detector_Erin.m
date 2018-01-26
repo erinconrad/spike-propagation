@@ -1,4 +1,4 @@
-function [out,MARKER,envelope,background,discharges,envelope_pdf]=spike_detector_hilbert_v16_byISARG(d,fs,settings)
+function [out,MARKER,envelope,background,discharges,envelope_pdf]=spike_detector_Erin(d,fs,settings)
 
 % Mutichannel spike detector using statistical description of bacground
 % activity to finding of spike suspected section. Algorithm resample signal
@@ -97,7 +97,7 @@ main_hum_freq=50; % (-h)
 beta=Inf;    % (-b)
 beta_win=20; % (-bw)
 beta_AR=12; % (-br)
-f_type=1; % 1-cheby2, 2-but, 3-fir (-ft)
+f_type=3; % 1-cheby2, 2-but, 3-fir (-ft) ERIN CHANGED THIS TO 3 (WAS PREVIOUSLY 1)
 discharge_tol=0.005; % (-dt)
 polyspike_uniom_time=0.12; % (-pt)
 
@@ -148,20 +148,22 @@ for i=1:size(SET{1,1},1)
     end
 end
 
-
-% signal resampling to 200 Hz -------------------------------------------
-if fs>200
-    for ch=1:size(d,2)
-        d_res(:,ch)=resample(d(:,ch),200,fs,100);
+if 1 == 0
+    % Erin turned this off
+    % signal resampling to 200 Hz -------------------------------------------
+    if fs>200
+        for ch=1:size(d,2)
+            d_res(:,ch)=resample(d(:,ch),200,fs,100);
+        end
+        winsize=winsize/fs;
+        noverlap=noverlap/fs;
+        fs=200; d=d_res; clear d_res;
+        winsize=round(winsize*fs);
+        noverlap=round(noverlap*fs);
     end
-    winsize=winsize/fs;
-    noverlap=noverlap/fs;
-    fs=200; d=d_res; clear d_res;
-    winsize=round(winsize*fs);
-    noverlap=round(noverlap*fs);
-end
 
-MARKER.fs=fs;
+    MARKER.fs=fs;
+end
 
 % signal buffering ---------------------------------------------------
 N_seg=floor(size(d,1)/(buffering*fs));
@@ -475,7 +477,9 @@ switch type
         [bl,al] = cheby2(n,Rs,Ws);
         
         % high pass
-        Wp = 2*bandwidth(1)/fs; Ws = 2*bandwidth(1)/fs- 0.05;
+        % Erin changed this to make it not crash. It used to be:
+        %Wp = 2*bandwidth(1)/fs; Ws = 2*bandwidth(1)/fs- 0.05;
+        Wp = 2*bandwidth(1)/fs; Ws = 2*bandwidth(1)/fs-.036;
         Rp = 6; Rs = 60;
         [n,Ws] = cheb2ord(Wp,Ws,Rp,Rs);
         [bh,ah] = cheby2(n,Rs,Ws,'high');
