@@ -1,4 +1,4 @@
-function data = getiEEGData(dataName,channels,indices)
+function data = getiEEGData(dataName,channels,indices,pwname)
 
 % This is a tool to return information from a specified iEEG dataset and a
 % certain time and channel arrangement
@@ -8,7 +8,7 @@ function data = getiEEGData(dataName,channels,indices)
 
 %% Unchanging parameters
 loginname = 'erinconr';
-pwname = 'eri_ieeglogin.bin';
+%pwname = 'eri_ieeglogin.bin';
 
 %% Open and get data
 session = IEEGSession(dataName, loginname, pwname);

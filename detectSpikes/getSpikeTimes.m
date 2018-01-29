@@ -1,4 +1,4 @@
-function [gdf,electrodeData] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,dummyRun)
+function [gdf,electrodeData] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,dummyRun)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -48,6 +48,7 @@ if nargin == 0
     
     % call path file (this defines the locations of various files)
     spikePaths
+    fileLocations
     
     % Load pt file (contains seizure times and which electrodes to ignore - like EKG leads)
     ptInfo = loadjson(jsonfile);
@@ -67,7 +68,7 @@ ignore = 1; % should we ignore any electrodes? This breaks if I say no.
 %% Load EEG data info
 % calling this with 0 and 0 means I will just get basic info like sampling
 % rate and channel labels
-data = getiEEGData(dataName,0,0);  
+data = getiEEGData(dataName,0,0,pwfile);  
 
 
 
@@ -176,7 +177,7 @@ elseif dummyRun == 0
     indices = startAndEndIndices(1):startAndEndIndices(2);
 
     % get the data from those indices and channels (ignoring ignored channels)
-    data = getiEEGData(dataName,channels,indices);
+    data = getiEEGData(dataName,channels,indices,pwfile);
 
     %% Do cleaning?
     % What should I do?
