@@ -24,13 +24,13 @@ if nargin  == 0
     electrodeData.ptName = C{1};
     ptname = electrodeData.ptName;
 
-
+    spikePaths
 end
 
 
 
 %% Other files
-spikePaths
+
 
 if nargin == 0
 %% Load gdf file
