@@ -1,4 +1,4 @@
-function gdf = getSpikeTimes(desiredTimes,dataName,electrodeFile)
+function [gdf,electrodeData] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,dummyRun)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -9,6 +9,9 @@ of spikes, the first column has the channel location of the spike and the
 You can either call it without arguments, in which case it will use the
 hardcoded EEG file listed below to pull from, or you can pass it arguments
 from another script.
+
+dummyRun is set to 1 if I am only doing this to generate the electrode
+location file, which I do once per patient
 
 It has the ability to use one of two spike detection algorithms: 
 - an algorithm by Janca et al. 2014, which detects transient changes in a
@@ -30,23 +33,27 @@ Janca, Radek, et al. "Detection of interictal epileptiform discharges using sign
 %% Parameters to change each time
 whichDetector = 1; %1 = modified Janca detector, 2 = Bermudez detector
 
-% If you didn't pass it a data file, then use the one written here
+% If you didn't pass it arguments, then use the ones written here
 if nargin == 0
     dataName = 'HUP78_phaseII-Annotations'; % the report you want to look at
-end
-
-if nargin == 0
-electrodeFile = 'HUP078_T1_19971218_electrode_labels.csv';
-end
-
-% if you didn't pass it start and stop times, use the times written here
-if nargin == 0
+    electrodeFile = 'HUP078_T1_19971218_electrode_labels.csv';
+    dummyRun = 0;
+    
     % These times are in seconds and correspond to the ieeg.org times
-    desiredTimes = [267000,267100]; %[267375,267415]; is a seizure % the first and last seconds you want to look at 
+    desiredTimes = [267000,268000]; %[267375,267415]; is a seizure % the first and last seconds you want to look at 
+    
+    
+    % the file to write to (will only write if you didn't pass it arguments)
+    outFile = 'gdf267000-268000.mat';
+    
+    % call path file (this defines the locations of various files)
+    spikePaths
+    
+    % Load pt file (contains seizure times and which electrodes to ignore - like EKG leads)
+    ptInfo = loadjson(jsonfile);
 end
 
-% the file to write to (will only write if you didn't pass it arguments)
-outFile = 'gdfTemp2.mat';
+
 
 % Bermudez algorithm parameters
 tmul=13; % threshold multiplier
@@ -55,8 +62,7 @@ absthresh=300;
 %% Parameters that probably don't need to change each time
 ignore = 1; % should we ignore any electrodes? This breaks if I say no.
 
-% call path file (this defines the locations of various files)
-spikePaths
+
 
 %% Load EEG data info
 % calling this with 0 and 0 means I will just get basic info like sampling
@@ -64,8 +70,7 @@ spikePaths
 data = getiEEGData(dataName,0,0);  
 
 
-%% Load pt file (contains seizure times and which electrodes to ignore - like EKG leads)
-ptInfo = loadjson(jsonfile);
+
 
 %% Select correct patient
 % requires parsing because the name of the patient in json file is
@@ -143,9 +148,7 @@ end
 
 %% Prep what data I want to look at
 
-% Get the indices I want to look at
-startAndEndIndices = desiredTimes*data.fs;
-indices = startAndEndIndices(1):startAndEndIndices(2);
+
 
 % get the channels I want to look at. Also make unignoredChLabels, which is
 % the length of the new channel array and keeps track of the channel
@@ -160,67 +163,82 @@ for i = 1:length(data.chLabels)
     end
 end
 
-% get the data from those indices and channels (ignoring ignored channels)
-data = getiEEGData(dataName,channels,indices);
+if dummyRun == 1
+    gdf = 0;
+    %% make the list of channel locations
+    addpath('/Users/erinconrad/Desktop/residency stuff/R25/actual work/scripts/my scripts/makeChannelStructs/');
+    electrodeData = chanLocUseGdf(unignoredChLabels,electrodeFile);
 
-%% Do cleaning?
-% What should I do?
-
-%% Run spike detector
-if whichDetector == 1
-
-    % This is the spike detector from Janca et al 2014, edited by me as
-    % above
-    [out,~,~,~,~,~] = spike_detector_Erin(data.values,data.fs);
+elseif dummyRun == 0
     
-    % reorder spikes by time
-    [timeSort,I] = sort(out.pos);
-    chanSort = out.chan(I);
-    
-    % make gdf
-    if isempty(out.pos) == 1
-        fprintf('No spikes detected\n');
-    else
-        fprintf('Detected %d spikes\n',length(out.pos));
-        gdf = [chanSort,timeSort];
+    % Get the indices I want to look at
+    startAndEndIndices = desiredTimes*data.fs;
+    indices = startAndEndIndices(1):startAndEndIndices(2);
+
+    % get the data from those indices and channels (ignoring ignored channels)
+    data = getiEEGData(dataName,channels,indices);
+
+    %% Do cleaning?
+    % What should I do?
+
+    %% Run spike detector
+    if whichDetector == 1
+
+        % This is the spike detector from Janca et al 2014, edited by me as
+        % above
+        [out,~,~,~,~,~] = spike_detector_Erin(data.values,data.fs);
+
+        % reorder spikes by time
+        [timeSort,I] = sort(out.pos);
+        chanSort = out.chan(I);
+
+        % make gdf
+        if isempty(out.pos) == 1
+            fprintf('No spikes detected\n');
+        else
+            %fprintf('Detected %d spikes\n',length(out.pos));
+            gdf = [chanSort,timeSort];
+        end
+
+    elseif whichDetector == 2
+         addpath('./SamCode');
+        % This calls the Bermudez detector
+        % 
+        % I have not edited this at all at this point.
+        gdf = fspk2(data.values,tmul,absthresh,length(channels),data.fs);
+
+
+        if isempty(gdf) == 1
+            fprintf('No spikes detected\n');
+        else
+            %fprintf('Detected %d spikes\n',size(gdf,1));
+             % put it in seconds
+             gdf(:,2) = gdf(:,2)/data.fs;
+
+            out.pos = gdf(:,2); out.chan = gdf(:,1);
+        end
+
+    end
+
+
+
+    if nargin == 0
+        %% Save spike times
+        % note that this only has data from the unignored channels
+        save([gdfFolder outFile], 'gdf','unignoredChLabels');
+
+        %% Sample plot
+        if 1 == 0
+        figure
+        indicesToPlot = 10000:14000;
+        chsToPlot = [68];
+        plotSpikeTimes(data,out,indicesToPlot,chsToPlot)
+        end
     end
     
-elseif whichDetector == 2
-        
-    % This calls the Bermudez detector
-    % fspk2 is currently located in my tools folder (on the default path).
-    % I have not edited this at all at this point.
-    gdf = fspk2(data.values,tmul,absthresh,length(channels),data.fs);
-    
-    % put it in seconds
-    gdf(:,2) = gdf(:,2)/data.fs;
-    
-    if isempty(gdf) == 1
-        fprintf('No spikes detected\n');
-    else
-        fprintf('Detected %d spikes\n',size(gdf,1));
-        out.pos = gdf(:,2); out.chan = gdf(:,1);
-    end
+    electrodeData = 0;
     
 end
 
-
-
-if nargin == 0
-    %% Save spike times
-    % note that this only has data from the unignored channels
-    save([gdfFolder outFile], 'gdf','unignoredChLabels');
-
-    %% Sample plot
-    if 1 == 1
-    figure
-    indicesToPlot = 10000:14000;
-    chsToPlot = [68];
-    plotSpikeTimes(data,out,indicesToPlot,chsToPlot)
-    end
-end
-
-%% make the list of channel locations
-chanLocUseGdf(unignoredChLabels,electrodeFile);
 
 end

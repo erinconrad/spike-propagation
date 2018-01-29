@@ -1,14 +1,40 @@
 %{
  
    Perform spatial constraint: require that each spike in the sequence be
-   close enough to the previous spike
+   close enough to the previous spike.
+
+   There is an additional caveat that if the spikes are far apart, but it
+   is very common that Channel 1 has a spike right before Channel 2, then I
+   allow it anyway.
 
 %}
 
 function part = spatialConstraint(temp, xyChan, ...
-    minConcurrentFreq, maxDist, minSpikesCloseEnough)
+    minConcurrentFreqAbs, minConcurrentFreqRel, maxDist, minSpikesCloseEnough)
 
 part = [];
+n_chans = size(xyChan,1);
+
+%% Make Network of pairwise co-occurances
+network = zeros(n_chans,n_chans);
+
+% Loop over sequences
+for c = 1:2:size(temp,2)
+    
+    % Get column of channels in a specific sequence
+    col   = temp(:,c); 
+    
+    % remove zeros
+    col(col==0) = [];  
+    
+    % Loop through all channels that have a spike in that sequence
+    for r = 2:length(col)        
+        
+        % add a 1 to this network matrix if there is an occasion where
+        % channel1 immediately preceded channel2
+        network(col(r-1),col(r)) = network(col(r-1),col(r)) + 1;
+    end  
+end
 
 %% Create vector of all nonzero entries in temp matrix (used later)
 
@@ -59,14 +85,13 @@ for c = 1:2:size(temp,2)
         if sqrt(sum((xyzPrevChan-xyzCurrChan).^2)) > maxDist
             
 
-            % Test for frequency in temp matrix. This is a test of how
-            % often the current test channel shows up in the spike trains
-            % for the current "head" channel defining the temp matrix
-            occurances = find(col(r,1)==entries);
+            % Test for frequency of connection
+            freq = network(col(r-1,1),col(r,1));
             
-            % If this channel doesn't show up enough in the head channel's
-            % spike trains
-            if length(occurances) / length(entries) < minConcurrentFreq
+            % If this frequency is too low (either in absolutes or relative
+            % to how connected the prior channel is in general
+            if freq < minConcurrentFreqAbs ||...
+                    freq/sum(network(col(r-1,1),:)) < minConcurrentFreqRel
                 
                 % Remove spike from sequence. Note that I have not yet
                 % removed the subsequent spikes in the sequence
@@ -91,7 +116,7 @@ for c = 1:2:size(temp,2)
     % If, after this, there are still enough spikes in the sequence,
     % include the sequence
     if length(col) >= minSpikesCloseEnough
-        % Add dummy zeros, concactenate
+        % Add dummy zeros, concatenate
         diff = length(col) - size(part,1);
         if diff < 0
             col = vertcat(col, zeros(abs(diff),1));

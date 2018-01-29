@@ -1,7 +1,7 @@
 function [sequences,discarded] = ...
     getSequencesErin(spikes, xyChan, t1, t2, minSeqLength, uniquenessCheck,...
     minUniqueSeqLength, maxPercTies,...
-    minConcurrentFreq, maxDist, minSpikesCloseEnough)
+    minConcurrentFreqAbs, minConcurrentFreqRel, maxDist, minSpikesCloseEnough)
 
 %{
  
@@ -18,7 +18,6 @@ discarded.total =  0; % total number of rejected sequences
 discarded.length = 0; % number of sequences rejected because too short
 discarded.ties = 0; % number of sequences rejected because too many ties
 discarded.spatialRestriction = 0;
-discarded.remaining = 0; % number of sequences remaining at the end
 
 allSeqsTies = [];
 
@@ -82,7 +81,7 @@ for row = 2:size(spikes,1)
             if uniquenessCheck == 0
                 acceptablyUnique = 1;
             elseif uniquenessCheck == 1
-                if length(unique(ticksCol)) >= minSeqLength
+                if length(unique(ticksCol)) >= minUniqueSeqLength
                     acceptablyUnique = 1;
                 end
             elseif uniquenessCheck == 2
@@ -135,36 +134,18 @@ end
 overall = reorder_tiesErin(overall, xyChan);
 
 
-% Extract sequences for each chan, apply spatial partition restrictions
- for lead = 1:nchans   
- % loop through each channel
 
-    % Identify indices of sequences led by channel
-    hits    = find(overall(1,:) == lead);
-    hits(mod(hits,2)==0) = []; % remove even elements (ie, time columns)
+% Partition sequences- apply spatial restrictions, store
+part  = spatialConstraint(overall, xyChan, minConcurrentFreqAbs,...
+    minConcurrentFreqRel, maxDist,...
+    minSpikesCloseEnough);
 
-    % Collect channel AND ticks columns into temp matrix
-    % so temp is an nx(m*2) matrix where n is the number of spikes in a
-    % sequence (padded with zeros) and m is the number of sequences led by
-    % this channel and then for each m, column 1 is the channel and column
-    % 2 is the time
-    temp = [];
-    for col = hits
-        temp = [temp, overall(:,col), overall(:,col+1)];
-    end
+% store sequences according to which is the lead channel
+sequences = part;
+discarded.spatialRestriction = discarded.spatialRestriction + size(overall,2)/2 - size(sequences,2)/2;
 
-    % Partition sequences- apply spatial restrictions, store
-    part  = spatialConstraint(temp, xyChan, minConcurrentFreq, maxDist,...
-        minSpikesCloseEnough);
-    
-    % store sequences according to which is the lead channel
-    sequences{lead} = part;
-    discarded.spatialRestriction = discarded.spatialRestriction + size(temp,2)/2 - size(part,2)/2;
 
- end
  discarded.total = discarded.total + discarded.spatialRestriction;
- discarded.remaining = discarded.origNum- discarded.total;
- discarded.percentdiscarded = discarded.total/discarded.origNum;
  discarded.totalPercTies = mean(allSeqsTies);
 
 

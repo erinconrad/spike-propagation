@@ -203,7 +203,7 @@ discharges.MD=[]; % event duration
 discharges.MW=[]; % statistical weight
 discharges.MPDF=[]; % statistical weight
 
-fprintf(1,'progress:   0 %%')
+%fprintf(1,'progress:   0 %%')
 for i=1:length(index_stop)
     % subsection signal spike detection ----------------
     [sub_MARKER,sub_envelope,sub_background,sub_discharges,sub_out,sub_envelope_pdf]=spike_detector(d(index_start(i):index_stop(i),:),fs,[band_low band_high],k1,k2,winsize,noverlap,f_type,main_hum_freq,beta,beta_win,beta_AR,polyspike_uniom_time,discharge_tol);

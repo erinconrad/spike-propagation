@@ -10,7 +10,6 @@ function Patient = getRecruitmentLatency(Patient)
 
 nChannels = size(Patient.xyChan,1); % Number of channels
 
-
 % initialize output variable
 recruitmentLatencySingle = cell(1,nChannels);
 spikeCount = zeros(1,nChannels);
@@ -28,56 +27,50 @@ for iChannel = 1:nChannels
    recruitmentLatencySingle{iChannel} = nan(length(Patient.sequences),2);  
 end
 
+nSeqs = size(Patient.sequences,2)/2; % The number of sequences is the number of columns divided by 2
 
+% Loop through all the sequences
+for jSeq = 1:nSeqs
+    column = (jSeq-1)*2+1; % This is the column showing the channel
 
-for iChannel = 1:nChannels
-    if isempty(Patient.sequences{iChannel}) == 1 % If there are no sequences for that channel, continue
-        continue
-    else
-        nSeqs = size(Patient.sequences{1,iChannel},2)/2; % The number of sequences is the number of columns divided by 2
+    headChannel = Patient.sequences(1,column); % The first row of the spike sequence contains the first spike
+    headTime = Patient.sequences(1,column+1); % The next column is the spike time
 
-        % Loop through all the sequences
-        for jSeq = 1:nSeqs
-            column = (jSeq-1)*2+1; % This is the column showing the channel
+    for kSpikeInSeq = 1:size(Patient.sequences,1) % The number of rows in the sequence (number of spikes, padded with zeros)
+    % Loop through each spike in the sequence
 
-            headChannel = Patient.sequences{iChannel}(1,column); % The first row of the spike sequence contains the first spike
-            headTime = Patient.sequences{iChannel}(1,column+1); % The next column is the spike time
+        % If the spike data is zero, continue
+        if Patient.sequences(kSpikeInSeq,column) == 0
+            continue
+        else
 
-            for kSpikeInSeq = 1:size(Patient.sequences{iChannel},1) % The number of rows in the sequence (number of spikes, padded with zeros)
-            % Loop through each spike in the sequence
-            
-                % If the spike data is zero, continue
-                if Patient.sequences{iChannel}(kSpikeInSeq,column) == 0
-                    continue
-                else
+            % Get the latency at which that channel was
+            % activated relative to the head channel
+            tempLatency = Patient.sequences(kSpikeInSeq,column+1) - headTime;
 
-                    % Get the latency at which that channel was
-                    % activated relative to the head channel
-                    tempLatency = Patient.sequences{iChannel}(kSpikeInSeq,column+1) - headTime;
+            % Get the channel being activated
+            tempChan = Patient.sequences(kSpikeInSeq,column);
 
-                    % Get the channel being activated
-                    tempChan = Patient.sequences{iChannel}(kSpikeInSeq,column);
+            % Increase the spike count for that channel that is activated
+            spikeCount(tempChan) = spikeCount(tempChan) + 1;
+            tempSCount = spikeCount(tempChan);
 
-                    % Increase the spike count for that channel
-                    spikeCount(tempChan) = spikeCount(tempChan) + 1;
-                    tempSCount = spikeCount(tempChan);
+            % Fill up the first column with the latency
+            % This is basically just saying that for the channel of
+            % interest (NOT THE LEAD CHANNEL), I want to look at
+            % the next free row in the recruitmentLatencySingle
+            % array for that channel and add the latency and the
+            % head channel number for this particular appearance in
+            % a sequence
+            recruitmentLatencySingle{tempChan}(tempSCount,1) = tempLatency; 
 
-                    % Fill up the first column with the latency
-                    % This is basically just saying that for the channel of
-                    % interest (NOT THE LEAD CHANNEL), I want to look at
-                    % the next free row in the recruitmentLatencySingle
-                    % array for that channel and add the latency and the
-                    % head channel number for this particular appearance in
-                    % a sequence
-                    recruitmentLatencySingle{tempChan}(tempSCount,1) = tempLatency; 
-
-                    % Fill up the second column with the head channel
-                    recruitmentLatencySingle{tempChan}(tempSCount,2) = headChannel;
-                end
-            end
+            % Fill up the second column with the head channel
+            recruitmentLatencySingle{tempChan}(tempSCount,2) = headChannel;
         end
     end
 end
+
+
 
 
 %% Trim NaNs

@@ -7,7 +7,14 @@ sequence as a gif. It assumes equal time steps between each successive
 spike (which is not actually true).
 
 %}
-s = 4;
+
+function visualizeChLocations(Patient,s)
+
+if nargin == 0
+    s = 2;
+    Patient = evalin('base', 'Patient');
+
+end
 
 % Get the channel locations for the patient
 chLocs = Patient.xyChan(:,2:4);
@@ -21,7 +28,7 @@ delay = 0.4; % time delay between steps
 
 % Change these lines each time. Which segment and which starting channel
 % and which spike sequence to visualize
-temp = Patient.sequences{79}; % which segment and starting channel
+temp = Patient.sequences; % which segment and starting channel
 seq = temp(:,(s-1)*2+1:(s-1)*2+2); % which sequence
 seq = seq(any(seq~=0,2),:); % remove rows of zeros
 
@@ -67,4 +74,6 @@ for iTime = 1:size(seq,1)
     end
 
     close(fig)
+end
+
 end

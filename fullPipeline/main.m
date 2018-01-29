@@ -18,14 +18,11 @@ already made
 %}
 
 
-clear
-
+function Patient = main
 %% Parameters
 
-% What EEG report you want to look at
+% data name (for ieeg.org)
 dataName = 'HUP78_phaseII-Annotations';   
-
-electrodeFile = 'HUP078_T1_19971218_electrode_labels.csv';
 
 % The patient name with format as used in the json file
 ptname = 'HUP078';
@@ -38,25 +35,25 @@ fs = 512;
 
 % How many seconds you want per block. Max allowable appears to be 2000, or
 % possibly less
-sPerBlock = 100;
+sPerBlock = 50;
 
 % How many blocks you want to compare before the seizure
-nblocks = 3;
+nblocks = 2;
 
 
 %% Get paths and load seizure info and channel info
-p1 = genpath('/Users/erinconrad/Desktop/residency stuff/R25/actual work/scripts/my scripts/');
-p2 = genpath('/Users/erinconrad/Desktop/residency stuff/R25/actual work/data/');
+[electrodeFile,jsonfile,scriptFolder,resultsFolder] = fileLocations;
+p1 = genpath(scriptFolder);
 addpath(p1);
-addpath(p2);
-spikePaths
 ptInfo = loadjson(jsonfile);
 
 
-load([ptname,'_chanLoc.mat'])
+%load([ptname,'_chanLoc.mat'])
 Patient(pt).seizures = ptInfo.PATIENTS.(ptname).Events.Ictal;
 szNames = fieldnames(Patient(pt).seizures);
 
+%% Run the getSpikes script once as a dummy run just to produce a file of electrode locations
+[~,electrodeData] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,1);
 
 %% Define seizure onset and offset times for each seizure
 for i = 1:length(fieldnames(Patient(pt).seizures))
@@ -67,7 +64,9 @@ end
 %% Define the start and stop times of each block prior to the seizure
 
 % Loop through all the seizures
-for i = 1:length(Patient(pt).sz)
+for i = 1:1%length(Patient(pt).sz)
+    
+    
     
     % Skip the seizure if it's too close to the start of the data
     if Patient(pt).sz(i).onset < nblocks*sPerBlock+2
@@ -102,20 +101,26 @@ end
 % Loop through all seizures
 for i = 1:length(Patient(pt).sz)
     
+    fprintf('Doing seizure %d of %d\n',i,length(Patient(pt).sz));
+    
     % Skip if we're not running anything for the seizure
    if isempty(Patient(pt).sz(i).runTimes) == 0
        
        % Loop through all blocks
        for j = 1:length(Patient(pt).sz(i).runTimes)
+           fprintf('Doing block %d of %d in seizure %d of %d\n',...
+               j,length(Patient(pt).sz(i).runTimes),i,length(Patient(pt).sz));
            
            % Establish start and stop times
            desiredTimes = Patient(pt).sz(i).runTimes(j,1:2);
            
            % calculate gdf (spike times and locations) for the block
-           gdf = getSpikeTimes(desiredTimes,dataName);
+           fprintf('Detecting spikes\n');
+           [gdf,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,0);
            
            % Get spike sequences and spatial organization for the block
-           Patient(pt).sz(i).block(j).data = mainSequences(gdf,electrodeData,electrodeFile);
+           fprintf('Detecting sequences and calculating spatial organization\n');
+           Patient(pt).sz(i).block(j).data = mainSequences(gdf,electrodeData);
        end
    end
     
@@ -130,5 +135,9 @@ for i = 1:length(Patient(pt).sz)
        end
    end
     
+end
+
+save([resultsFolder,'Patient.mat'],'Patient');
+
 end
 

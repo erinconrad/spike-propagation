@@ -1,4 +1,4 @@
-function chanLocUseGdf(unignoredChLabels,electrodeFile)
+function electrodeData = chanLocUseGdf(unignoredChLabels,electrodeFile)
 
 %{
 This file makes .mat structures with electrode data. Importantly, it uses
@@ -16,13 +16,17 @@ file. Use getSpikeTimes.m to make gdf files.
 
 %% which patient
 if nargin  == 0
-electrodeFile = 'HUP078_T1_19971218_electrode_labels.csv';
+    mainFolder = '/Users/erinconrad/Desktop/residency stuff/R25/actual work/';
+    fname = 'HUP078_T1_19971218_electrode_labels.csv';
+    electrodeFile = [mainFolder,'data/','electrodeData/',fname];
+    % get patient name
+    C = strsplit(fname,'_');
+    electrodeData.ptName = C{1};
+    ptname = electrodeData.ptName;
+
+
 end
 
-% get patient name
-C = strsplit(electrodeFile,'_');
-electrodeData.ptName = C{1};
-ptname = electrodeData.ptName;
 
 
 %% Other files
@@ -35,7 +39,7 @@ end
 
 %% Load electrode file
 
-fileID = fopen([electrodeFolder,electrodeFile]);
+fileID = fopen(electrodeFile);
 
 out=textscan(fileID, '%s', 'whitespace',',');
 out = out{1};
@@ -103,6 +107,8 @@ for i = 1:length(electrodeData.electrodes)
 end
 
 %% Save struct
-save([electrodeFolder,electrodeData.ptName,'_chanLoc.mat'], 'electrodeData')
+if nargin == 0
+    save([electrodeFolder,electrodeData.ptName,'_chanLoc.mat'], 'electrodeData')
+end
 
 end
