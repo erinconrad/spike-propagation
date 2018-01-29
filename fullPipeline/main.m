@@ -35,10 +35,10 @@ fs = 512;
 
 % How many seconds you want per block. Max allowable appears to be 2000, or
 % possibly less
-sPerBlock = 50;
+sPerBlock = 1000;
 
 % How many blocks you want to compare before the seizure
-nblocks = 2;
+nblocks = 10;
 
 
 %% Get paths and load seizure info and channel info
@@ -64,7 +64,7 @@ end
 %% Define the start and stop times of each block prior to the seizure
 
 % Loop through all the seizures
-for i = 1:1%length(Patient(pt).sz)
+for i = 1:length(Patient(pt).sz)
     
     
     

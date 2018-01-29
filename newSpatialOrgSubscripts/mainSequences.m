@@ -93,11 +93,12 @@ if nargin == 0
     spikePaths
     load([dataLoc,'gdf/',filename]);
     load([dataLoc,'electrodeData/',ptname,'_chanLoc.mat']);
+    addpath('/Users/erinconrad/Desktop/residency stuff/R25/actual work/scripts/my scripts/sequenceCleaning/');
+
 
 end
 
 %% Add path to the cleaning scripts
-addpath('/Users/erinconrad/Desktop/residency stuff/R25/actual work/scripts/my scripts/sequenceCleaning/');
 
 %% Initialize patient variables
 Patient                = struct;
