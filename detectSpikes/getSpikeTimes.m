@@ -52,6 +52,10 @@ if nargin == 0
     
     % Load pt file (contains seizure times and which electrodes to ignore - like EKG leads)
     ptInfo = loadjson(jsonfile);
+    
+    
+    addpath('/Users/erinconrad/Desktop/residency stuff/R25/actual work/scripts/my scripts/makeChannelStructs/');
+
 end
 
 
@@ -167,7 +171,7 @@ end
 if dummyRun == 1
     gdf = 0;
     %% make the list of channel locations
-    addpath('/Users/erinconrad/Desktop/residency stuff/R25/actual work/scripts/my scripts/makeChannelStructs/');
+    
     electrodeData = chanLocUseGdf(unignoredChLabels,electrodeFile);
 
 elseif dummyRun == 0

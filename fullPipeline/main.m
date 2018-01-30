@@ -36,10 +36,10 @@ fs = 512;
 
 % How many seconds you want per block. Max allowable appears to be 2000, or
 % possibly less
-sPerBlock = 500;
+sPerBlock = 100;%500;
 
 % How many blocks you want to compare before the seizure
-nblocks = 10;
+nblocks = 2;
 
 
 %% Get paths and load seizure info and channel info
@@ -65,7 +65,7 @@ end
 %% Define the start and stop times of each block prior to the seizure
 
 % Loop through all the seizures
-for i = 1:length(Patient(pt).sz)
+for i = 1:1%length(Patient(pt).sz)
     
     
     
@@ -112,7 +112,12 @@ for i = 1:length(Patient(pt).sz)
            fprintf('Doing block %d of %d in seizure %d of %d\n',...
                j,length(Patient(pt).sz(i).runTimes),i,length(Patient(pt).sz));
            
+          mm = java.lang.Runtime.getRuntime.maxMemory;
+          tm = java.lang.Runtime.getRuntime.totalMemory;
+          fm = java.lang.Runtime.getRuntime.freeMemory;
           
+          fprintf('Max memory =  %1.2e, total memory = %1.2e, free memory = %1.2e\n',...
+              mm, tm, fm);
            
            % Establish start and stop times
            desiredTimes = Patient(pt).sz(i).runTimes(j,1:2);
