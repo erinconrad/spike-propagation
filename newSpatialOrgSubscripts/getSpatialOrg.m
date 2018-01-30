@@ -5,10 +5,10 @@ the spatial organization metric
 
 %}
 
-function Patient = getSpatialOrg(Patient,indexToms,dmin)
+function [avgRecruitmentLat,spatialOrg] = getSpatialOrg(recruitmentLatencySingle,xyChan,indexToms,dmin)
 
 
-nChannels = size(Patient.xyChan,1); % Number of channels
+nChannels = size(xyChan,1); % Number of channels
 
 %Initialize average recruitment latency
 avgRecruitmentLat = nan(1,nChannels);
@@ -18,7 +18,7 @@ avgRecruitmentLat = nan(1,nChannels);
 for iChannel = 1:nChannels
 
     % Average across the rows of the recruitment latencies
-    avgRows = mean(Patient.recruitmentLatencySingle{iChannel},1);
+    avgRows = mean(recruitmentLatencySingle{iChannel},1);
 
     % The first value of this is the average recruitment time (the
     % second is the average of the lead channel numbers which is
@@ -37,7 +37,7 @@ for iChannel = 1:nChannels
            wij(iChannel,jChannel) = nan;
        else
            % calculate Euclidean distance between the two channels
-           dij(iChannel,jChannel) =  sqrt(sum((Patient.xyChan(iChannel,2:end) - Patient.xyChan(jChannel,2:end)).^2));
+           dij(iChannel,jChannel) =  sqrt(sum((xyChan(iChannel,2:end) - xyChan(jChannel,2:end)).^2));
            
            % if this distance is less than a minimum distance
            if dij(iChannel,jChannel) <= dmin
@@ -99,8 +99,5 @@ allChannelAvgRecruitmentLat = nanmean(avgRecruitmentLat);
     
     spatialOrg = outsidemultiple*numerator/denominator;
     
-
-Patient.spatialOrg = spatialOrg;
-Patient.avgRecruitmentLat = avgRecruitmentLat;
 
 end

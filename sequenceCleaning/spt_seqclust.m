@@ -6,13 +6,7 @@
 
 %}
 
-function Patient = spt_seqclust(Patient,ss_thresh,tt_thresh)
-
-
-
-xyChan = Patient.xyChan;
-
-allseqs = Patient.sequences;
+function seq_track = spt_seqclust(xyChan,allseqs,ss_thresh,tt_thresh)
 
 
 % Generate files for clueGraph algorithm
@@ -24,9 +18,7 @@ allseqs = Patient.sequences;
 % Clean sequences
 [clueGraph_clean,seq_track] = spt_cleanseqs(clueGraph);
 
-Patient.clueGraph_clean = clueGraph_clean;
-Patient.seq_track = seq_track;
-    
+
 end
     
 

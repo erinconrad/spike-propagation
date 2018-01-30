@@ -298,17 +298,20 @@ end
 df=filtering(bandwidth,d,fs,f_type);
 df=filt50Hz(df,fs,main_hum_freq);
 
-if exist('parfor')==5 % If you don't have "Parallel Computing Toolbox", only standard for-cycle will be performed
-        
-    parfor ch=1:size(df,2)
-        [envelope(:,ch),markers_high(:,ch),markers_low(:,ch),background(:,ch,:),envelope_cdf(:,ch),envelope_pdf(:,ch)]=one_channel_detect(df(:,ch),fs,index,winsize,k1,k2,polyspike_uniom_time); % ~ = prah_int(:,ch,:)
+%% Don't use parallel toolbox?
+if  1 == 1
+    if exist('parfor')==5 % If you don't have "Parallel Computing Toolbox", only standard for-cycle will be performed
+
+        parfor ch=1:size(df,2)
+            [envelope(:,ch),markers_high(:,ch),markers_low(:,ch),background(:,ch,:),envelope_cdf(:,ch),envelope_pdf(:,ch)]=one_channel_detect(df(:,ch),fs,index,winsize,k1,k2,polyspike_uniom_time); % ~ = prah_int(:,ch,:)
+        end
+
+    else % If you do not have "Parallel Computing Toolbox", only standard for-cycle will be performed
+
+        for ch=1:size(df,2)
+            [envelope(:,ch),markers_high(:,ch),markers_low(:,ch),background(:,ch,:),envelope_cdf(:,ch),envelope_pdf(:,ch)]=one_channel_detect(df(:,ch),fs,index,winsize,k1,k2,polyspike_uniom_time); % ~ = prah_int(:,ch,:)
+        end  
     end
-    
-else % If you do not have "Parallel Computing Toolbox", only standard for-cycle will be performed
-        
-    for ch=1:size(df,2)
-        [envelope(:,ch),markers_high(:,ch),markers_low(:,ch),background(:,ch,:),envelope_cdf(:,ch),envelope_pdf(:,ch)]=one_channel_detect(df(:,ch),fs,index,winsize,k1,k2,polyspike_uniom_time); % ~ = prah_int(:,ch,:)
-    end  
 end
 
 % first and last second is not analyzed (filter time response etc.)
@@ -498,6 +501,9 @@ switch type
 end
 
 
+%% Don't use parallel computing toolbox?
+
+if 1 == 1
 if exist('parfor')==5 % If you don't have "Parallel Computing Toolbox", only standard for-cycle will be performed
     parfor ch=1:size(d,2); df(:,ch)=filtfilt(bh,ah,d(:,ch)); end
     if bandwidth(2)==fs/2; return; end
@@ -508,6 +514,7 @@ else % If you do not have "Parallel Computing Toolbox", only standard for-cycle 
     if bandwidth(2)==fs/2; return; end
     for ch=1:size(d,2); df(:,ch)=filtfilt(bl,al,df(:,ch)); end
     
+end
 end
 end
 

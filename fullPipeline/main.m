@@ -19,6 +19,7 @@ already made
 
 
 function Patient = main
+tic
 %% Parameters
 
 % data name (for ieeg.org)
@@ -35,7 +36,7 @@ fs = 512;
 
 % How many seconds you want per block. Max allowable appears to be 2000, or
 % possibly less
-sPerBlock = 1000;
+sPerBlock = 500;
 
 % How many blocks you want to compare before the seizure
 nblocks = 10;
@@ -111,6 +112,8 @@ for i = 1:length(Patient(pt).sz)
            fprintf('Doing block %d of %d in seizure %d of %d\n',...
                j,length(Patient(pt).sz(i).runTimes),i,length(Patient(pt).sz));
            
+          
+           
            % Establish start and stop times
            desiredTimes = Patient(pt).sz(i).runTimes(j,1:2);
            
@@ -138,6 +141,6 @@ for i = 1:length(Patient(pt).sz)
 end
 
 save([resultsFolder,'Patient.mat'],'Patient');
-
+toc
 end
 

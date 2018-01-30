@@ -6,9 +6,9 @@ sequence
 
 %}
 
-function Patient = getRecruitmentLatency(Patient)
+function [recruitmentLatencySingle,spikeCount] = getRecruitmentLatency(sequences,xyChan)
 
-nChannels = size(Patient.xyChan,1); % Number of channels
+nChannels = size(xyChan,1); % Number of channels
 
 % initialize output variable
 recruitmentLatencySingle = cell(1,nChannels);
@@ -24,32 +24,32 @@ for iChannel = 1:nChannels
    % the channel was activated relative to the lead channel. This will
    % mostly be nans because most channels are not activated in a given
    % sequence.
-   recruitmentLatencySingle{iChannel} = nan(length(Patient.sequences),2);  
+   recruitmentLatencySingle{iChannel} = nan(length(sequences),2);  
 end
 
-nSeqs = size(Patient.sequences,2)/2; % The number of sequences is the number of columns divided by 2
+nSeqs = size(sequences,2)/2; % The number of sequences is the number of columns divided by 2
 
 % Loop through all the sequences
 for jSeq = 1:nSeqs
     column = (jSeq-1)*2+1; % This is the column showing the channel
 
-    headChannel = Patient.sequences(1,column); % The first row of the spike sequence contains the first spike
-    headTime = Patient.sequences(1,column+1); % The next column is the spike time
+    headChannel = sequences(1,column); % The first row of the spike sequence contains the first spike
+    headTime = sequences(1,column+1); % The next column is the spike time
 
-    for kSpikeInSeq = 1:size(Patient.sequences,1) % The number of rows in the sequence (number of spikes, padded with zeros)
+    for kSpikeInSeq = 1:size(sequences,1) % The number of rows in the sequence (number of spikes, padded with zeros)
     % Loop through each spike in the sequence
 
         % If the spike data is zero, continue
-        if Patient.sequences(kSpikeInSeq,column) == 0
+        if sequences(kSpikeInSeq,column) == 0
             continue
         else
 
             % Get the latency at which that channel was
             % activated relative to the head channel
-            tempLatency = Patient.sequences(kSpikeInSeq,column+1) - headTime;
+            tempLatency = sequences(kSpikeInSeq,column+1) - headTime;
 
             % Get the channel being activated
-            tempChan = Patient.sequences(kSpikeInSeq,column);
+            tempChan = sequences(kSpikeInSeq,column);
 
             % Increase the spike count for that channel that is activated
             spikeCount(tempChan) = spikeCount(tempChan) + 1;
@@ -99,8 +99,8 @@ end
 
 
 
-Patient.recruitmentLatencySingle = recruitmentLatencySingle;
-Patient.spikeCount = spikeCount;
+recruitmentLatencySingle = recruitmentLatencySingle;
+spikeCount = spikeCount;
 
 
 

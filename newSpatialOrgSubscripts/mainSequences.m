@@ -106,7 +106,6 @@ Patient                = struct;
 % nx4 array, where n is the number of unignored channels, 1st column is
 % index, and 2nd-4th columns are x,y,z positions
 Patient.xyChan         = electrodeData.locs;
-Patient.gdf            = gdf; 
 
 % Prepare to loop through gdf 
 nspikes           = size(gdf,1);
@@ -114,7 +113,7 @@ chans             = Patient.xyChan(:,1);
 
 
 %% Get sequences
-[Patient.sequences,Patient.discarded] = ...
+[sequences,Patient.discarded] = ...
     getSequencesErin(gdf, Patient.xyChan,...
     t1, t2, minSeqLength, uniquenessCheck, minUniqueSeqLength, ...
     maxPercTies, minConcurrentFreqAbs, minConcurrentFreqRel,...
@@ -126,20 +125,20 @@ chans             = Patient.xyChan(:,1);
 % data then I will have it on n_blocks*n_seizures as much data, but it will
 % be much more complicated to do
 
-Patient.dirtysequences = Patient.sequences;
-Patient =  spt_seqclust(Patient,ss_thresh,tt_thresh);
-iclean = Patient.seq_track;
+dirtysequences = sequences;
+iclean =  spt_seqclust(Patient.xyChan,sequences,ss_thresh,tt_thresh);
 y = zeros(length(iclean)*2, 1); y(1:2:end-1)=(iclean-1)*2+1; y(2:2:end)=(iclean-1)*2+2;
-Patient.sequences = Patient.sequences(:,y);
+sequences = dirtysequences(:,y);
 
-Patient.discarded.cleaning = -size(Patient.sequences,2)/2 + size(Patient.dirtysequences,2)/2;
+Patient.discarded.cleaning = -size(sequences,2)/2 + size(dirtysequences,2)/2;
 Patient.discarded.total = Patient.discarded.total + Patient.discarded.cleaning;
 Patient.discarded.remaining = Patient.discarded.origNum - Patient.discarded.total;
 
+Patient.sequences = sequences;
 
 %% Get recruitment latency and spatial organization
-Patient = getRecruitmentLatency(Patient);
-Patient = getSpatialOrg(Patient,indexToms,dmin);
+[recruitmentLatencySingle,spikeCount] = getRecruitmentLatency(sequences,Patient.xyChan);
+[Patient.avgRecruitmentLat,Patient.spatialOrg] = getSpatialOrg(recruitmentLatencySingle,Patient.xyChan,indexToms,dmin);
 
 
 
