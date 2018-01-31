@@ -4,34 +4,29 @@ Pipeline for the Spatial Organization project
 
 - written by Erin Conrad, 2017, University of Pennsylvania
 - uses scripts from Sam Tomlinson (to generate spike sequences) and Radek
-Janca
+Janca (to detect spikes)
 
 Tomlinson, Samuel B., et al. "Spatiotemporal Mapping of Interictal Spike Propagation: A Novel Methodology Applied to Pediatric Intracranial EEG Recordings." Frontiers in neurology 7 (2016).
 
 Janca, Radek, et al. "Detection of interictal epileptiform discharges using signal envelope distribution modelling: application to epileptic and non-epileptic intracranial recordings." Brain topography 28.1 (2015): 172-183.
 
 
+To run this pipeline, go to the folder "fullPipeline" and run main. In
+main, you should change the patient name, the output file name, the
+ieeg.org data name, and the electrode file name, and the patient number, as
+well as the sampling rate of the EEG data. The pipeline works as follows:
 
+1) it gets the seizure onset and offset times for each seizure that the
+patient has
+2) from this, it defines the start and stop times for each block we want to
+detect sequences over prior to each seizure
+3) it detects spikes in each block
+4) it detects sequences of spikes in each block
+5) it calculates the spatial organization of the spike sequences for each
+block
 
-1: Detect spikes and output them to a gdf file
-- to do this, go to detectSpikes and run getSpikeTimes. 
-- need to input the file name you want to load from the iEEG portal
-- this will create a gdf file with spike times
-- this ignores channels that the json file tells you to ignore 
-
-2: Make a structure containing the channel locations for the unignored
-channels
-- to do this, go to make ChannelStructs and run chanLocUseGdf
-- this requires that the gdf file with spike times already exists because
-it uses this to ensure that the channel indices in this struct will be the
-same as the channel indices in the gdf file
-- this also requires that you have a csv file with electrode locations
-
-3: Combine the spike times from 1) and the channel locations from 2) to
-calculate spike propagation information
-- to do this, go to newSpatialOrgSubscripts and run main
-- this takes the gdf file and the channel location file you created and
-finds spike sequences and saves the sequences and spatial organization
-
+This code tends to fail when requesting larger chunks of data, but only on
+Borel. It raises PermGen memory errors in the IEEG database code,
+suggesting that somehow on Borel this code is creating a memory leak
 
 %}

@@ -7,13 +7,15 @@ electrodes corresponds to how often that path was traversed.
 
 
 %}
+
+function visualizeAvgPath(Patient)
+
 %% Parameters
 
 % what lead channel you want to look at
-whichCh = 79;
 
 % output file name
-filename = ['test',sprintf('%d',whichCh),'.jpg'];
+filename = ['test','.jpg'];
 
 % base size of electrodes
 baseSizeElec = 20;
@@ -22,10 +24,10 @@ baseSizeElec = 20;
 baseSizeLine = 0.5;
 
 % multiplication factor for electrodes
-multElec = 4;
+multElec = 3;
 
 % multiplication factor for lines
-multLines = 3;
+multLines = 1;
 
 
 %% Initialize channel arrays
@@ -39,7 +41,7 @@ pathHits = zeros(length(allChs),length(allChs));
 %% Get the sequence data
 % Change these lines each time. Which segment and which starting channel
 % and which spike sequence to visualize
-temp = Patient.sequences{whichCh}; % which segment and starting channel
+temp = Patient.sequences; % which segment and starting channel
 
 % Remove the times, now this has as many columns as there are sequences
 temp = temp(:,1:2:end-1);
@@ -93,10 +95,7 @@ for i = 1:length(allChs)
       % plot the dot
       scatter3(chLocs(i,1) ,chLocs(i,2),chLocs(i,3),circleSize,'r','filled');
       
-      % save the size for the lead channel
-      if allChs(i) == whichCh
-          origChSize = circleSize;
-      end
+     
    end
    
    % loop through the other channels, looking for path hits
@@ -115,8 +114,7 @@ for i = 1:length(allChs)
    end
 end
 
-% turn the lead channel green
-scatter3(chLocs(whichCh,1) ,chLocs(whichCh,2),chLocs(whichCh,3),origChSize,'g','filled');
-
 
 saveas(fig,filename);
+
+end

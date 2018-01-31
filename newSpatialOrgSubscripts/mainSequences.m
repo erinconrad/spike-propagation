@@ -1,4 +1,4 @@
-function Patient = mainSequences(gdf,electrodeData)
+function Patient = mainSequences(gdf,electrodeData,fs)
 
 %{
 
@@ -15,21 +15,21 @@ Tomlinson, Samuel B., et al. "Spatiotemporal Mapping of Interictal Spike Propaga
 Patient:
 - this is the main output variable
 - Patient.xyChan contains the xyz coordinates of all the channels
-- Patient.gdf contains the channel location and time of each spike
-- Patient.sequences is a 1xn cell, where n is the number of segments the
-data is divided into. Within each cell, there are nChannel cells, each of
-which contains an mx(2*s) array. s is the number of spike sequences
-starting in that channel (and it is 2*s wide because the first row contains
+- Patient.sequences is an mx(2*s) array. s is the number of spike sequences
+ (and it is 2*s wide because the first row contains
 the channel number and the second row contains the time) and m is the
 number of steps in the spike sequence.
 %}
 
 %% parameters
+% The choice of these is at this point arbitrary and is very important for
+% the final result
 
 % If I don't pass a gdf, use the one written here
 if nargin == 0
-    filename = 'gdf267000-268000.mat';
+    filename = 'gdfTemp.mat';
     ptname = 'HUP078';
+    fs =  512;
 
 end
 
@@ -39,27 +39,29 @@ t1 = .05;
 % max time from preceding spike (15 ms in paper)
 t2 = .015; 
 
-% minimum sequence length (how many spikes per sequence, 5 in the paper)
+% minimum sequence length for a sequence to even initially be considered
+% (how many spikes per sequence, 5 in the paper)
 minSeqLength = 5; 
 
 % This is my criteria for potentially throwing out a sequence if there are
 % too many simultaneous spikes. If this is set to 0, I never throw any
 % sequences out. If this is set to 1, I use the minimum number of
 % non-simultaneous spikes criterion. If this is set to 2, I use the maximum
-% percentage that is ties criterion.
+% percentage that is ties criterion. The paper did not have any check (so
+% this was set to 0)
 uniquenessCheck = 0;
 
-% minimum number of non-simultaneous spikes in a sequence
+% minimum number of non-simultaneous spikes in a sequence. (Only used if
+% uniquenessCheck = 1.)
 minUniqueSeqLength = 3;
 
 % maximum percentage of a sequence that is ties (when the spike hits
-% multiple channels at the same time). This was not a criterion in the
-% Tomlinson paper. 
+% multiple channels at the same time). (Only used if uniquenessCheck = 2).
 maxPercTies = 0.7; 
 
 % some distance between channels for channel weights. In the paper this was
-% 1.5 cm so I need to figure out the conversion.
-dmin = 10.5; 
+% 1.5 cm so I need to figure out the conversion. I think for me 1 unit is 1 mm. MUST CHECK.
+dmin = 15; 
 
 % This is used when two channels are not within an allowable distance of
 % each others, but if the 2 channels spike together this frequently, then
@@ -74,18 +76,36 @@ minConcurrentFreqAbs = 5;
 % The allowable distance between 2 channels of successive spikes. This is
 % new in my methods because the Tomlinson paper instead used a
 % "partitioning" approach and required that successive spikes be in
-% adjacent partitions. Need to think about this number.
-maxDist = 20;
+% adjacent partitions. I downloaded a paper Hirsh1991 (Synaptic physiology
+% of horizontal connections in the cats visual cortex), which says that CV
+% is about 0.3-1 m/s. Let's assume that the fastest it can go is 1 m/s.
+% This is 1000 mm/s. I believe my spatial units are in mm and my time units
+% are in s.
+maxSpeed = 1000;
 
-% How long the spike sequence needs to be after the spatial constraint
-minSpikesCloseEnough = 3;
+% How long the spike sequence needs to be after the spatial constraint.
+% This was 5 in Sam's code but not explicitly mentioned in the paper.
+minSpikesCloseEnough = 5;
 
 % I don't know what this does.
 indexToms = 1;
 
 % Cleaning parameters
-ss_thresh     = 1.5;                      
-tt_thresh     = 3;  
+
+% spatial and temporaly thresholds used for cleaning algorithm. It finds all
+% points that fall within ss_thresh of the reference point and tt_thresh of
+% the reference point (similar time to lead spike). Then, the matched point
+% with the shortest Euclidean distance from the reference point was used to
+% compute the similarity score 1-d_match/ss_thresh. In the paper ss_thresh
+% was 1.5 cm (although they used 2 D measurements) and tt_thresh was 15 ms.
+% Sam's code uses 1.5 for ss_thresh and 3 for tt_thresh. However, I assume
+% the 3 for tt_thresh is because they do everything in indices, not
+% seconds. I am not sure if the 1:1 conversion here between cm and points
+% is correct. It looks like my locations of points are in mm because
+% distance between 2 electrodes in my coordinates is about 10 units, and
+% the interelectrode distance should be 10 mm. So 1 unit = 1 mm.
+ss_thresh     = 15;    % PROBABLY WRONG                
+tt_thresh     = 0.015;  
 
 
 %% Load data files if I don't pass a gdf
@@ -117,7 +137,7 @@ chans             = Patient.xyChan(:,1);
     getSequencesErin(gdf, Patient.xyChan,...
     t1, t2, minSeqLength, uniquenessCheck, minUniqueSeqLength, ...
     maxPercTies, minConcurrentFreqAbs, minConcurrentFreqRel,...
-    maxDist, minSpikesCloseEnough);
+    maxSpeed, fs, minSpikesCloseEnough);
 
 %% Do cleaning step
 % At some point I should consider whether to do the cleaning step in each

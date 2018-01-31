@@ -11,7 +11,12 @@ hardcoded EEG file listed below to pull from, or you can pass it arguments
 from another script.
 
 dummyRun is set to 1 if I am only doing this to generate the electrode
-location file, which I do once per patient
+location file, which I do once per patient. The reason I do this in the
+spike detector script is because I want to ensure that I consistently track
+which electrodes I am not running the spike detector on, and so in this
+script I look up which electrodes to ignore as listed in the json file, and
+then I store the identities of those electrodes in my electrodeData file
+and I ignore them when I run the spike detector.
 
 It has the ability to use one of two spike detection algorithms: 
 - an algorithm by Janca et al. 2014, which detects transient changes in a
@@ -60,13 +65,14 @@ end
 
 
 
-% Bermudez algorithm parameters
-tmul=13; % threshold multiplier
-absthresh=300;
+
 
 %% Parameters that probably don't need to change each time
 ignore = 1; % should we ignore any electrodes? This breaks if I say no.
 
+% Bermudez algorithm parameters
+tmul=13; % threshold multiplier
+absthresh=300;
 
 
 %% Load EEG data info
@@ -76,8 +82,7 @@ data = getiEEGData(dataName,0,0,pwfile);
 
 
 
-
-%% Select correct patient
+%% Select correct patient in order to get ignore electrode info from json file
 % requires parsing because the name of the patient in json file is
 % different from iEEG
 % only look at the part of the name before the _
@@ -153,8 +158,6 @@ end
 
 %% Prep what data I want to look at
 
-
-
 % get the channels I want to look at. Also make unignoredChLabels, which is
 % the length of the new channel array and keeps track of the channel
 % identities of these newly indexed channels
@@ -169,6 +172,8 @@ for i = 1:length(data.chLabels)
 end
 
 if dummyRun == 1
+    
+    % Don't need gdf for dummy run
     gdf = 0;
     %% make the list of channel locations
     
@@ -176,15 +181,15 @@ if dummyRun == 1
 
 elseif dummyRun == 0
     
+    % Don't need electrode Data for non-dummy run as already calculated it
+    electrodeData = 0;
+    
     % Get the indices I want to look at
     startAndEndIndices = desiredTimes*data.fs;
     indices = startAndEndIndices(1):startAndEndIndices(2);
 
     % get the data from those indices and channels (ignoring ignored channels)
     data = getiEEGData(dataName,channels,indices,pwfile);
-
-    %% Do cleaning?
-    % What should I do?
 
     %% Run spike detector
     if whichDetector == 1
@@ -199,7 +204,7 @@ elseif dummyRun == 0
 
         % make gdf
         if isempty(out.pos) == 1
-            fprintf('No spikes detected\n');
+            fprintf('Warning: No spikes detected\n');
         else
             %fprintf('Detected %d spikes\n',length(out.pos));
             gdf = [chanSort,timeSort];
@@ -241,7 +246,7 @@ elseif dummyRun == 0
         end
     end
     
-    electrodeData = 0;
+   
     
 end
 

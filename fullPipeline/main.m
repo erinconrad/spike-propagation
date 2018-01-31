@@ -12,18 +12,27 @@ spikes and detects spike sequences and calculates the spatial organization
 
 At some point, this could be expanded to loop through multiple patients.
 
-This requires that I have a file with electrode data for the patient
-already made
+This requires that you have the following data:
+- the EEG data (on ieeg.org); you need the name of the file you want
+- the csv file with electrode locations for the patient
+- the json file with 1) the seizure times for the patient, and 2) identity
+of which electrodes to ignore for the patient
 
 %}
 
 
 function Patient = main
 tic
-%% Parameters
+%% Parameters to change every time
+
+% Output file name to save
+outputName = 'HUP78_oneMinBlocks.mat';
 
 % data name (for ieeg.org)
-dataName = 'HUP78_phaseII-Annotations';   
+dataName = 'HUP78_phaseII-Annotations';  
+
+% CSV file with electrode locations
+csvFile = 'HUP078_T1_19971218_electrode_labels.csv';
 
 % The patient name with format as used in the json file
 ptname = 'HUP078';
@@ -36,20 +45,19 @@ fs = 512;
 
 % How many seconds you want per block. Max allowable appears to be 2000, or
 % possibly less
-sPerBlock = 500;
+sPerBlock = 60;
 
 % How many blocks you want to compare before the seizure
 nblocks = 10;
 
 
 %% Get paths and load seizure info and channel info
-[electrodeFile,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
+[electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
+electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
 addpath(p1);
 ptInfo = loadjson(jsonfile);
 
-
-%load([ptname,'_chanLoc.mat'])
 Patient(pt).seizures = ptInfo.PATIENTS.(ptname).Events.Ictal;
 szNames = fieldnames(Patient(pt).seizures);
 
@@ -109,16 +117,11 @@ for i = 1:length(Patient(pt).sz)
        
        % Loop through all blocks
        for j = 1:length(Patient(pt).sz(i).runTimes)
+           tic
            fprintf('Doing block %d of %d in seizure %d of %d\n',...
                j,length(Patient(pt).sz(i).runTimes),i,length(Patient(pt).sz));
            
-          mm = java.lang.Runtime.getRuntime.maxMemory;
-          tm = java.lang.Runtime.getRuntime.totalMemory;
-          fm = java.lang.Runtime.getRuntime.freeMemory;
           
-          fprintf('Max memory =  %1.2e, total memory = %1.2e, free memory = %1.2e\n',...
-              mm, tm, fm);
-           
            % Establish start and stop times
            desiredTimes = Patient(pt).sz(i).runTimes(j,1:2);
            
@@ -128,7 +131,8 @@ for i = 1:length(Patient(pt).sz)
            
            % Get spike sequences and spatial organization for the block
            fprintf('Detecting sequences and calculating spatial organization\n');
-           Patient(pt).sz(i).block(j).data = mainSequences(gdf,electrodeData);
+           Patient(pt).sz(i).block(j).data = mainSequences(gdf,electrodeData, fs);
+           toc
        end
    end
     
@@ -145,7 +149,7 @@ for i = 1:length(Patient(pt).sz)
     
 end
 
-save([resultsFolder,'Patient.mat'],'Patient');
+save([resultsFolder,outputName],'Patient');
 toc
 end
 

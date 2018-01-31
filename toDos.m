@@ -1,30 +1,32 @@
 %{
 
 TO DOs:
-- [] make it self contained so that it doesn't depend on outside tools (so
-someone could download it and run it easily and so that I can run it on Borel)
+- [] figure out why it runs out of PermGen memory on Borel but not on my
+laptop
+- [] meet with Eric to ensure on right path
+- [] confirm hard coded values
 - [] think about the value of these different cleaning measures, and think
 about why I get such a different result when I restrict ties versus not (I
 saved two sample versions in the results, one restricting ties and one not
 restricting ties)
 - [] decide about 2D vs 3D distance measure (right now everything is 3D)
-- [] correct some of the hard coded numbers to make sure physiologic. I
-downloaded a paper Hirsh1991 (Synaptic physiology of horizontal connections
-in th cat's visual cortex), which says that CV is about 0.3-1 m/s
 - [] try to validate the spike detectors: I need annotated data
 - [] remove EKG artifact? Or remove detected spikes that are detected at
 the same time in the EKG channel?
 - [] should make it nicer for doing it for multiple patients
-- [] should clean up the electrode localizer so that I am not remaking the
-file each time; that's totally unnecessary (but then again it doesn't take
-much time)
 - [] try source localization instead? I may be falsely assuming that
 wherever I see the spike is where the actual source of the spike is.
 Instead it could be that there is a spike below the surface that I am
 seeing at multiple locations on the cortex at the same time
 
-
-
+- [x] correct some of the hard coded numbers to make sure physiologic. I
+downloaded a paper Hirsh1991 (Synaptic physiology of horizontal connections
+in th cat's visual cortex), which says that CV is about 0.3-1 m/s
+- [x] should clean up the electrode localizer so that I am not remaking the
+file each time; that's totally unnecessary (but then again it doesn't take
+much time)
+- [x] make it self contained so that it doesn't depend on outside tools (so
+someone could download it and run it easily and so that I can run it on Borel)
 - [x] nice way to plot recruitment latency maps
 - [x] add in the potential to use some of Sam's stuff in my code, sequence
 similarity matrix

@@ -10,7 +10,7 @@
 %}
 
 function part = spatialConstraint(temp, xyChan, ...
-    minConcurrentFreqAbs, minConcurrentFreqRel, maxDist, minSpikesCloseEnough)
+    minConcurrentFreqAbs, minConcurrentFreqRel, maxSpeed, fs, minSpikesCloseEnough)
 
 part = [];
 n_chans = size(xyChan,1);
@@ -58,6 +58,9 @@ entries = reshape(entries.',1,numel(entries));
 % remove zeros
 entries(entries==0)=[];
 
+% for testing
+%speedForTesting = [];
+
 %% Test whether each spike falls in legal location
 for c = 1:2:size(temp,2)
     % loop through the sequences
@@ -76,13 +79,34 @@ for c = 1:2:size(temp,2)
         prevChan = col(r-1,1);
         xyzPrevChan = xyChan(prevChan,2:end);
         
+        %Get the time of the previous spike
+        timePrevSpike = ticks(r-1,1);
+        
         % Get the x,y,z location of the current channel
         currChan = col(r,1);
         xyzCurrChan = xyChan(currChan,2:end);
         
+        % Get the time of the current spike
+        timeCurrSpike = ticks(r,1);
+        
+        % Calculate the necessary speed the spike needed to travel to go
+        % from one electrode to the other, and whether that's allowable
+        distTravel = sqrt(sum((xyzPrevChan-xyzCurrChan).^2));
+        timeTravel = timeCurrSpike-timePrevSpike;
+        
+        if timeTravel == 0
+            % if the spike occured at the same time, assume the travel time
+            % was actually one over the sampling rate (so the shortest time
+            % step)
+           timeTravel =  1/fs;
+        end
+        
+        speedTravel = distTravel/timeTravel;
+        %speedForTesting = [speedForTesting,speedTravel];
+        
         % if the 2 channels are NOT within the allowable distance from each
         % other
-        if sqrt(sum((xyzPrevChan-xyzCurrChan).^2)) > maxDist
+        if speedTravel > maxSpeed
             
 
             % Test for frequency of connection
