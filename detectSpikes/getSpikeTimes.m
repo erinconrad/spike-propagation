@@ -1,4 +1,5 @@
-function [gdf,electrodeData] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,dummyRun)
+function [gdf,electrodeData] = getSpikeTimes(desiredTimes,dataName,...
+    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -230,7 +231,12 @@ elseif dummyRun == 0
 
     end
 
-
+    if vanleer == 1
+        % If doing the vanleer approach, input the gdf into a separate
+        % function to get delay and rms info
+        gdf = vMakeSegments(gdf,data.values,data.fs,vtime);
+        
+    end
 
     if nargin == 0
         %% Save spike times

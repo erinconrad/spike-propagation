@@ -11,7 +11,7 @@ spike (which is not actually true).
 function visualizeChLocations(Patient,s)
 
 if nargin == 0
-    s = 2;
+    s = 3;
     Patient = evalin('base', 'Patient');
 
 end

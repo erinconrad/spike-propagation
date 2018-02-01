@@ -50,6 +50,9 @@ sPerBlock = 60;
 % How many blocks you want to compare before the seizure
 nblocks = 10;
 
+%for vanleer, not applicable in this code
+vtime = 0;
+
 
 %% Get paths and load seizure info and channel info
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -62,7 +65,7 @@ Patient(pt).seizures = ptInfo.PATIENTS.(ptname).Events.Ictal;
 szNames = fieldnames(Patient(pt).seizures);
 
 %% Run the getSpikes script once as a dummy run just to produce a file of electrode locations
-[~,electrodeData] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,1);
+[~,electrodeData] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,1,0,vtime);
 
 %% Define seizure onset and offset times for each seizure
 for i = 1:length(fieldnames(Patient(pt).seizures))
@@ -127,7 +130,7 @@ for i = 1:length(Patient(pt).sz)
            
            % calculate gdf (spike times and locations) for the block
            fprintf('Detecting spikes\n');
-           [gdf,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,0);
+           [gdf,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,0,0,vtime);
            
            % Get spike sequences and spatial organization for the block
            fprintf('Detecting sequences and calculating spatial organization\n');

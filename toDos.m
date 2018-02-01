@@ -3,8 +3,28 @@
 TO DOs:
 - [] figure out why it runs out of PermGen memory on Borel but not on my
 laptop
-- [] meet with Eric to ensure on right path
-- [] confirm hard coded values
+- [] find better way to ensure reasonability of spike sequences
+- [] try incorporating the Vanleer methods
+- [] meet with Eric to ensure on right path. Specific questions:
+      - any gold standard spikes on HUP data? Or any data?
+      - discuss my method for the spatial restriction
+      - discuss the general methods (like pros and cons of restricting
+      ties)
+      - discuss whether I should make any attempt to have "clean" data or
+      do any additional artifact removal given that I am looking over a
+      much longer period of time than Hoameng did for his cognitive paper
+      - discuss whether, if I don't attempt artifact removal, I need to
+      do a new round of validation on this longer timed data set (make a
+      new set of gold standard spikes, for instance)
+      - discuss what steps, if any, I should take to ensure that sequences
+      themselves look "reasonable"
+      - discuss 2D vs 3D distances
+      - discuss this source localization idea
+      - I do the cleaning within each block. Should I instead run this
+      algorithm on all the data and then go back and put the remaining sequences back
+      into blocks?
+- [] confirm hard coded values - maybe ask Hoameng or Lohith what the voxel
+to mm conversion is in the electrode location file?
 - [] think about the value of these different cleaning measures, and think
 about why I get such a different result when I restrict ties versus not (I
 saved two sample versions in the results, one restricting ties and one not
