@@ -41,7 +41,7 @@ t2 = .015;
 
 % minimum sequence length for a sequence to even initially be considered
 % (how many spikes per sequence, 5 in the paper)
-minSeqLength = 5; 
+minSeqLength = 5;  %5
 
 % This is my criteria for potentially throwing out a sequence if there are
 % too many simultaneous spikes. If this is set to 0, I never throw any
@@ -85,7 +85,7 @@ maxSpeed = 1000;
 
 % How long the spike sequence needs to be after the spatial constraint.
 % This was 5 in Sam's code but not explicitly mentioned in the paper.
-minSpikesCloseEnough = 5;
+minSpikesCloseEnough = 5; %5
 
 % I don't know what this does.
 indexToms = 1;

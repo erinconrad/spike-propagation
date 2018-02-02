@@ -23,28 +23,34 @@ to see if the proportion differs among the clusters.
 %% Parameters to change every time
 
 % Output file name to save
-outputName = 'HUP78_oneMinBlocks.mat';
+outputName = 'HUP80_test.mat';
+%outputName = 'HUP78_oneMinBlocks.mat';
 
 % data name (for ieeg.org)
-dataName = 'HUP78_phaseII-Annotations';  
+dataName = 'HUP80_phaseII';
+%dataName = 'HUP78_phaseII-Annotations';  
 
 % CSV file with electrode locations
-csvFile = 'HUP078_T1_19971218_electrode_labels.csv';
+csvFile = 'HUP080_T1_19991213_electrode_labels.csv';
+%csvFile = 'HUP078_T1_19971218_electrode_labels.csv';
 
 % The patient name with format as used in the json file
-ptname = 'HUP078';
+ptname = 'HUP080';
+%ptname = 'HUP078';
 
 % The number of the patient
-pt = 78;
-
-% The sampling rate of the EEG data
-fs = 512;
-
+pt = 80;
+%pt = 78;
 
 % segment time (50 ms segments going from 2 ms before the spike detection
 % to 48 ms after the spike detection)
 vtime = [-0.002,0.048];
 
+% number of permutations in permutation test
+nboot = 1e4;
+
+% Remove EKG artifact? This is not set up to be able to do this
+rmEKGArtifact = 0;
 
 %% Get paths and load seizure info and channel info
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -57,8 +63,14 @@ ptInfo = loadjson(jsonfile);
 Patient(pt).seizures = ptInfo.PATIENTS.(ptname).Events.Ictal;
 szNames = fieldnames(Patient(pt).seizures);
 
+%% Load EEG data info
+% calling this with 0 and 0 means I will just get basic info like sampling
+% rate and channel labels
+data = getiEEGData(dataName,0,0,pwfile);  
+fs = data.fs;
+
 %% Run the getSpikes script once as a dummy run just to produce a file of electrode locations
-[~,electrodeData] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,1,0,vtime);
+[~,electrodeData,~] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,1,0,vtime,0,0);
 
 %% Define seizure onset and offset times for each seizure
 for i = 1:length(fieldnames(Patient(pt).seizures))
@@ -134,7 +146,9 @@ for i = 1:2%length(Patient(pt).sz)
            
            % Detect spikes and get rms power and delay maps for each block
            fprintf('Detecting spikes\n');
-           [gdf,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,0,1,vtime);
+           [gdf,~,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,0,1,vtime,0,0);
+           
+           
            
            % root mean square power
            allrms = [allrms;gdf.rms];
@@ -193,11 +207,11 @@ midx = midx{minidx};
 
 
 %% Do bootstrap
-stats =  vPermTest(cluster_assignment,szOrNot,10);
+stats =  vPermTest(cluster_assignment,szOrNot,10,nboot);
 
 
 %% Things for plots
-if 1 == 0
+if 1 == 1
 
     % Reconstruct all_features with reduced dimensionality
     temp = new_scores*new_coeff';

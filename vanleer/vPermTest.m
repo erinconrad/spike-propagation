@@ -1,4 +1,4 @@
-function stats =  vPermTest(cluster_assignment,szOrNot,nclusters)
+function stats =  vPermTest(cluster_assignment,szOrNot,nclusters,nboot)
 
 %{
 
@@ -11,7 +11,6 @@ versus preictal
 
 
 alpha = 0.01;
-nboot = 1e3;
 
 % This is how many of the smallest and largest proportions from the
 % permutations to take as the significance confidence interval. Basically,

@@ -1,5 +1,5 @@
-function [gdf,electrodeData] = getSpikeTimes(desiredTimes,dataName,...
-    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime)
+function [gdf,electrodeData,extraOutput] = getSpikeTimes(desiredTimes,dataName,...
+    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -144,12 +144,22 @@ if ignore == 1
         chNames{i} = chName;
 
         %% ignore certain electrodes as suggested in the json file
+        if keepEKG == 0
         
         % Ignore certain electrodes
-        for j = 1:length(ignoreElectrodes)
-            if strcmp(chName,ignoreElectrodes{j}) == 1
-                chIgnore(i) = 1;
+            for j = 1:length(ignoreElectrodes)
+                if strcmp(chName,ignoreElectrodes{j}) == 1
+                    chIgnore(i) = 1;
+                end
             end
+        elseif keepEKG == 1
+            % only keep the EKG
+           if contains(chName,'EKG') == 1
+               chIgnore(i) = 0;
+           else
+               chIgnore(i) = 1;
+           end
+       
         end
 
     end
@@ -256,5 +266,10 @@ elseif dummyRun == 0
     
 end
 
+if outputData == 1
+   extraOutput = {data.values,unignoredChLabels};
+else
+   extraOutput = 0; 
+end
 
 end

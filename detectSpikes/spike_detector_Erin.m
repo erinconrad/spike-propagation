@@ -97,7 +97,7 @@ main_hum_freq=50; % (-h)
 beta=Inf;    % (-b)
 beta_win=20; % (-bw)
 beta_AR=12; % (-br)
-f_type=3; % 1-cheby2, 2-but, 3-fir (-ft) ERIN CHANGED THIS TO 3 (WAS PREVIOUSLY 1)
+f_type=1; % 1-cheby2, 2-but, 3-fir (-ft) ERIN CHANGED THIS TO 3 (WAS PREVIOUSLY 1)
 discharge_tol=0.005; % (-dt)
 polyspike_uniom_time=0.12; % (-pt)
 
@@ -148,7 +148,7 @@ for i=1:size(SET{1,1},1)
     end
 end
 
-if 1 == 0
+if 1 == 1
     % Erin turned this off
     % signal resampling to 200 Hz -------------------------------------------
     if fs>200
@@ -303,7 +303,9 @@ if  1 == 1
     if exist('parfor')==5 % If you don't have "Parallel Computing Toolbox", only standard for-cycle will be performed
 
         parfor ch=1:size(df,2)
+            
             [envelope(:,ch),markers_high(:,ch),markers_low(:,ch),background(:,ch,:),envelope_cdf(:,ch),envelope_pdf(:,ch)]=one_channel_detect(df(:,ch),fs,index,winsize,k1,k2,polyspike_uniom_time); % ~ = prah_int(:,ch,:)
+        
         end
 
     else % If you do not have "Parallel Computing Toolbox", only standard for-cycle will be performed
@@ -480,9 +482,9 @@ switch type
         [bl,al] = cheby2(n,Rs,Ws);
         
         % high pass
-        % Erin changed this to make it not crash. It used to be:
-        %Wp = 2*bandwidth(1)/fs; Ws = 2*bandwidth(1)/fs- 0.05;
-        Wp = 2*bandwidth(1)/fs; Ws = 2*bandwidth(1)/fs-.036;
+        
+        Wp = 2*bandwidth(1)/fs; Ws = 2*bandwidth(1)/fs- 0.05;
+        
         Rp = 6; Rs = 60;
         [n,Ws] = cheb2ord(Wp,Ws,Rp,Rs);
         [bh,ah] = cheby2(n,Rs,Ws,'high');

@@ -1,10 +1,9 @@
 %{
 
 TO DOs:
+- [] think more about the EKG artifact detection problem
 - [] figure out why it runs out of PermGen memory on Borel but not on my
 laptop
-- [] find better way to ensure reasonability of spike sequences
-- [] try incorporating the Vanleer methods
 - [] meet with Eric to ensure on right path. Specific questions:
       - any gold standard spikes on HUP data? Or any data?
       - discuss my method for the spatial restriction
@@ -39,6 +38,15 @@ wherever I see the spike is where the actual source of the spike is.
 Instead it could be that there is a spike below the surface that I am
 seeing at multiple locations on the cortex at the same time
 
+- [x] figure out why I'm mostly detecting EKG artifact-seems to be patient
+specific??
+     [x] make a script to more easily visualize detected spikes
+     [x] try taking out the change i made to the Janca code to see if it is
+     still a problem - yes
+     [x] try it on a diff patient - not as bad on HUP80
+     [x] write a script to take out spikes that occur too close to spikes
+     detected on the ekg channel
+- [x] try incorporating the Vanleer methods
 - [x] correct some of the hard coded numbers to make sure physiologic. I
 downloaded a paper Hirsh1991 (Synaptic physiology of horizontal connections
 in th cat's visual cortex), which says that CV is about 0.3-1 m/s

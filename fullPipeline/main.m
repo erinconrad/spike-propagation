@@ -26,33 +26,35 @@ tic
 %% Parameters to change every time
 
 % Output file name to save
-outputName = 'HUP78_oneMinBlocks.mat';
+outputName = 'HUP80_test.mat';
+%outputName = 'HUP78_oneMinBlocks.mat';
 
 % data name (for ieeg.org)
-dataName = 'HUP78_phaseII-Annotations';  
+dataName = 'HUP80_phaseII';
+%dataName = 'HUP78_phaseII-Annotations';  
 
 % CSV file with electrode locations
-csvFile = 'HUP078_T1_19971218_electrode_labels.csv';
+csvFile = 'HUP080_T1_19991213_electrode_labels.csv';
+%csvFile = 'HUP078_T1_19971218_electrode_labels.csv';
 
 % The patient name with format as used in the json file
-ptname = 'HUP078';
+ptname = 'HUP080';
+%ptname = 'HUP078';
 
 % The number of the patient
-pt = 78;
-
-% The sampling rate of the EEG data
-fs = 512;
+pt = 80;
+%pt = 78;
 
 % How many seconds you want per block. Max allowable appears to be 2000, or
 % possibly less
-sPerBlock = 60;
+sPerBlock = 1000;
 
 % How many blocks you want to compare before the seizure
-nblocks = 10;
+nblocks = 3;
 
-%for vanleer, not applicable in this code
-vtime = 0;
-
+% Remove EKG artifact?
+rmEKGArtifact = 1;
+prox = 0.01; %10 ms
 
 %% Get paths and load seizure info and channel info
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -64,8 +66,14 @@ ptInfo = loadjson(jsonfile);
 Patient(pt).seizures = ptInfo.PATIENTS.(ptname).Events.Ictal;
 szNames = fieldnames(Patient(pt).seizures);
 
+%% Load EEG data info
+% calling this with 0 and 0 means I will just get basic info like sampling
+% rate and channel labels
+data = getiEEGData(dataName,0,0,pwfile);  
+fs = data.fs;
+
 %% Run the getSpikes script once as a dummy run just to produce a file of electrode locations
-[~,electrodeData] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,1,0,vtime);
+[~,electrodeData,~] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,1,0,0,0,0);
 
 %% Define seizure onset and offset times for each seizure
 for i = 1:length(fieldnames(Patient(pt).seizures))
@@ -76,7 +84,7 @@ end
 %% Define the start and stop times of each block prior to the seizure
 
 % Loop through all the seizures
-for i = 1:length(Patient(pt).sz)
+for i = 1:1%length(Patient(pt).sz)
     
     
     
@@ -128,11 +136,21 @@ for i = 1:length(Patient(pt).sz)
            % Establish start and stop times
            desiredTimes = Patient(pt).sz(i).runTimes(j,1:2);
            
-           % calculate gdf (spike times and locations) for the block
+           %% calculate gdf (spike times and locations) for the block
            fprintf('Detecting spikes\n');
-           [gdf,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,0,0,vtime);
+           [gdf,~,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,0,0,0,0,0);
            
-           % Get spike sequences and spatial organization for the block
+           %% EKG artifact removal
+           if rmEKGArtifact == 1
+               % calculate gdf and values of EKG channels
+               [gdfEKG,~,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,...
+                   ptInfo,pwfile,0,0,0,0,1);
+
+               % remove spikes that occur too close to EKG channel spikes
+                gdf = removeEKGArtifact(gdf,gdfEKG,prox);
+           end
+           
+           %% Get spike sequences and spatial organization for the block
            fprintf('Detecting sequences and calculating spatial organization\n');
            Patient(pt).sz(i).block(j).data = mainSequences(gdf,electrodeData, fs);
            toc
