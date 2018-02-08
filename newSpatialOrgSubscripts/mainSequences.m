@@ -90,6 +90,8 @@ minSpikesCloseEnough = 5; %5
 % I don't know what this does.
 indexToms = 1;
 
+cleaning = 0;
+
 % Cleaning parameters
 
 % spatial and temporaly thresholds used for cleaning algorithm. It finds all
@@ -146,19 +148,30 @@ chans             = Patient.xyChan(:,1);
 % be much more complicated to do
 
 dirtysequences = sequences;
+if cleaning == 1
+    
+if size(sequences,2) >2
 iclean =  spt_seqclust(Patient.xyChan,sequences,ss_thresh,tt_thresh);
 y = zeros(length(iclean)*2, 1); y(1:2:end-1)=(iclean-1)*2+1; y(2:2:end)=(iclean-1)*2+2;
 sequences = dirtysequences(:,y);
+end
+
+%% Get recruitment latency and spatial organization
+if size(sequences,2) >2
+[recruitmentLatencySingle,spikeCount] = getRecruitmentLatency(sequences,Patient.xyChan);
+[Patient.avgRecruitmentLat,Patient.spatialOrg] = getSpatialOrg(recruitmentLatencySingle,Patient.xyChan,indexToms,dmin);
+else
+    Patient.avgRecruitmentLat = nan;Patient.spatialOrg = nan;
+end
 
 Patient.discarded.cleaning = -size(sequences,2)/2 + size(dirtysequences,2)/2;
 Patient.discarded.total = Patient.discarded.total + Patient.discarded.cleaning;
+
+end
+
+
 Patient.discarded.remaining = Patient.discarded.origNum - Patient.discarded.total;
-
 Patient.sequences = sequences;
-
-%% Get recruitment latency and spatial organization
-[recruitmentLatencySingle,spikeCount] = getRecruitmentLatency(sequences,Patient.xyChan);
-[Patient.avgRecruitmentLat,Patient.spatialOrg] = getSpatialOrg(recruitmentLatencySingle,Patient.xyChan,indexToms,dmin);
 
 
 

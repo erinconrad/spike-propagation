@@ -8,14 +8,15 @@ electrodes corresponds to how often that path was traversed.
 
 %}
 
-function visualizeAvgPath(Patient)
+function visualizeAvgPath(P,sz,block)
 
 %% Parameters
 
-% what lead channel you want to look at
+Patient = P(80).sz(sz).block(block).data;
 
 % output file name
-filename = ['test','.jpg'];
+[~,~,~,resultsFolder,~] = fileLocations;
+filename = ['HUP080_avgsequences','.png'];
 
 % base size of electrodes
 baseSizeElec = 20;
@@ -41,7 +42,7 @@ pathHits = zeros(length(allChs),length(allChs));
 %% Get the sequence data
 % Change these lines each time. Which segment and which starting channel
 % and which spike sequence to visualize
-temp = Patient.sequences; % which segment and starting channel
+temp = Patient.cleanseq;%sequences; % which segment and starting channel
 
 % Remove the times, now this has as many columns as there are sequences
 temp = temp(:,1:2:end-1);
@@ -90,10 +91,10 @@ for i = 1:length(allChs)
    if chHits(i) ~= 0
        
        % weight the dot by how many hits
-      circleSize = baseSizeElec + (chHits(i)-1)*multElec;
+      %circleSize = baseSizeElec + (chHits(i)-1)*multElec;
       
       % plot the dot
-      scatter3(chLocs(i,1) ,chLocs(i,2),chLocs(i,3),circleSize,'r','filled');
+      %scatter3(chLocs(i,1) ,chLocs(i,2),chLocs(i,3),circleSize,'r','filled');
       
      
    end
@@ -115,6 +116,6 @@ for i = 1:length(allChs)
 end
 
 
-saveas(fig,filename);
+saveas(fig,[resultsFolder,filename]);
 
 end

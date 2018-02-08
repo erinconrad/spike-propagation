@@ -8,7 +8,14 @@ spike (which is not actually true).
 
 %}
 
-function visualizeChLocations(Patient,s)
+function visualizeChLocations(Patient,sz,b,s)
+
+% output file name
+filename = ['HUP080_sz_',sprintf('%d',sz),'_block_',sprintf('%d',b),...
+    '_sequence_',sprintf('%d',s),'.gif'];
+pt = 80;
+
+[~,~,~,resultsFolder,~] = fileLocations;
 
 if nargin == 0
     s = 3;
@@ -17,10 +24,9 @@ if nargin == 0
 end
 
 % Get the channel locations for the patient
-chLocs = Patient.xyChan(:,2:4);
+chLocs = Patient(pt).sz(sz).block(b).data.xyChan(:,2:4);
 
-% output file name
-filename = ['test',sprintf('%d',s),'.gif'];
+
 
 % Parameters
 circleSize = 20;
@@ -28,7 +34,7 @@ delay = 0.4; % time delay between steps
 
 % Change these lines each time. Which segment and which starting channel
 % and which spike sequence to visualize
-temp = Patient.sequences; % which segment and starting channel
+temp = Patient(pt).sz(sz).block(b).data.sequences; % which segment and starting channel
 seq = temp(:,(s-1)*2+1:(s-1)*2+2); % which sequence
 seq = seq(any(seq~=0,2),:); % remove rows of zeros
 
@@ -68,9 +74,9 @@ for iTime = 1:size(seq,1)
     [imind,cm] = rgb2ind(im,256);
     
     if iTime == 1
-        imwrite(imind,cm,filename,'gif', 'Loopcount',inf,'DelayTime',delay);
+        imwrite(imind,cm,[resultsFolder,filename],'gif', 'Loopcount',inf,'DelayTime',delay);
     else
-        imwrite(imind,cm,filename,'gif','WriteMode','append','DelayTime',delay);
+        imwrite(imind,cm,[resultsFolder,filename],'gif','WriteMode','append','DelayTime',delay);
     end
 
     close(fig)

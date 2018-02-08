@@ -1,18 +1,9 @@
-function visualizeSpikes
+function visualizeSequences(Patient,whichSz,block,s)
 
 
 %% Parameters to change every time
 
 doplot =  1;
-
-% which channels
-%whichCh = [50,51,52];
-
-% which seizure
-whichSz = 2;
-
-% ictal or pre-ictal
-ictal = 0;
 
 % data name (for ieeg.org)
 dataName = 'HUP80_phaseII';
@@ -57,17 +48,11 @@ for i = 1:length(fieldnames(Patient(pt).seizures))
 end
 
 %% Define the start and stop times of each seizure
-
-duration = Patient(pt).sz(whichSz).offset - Patient(pt).sz(whichSz).onset;
-
-if ictal == 1
-    times = [Patient(pt).sz(whichSz).onset,Patient(pt).sz(whichSz).offset];
-else
-    times = [Patient(pt).sz(whichSz).onset-duration*1,Patient(pt).sz(whichSz).offset];
-   
-end
-
-times = 34117+[800,850];
+blockOnset = Patient(80).sz(whichSz).runTimes(block,1);
+time_col = Patient(pt).sz(whichSz).block(block).data.sequences(:,(s-1)*2+2);
+chan_col = Patient(pt).sz(whichSz).block(block).data.sequences(:,(s-1)*2+1);
+times = blockOnset+[time_col(1)-8,time_col(1)+8];
+whichCh = chan_col(1:5);
 
 %% Load EEG data info
 % calling this with 0 and 0 means I will just get basic info like sampling
@@ -96,12 +81,6 @@ if rmEKGArtifact == 1
     gdf = removeEKGArtifact(gdf,gdfEKG,prox);
 end
 
-%% Get which channels to plot
-[~,chIds] = ismember(Patient(pt).sz(whichSz).electrodes,unignoredChLabels);
-
-% Only plot the first 3
-whichCh = chIds(1:3);
-whichCh = [80 79 70];
 
 %% Plot 
 if doplot == 1
@@ -129,9 +108,8 @@ legend(pl,legnames,'Location','northeast');
 xlabel('Time (s)');
 ylabel('Amplitude');
 
-if ictal == 1, ictext = 'Ictal'; else, ictext = 'Pre-ictal and ictal'; end
-title(sprintf('%s data and spike detections for %s seizure %d',...
-    ictext,ptname,whichSz));
+title(sprintf('Data and spike detections for %s seizure %d block %d sequences %d',...
+    ptname,whichSz,block,s));
 set(gca,'fontsize',15);
 
 
@@ -151,9 +129,10 @@ ylim(yl)
 end
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.6, 1, 0.4]);
 
-outputFile = [ptname,'_',ictext,'_sz_',sprintf('%d',whichSz),'.png'];
+outputFile = [ptname,'_','_sz_',sprintf('%d',whichSz),'_block_',...
+    sprintf('%d',block),'seq_',sprintf('%d',s),'.png'];
 
-%saveas(gcf,[resultsFolder,outputFile])
+saveas(gcf,[resultsFolder,outputFile])
 
 
 fprintf('no\n');

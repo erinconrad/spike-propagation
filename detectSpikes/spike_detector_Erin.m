@@ -97,7 +97,7 @@ main_hum_freq=50; % (-h)
 beta=Inf;    % (-b)
 beta_win=20; % (-bw)
 beta_AR=12; % (-br)
-f_type=1; % 1-cheby2, 2-but, 3-fir (-ft) ERIN CHANGED THIS TO 3 (WAS PREVIOUSLY 1)
+f_type=3; % 1-cheby2, 2-but, 3-fir (-ft) ERIN CHANGED THIS TO 3 (WAS PREVIOUSLY 1)
 discharge_tol=0.005; % (-dt)
 polyspike_uniom_time=0.12; % (-pt)
 
@@ -148,7 +148,7 @@ for i=1:size(SET{1,1},1)
     end
 end
 
-if 1 == 1
+if 1 == 0
     % Erin turned this off
     % signal resampling to 200 Hz -------------------------------------------
     if fs>200
