@@ -1,5 +1,5 @@
 function [gdf,electrodeData,extraOutput] = getSpikeTimes(desiredTimes,dataName,...
-    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG)
+    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -21,11 +21,7 @@ and I ignore them when I run the spike detector.
 
 It has the ability to use one of two spike detection algorithms: 
 - an algorithm by Janca et al. 2014, which detects transient changes in a
-signal envelope. I modified this slightly because this begins by
-downsampling the data to 200 Hz, which I don't want (higher resolution
-important for picking out the order of spikes in the sequence). I also
-changed the default filter type from Chebyshev II to FIR because it
-appeared to work better with the higher frequency.
+signal envelope.
 - an algorithm that was used in Eric Marsh's lab, which I believe was
 written by Camilo Bermudez 7/31/13, and appears to work by finding peaks in
 high frequency data and then requires that the peaks have a minimum
@@ -37,7 +33,12 @@ Janca, Radek, et al. "Detection of interictal epileptiform discharges using sign
 %}
 
 %% Parameters to change each time
-whichDetector = 1; %1 = modified Janca detector, 2 = Bermudez detector
+whichDetector = 3; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
+timeToLookForPeak = .025; % look 25 ms before and 25 ms after the detected spike to find the peak 
+
+setChLimits = 1;
+multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
+multiChTime = .025; % The time period over which spikes need to occur across multiple channels to toss
 
 % If you didn't pass it arguments, then use the ones written here
 if nargin == 0
@@ -46,7 +47,7 @@ if nargin == 0
     dummyRun = 0;
     
     % These times are in seconds and correspond to the ieeg.org times
-    desiredTimes = [267000,268000]; %[267375,267415]; is a seizure % the first and last seconds you want to look at 
+    desiredTimes = [267375,267415]; %[267375,267415]; is a seizure % the first and last seconds you want to look at 
     
     
     % the file to write to (will only write if you didn't pass it arguments)
@@ -54,14 +55,15 @@ if nargin == 0
     
     % call path file (this defines the locations of various files)
     spikePaths
-    fileLocations
+    [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
     
     % Load pt file (contains seizure times and which electrodes to ignore - like EKG leads)
     ptInfo = loadjson(jsonfile);
-    
-    
+    vanleer = 0;
+    outputData = 1;
+    keepEKG = 0;
     addpath('/Users/erinconrad/Desktop/residency stuff/R25/actual work/scripts/my scripts/makeChannelStructs/');
-
+    ignore = 0; % should we ignore any electrodes? 
 end
 
 
@@ -69,7 +71,7 @@ end
 
 
 %% Parameters that probably don't need to change each time
-ignore = 1; % should we ignore any electrodes? This breaks if I say no.
+
 
 % Bermudez algorithm parameters
 tmul=13; % threshold multiplier
@@ -100,9 +102,6 @@ elseif length(ptnum) < 2
     fprintf('The name of the patient is unexpected\n');
 end
 
-% now we can look up the name of the patient in the json file format to see
-% which electrodes to ignore
-ignoreElectrodes = ptInfo.PATIENTS.(ptname).IGNORE_ELECTRODES;
 
 
 %% Get electrodes to ignore
@@ -111,38 +110,54 @@ chNames = cell(length(data.chLabels),1);
 
 % initialize which channels to ignore
 chIgnore = zeros(length(data.chLabels),1);
+nchan = length(data.chLabels);
+channels = 1:nchan;
+
+     % loop through all channel labels
+     for i = 1:length(data.chLabels)   
+         
+         if funnyname == 0
+            %% parsing of channel names (labeled odd in the iEEG)
+
+            % get the name
+            origStr = data.chLabels{i};
+
+            % split it with spaces
+            C = strsplit(origStr,' ');
+
+            % I would expect all of the names to start with EEG
+            if strcmp(C{1},'EEG') == 0
+                fprintf('Warning, there is something weird in the channel labels for channel %d\n',i);
+            end
+
+            % Remove leading zero from the number
+            if strcmp(C{3}(1),'0') == 1
+                endOfChan = C{3}(2:end);
+            else
+                endOfChan = C{3};
+            end
+
+            % Remove -Ref
+            D = strsplit(endOfChan,'-');
+
+            % Final channel name
+            chName = [C{2},D{1}];
+            chNames{i} = chName;
+         else
+             origStr = data.chLabels{i};
+             chName = origStr;
+             chNames{i} = chName;
+         end
+    end
 
 if ignore == 1
+% now we can look up the name of the patient in the json file format to see
+% which electrodes to ignore
+ignoreElectrodes = ptInfo.PATIENTS.(ptname).IGNORE_ELECTRODES;
 
-    % loop through all channel labels
+   
     for i = 1:length(data.chLabels)
-        %% parsing of channel names (labeled odd in the iEEG)
-        
-        % get the name
-        origStr = data.chLabels{i};
-
-        % split it with spaces
-        C = strsplit(origStr,' ');
-
-        % I would expect all of the names to start with EEG
-        if strcmp(C{1},'EEG') == 0
-            fprintf('Warning, there is something weird in the channel labels for channel %d\n',i);
-        end
-
-        % Remove leading zero from the number
-        if strcmp(C{3}(1),'0') == 1
-            endOfChan = C{3}(2:end);
-        else
-            endOfChan = C{3};
-        end
-
-        % Remove -Ref
-        D = strsplit(endOfChan,'-');
-
-        % Final channel name
-        chName = [C{2},D{1}];
-        chNames{i} = chName;
-
+        chName = chNames{i};
         %% ignore certain electrodes as suggested in the json file
         if keepEKG == 0
         
@@ -163,7 +178,10 @@ if ignore == 1
         end
 
     end
-
+    
+    channels = find(chIgnore == 0);
+    unignoredChLabels = chNames(channels);
+    nchan = length(channels);
 end
 
 
@@ -172,15 +190,7 @@ end
 % get the channels I want to look at. Also make unignoredChLabels, which is
 % the length of the new channel array and keeps track of the channel
 % identities of these newly indexed channels
-channels = find(chIgnore == 0);
-unignoredChLabels = cell(length(channels),1);
-j = 0;
-for i = 1:length(data.chLabels)
-    if chIgnore(i) == 0
-        j = j+1;
-        unignoredChLabels{j} = chNames{i};
-    end
-end
+
 
 if dummyRun == 1
     
@@ -201,6 +211,17 @@ elseif dummyRun == 0
 
     % get the data from those indices and channels (ignoring ignored channels)
     data = getiEEGData(dataName,channels,indices,pwfile);
+    
+    %% Remove channels that are just nans and zeros
+    allsum = zeros(nchan,1);
+    for i = 1:nchan
+    allsum(i) = nansum(abs(data.values(:,i)));
+    end
+    nanidx = (allsum == 0);
+    data.values = data.values(:,~nanidx);
+    channels = find(nanidx == 0);
+    unignoredChLabels = chNames(channels);
+    nchan = length(channels);
 
     %% Run spike detector
     if whichDetector == 1
@@ -238,9 +259,117 @@ elseif dummyRun == 0
 
             out.pos = gdf(:,2); out.chan = gdf(:,1);
         end
+        
+    elseif whichDetector == 3
+        
+        [out,~,~,~,~,~] = spike_detector_hilbert_v16_nodownsample(data.values,data.fs,'-h 60');
+
+        % reorder spikes by time
+        [timeSort,I] = sort(out.pos);
+        chanSort = out.chan(I);
+
+        % make gdf
+        if isempty(out.pos) == 1
+            fprintf('Warning: No spikes detected\n');
+        else
+            %fprintf('Detected %d spikes\n',length(out.pos));
+            gdf = [chanSort,timeSort];
+        end
 
     end
+    
+    %% Re-define the spike time as the peak
+    gdfnew = gdf;
+    % convert times to indices
+    gdfIdx = round([gdf(:,1),gdf(:,2)*data.fs]);
+    timeToLookForPeakIdx = round(timeToLookForPeak*data.fs);
+    
+    % Loop through all spikes
+    for i = 1:size(gdf,1)
+        
+       % define the period over which to search for the peak relative to
+       % the detected spike time (50 ms total)
+       spikePeriod = [gdfIdx(i,2)-timeToLookForPeakIdx:gdfIdx(i,2)+timeToLookForPeakIdx];
+       
+       % make sure it's not less than 1 or more than the max of the data
+       spikePeriod = spikePeriod(spikePeriod>0);
+       spikePeriod = spikePeriod(spikePeriod<size(data.values,1));
+      
+       % get the channel of the spike
+       ch = gdf(i,1);
+       
+       % Get the index of the maximum
+       [~,I] = max(data.values(spikePeriod,ch));
+       
+       % Get the index relative to the whole block
+       newSpikeTimeIdx = spikePeriod(1)-1+I;
+       
+       % put it back into seconds
+       newSpikeTime = newSpikeTimeIdx/data.fs;
+       gdfnew(i,2) = newSpikeTime;
+        
+    end
+    gdf=gdfnew;
+    
+    %% reorder gdf
+    [timesort,I] = sort(gdf(:,2));
+    chanSort = gdf(I,1);
+    gdf = [chanSort,timesort];
+    
+    
+    %% Toss spikes that occur across too high a percentage of channels at the same time
+    if setChLimits == 1
+        newgdf =  gdf;
+        tooManyChs = [];
+        i = 1; % start with i = 1 (the first spike)
+        % Loop through the spikes (we are going to variably move through the spikes)
+        while 1
+            scount = 1;
 
+            % if i is the last spike, break
+            if i == size(newgdf,1)
+                break
+            end
+
+           % for each spike, loop through subsequent spikes to see how many
+           % there are across multiple channels occuring at the same time
+           for j = i+1:size(newgdf,1)
+
+               % Get the time difference between the first spike and the last
+               % spike
+               tdiff = newgdf(j,2)-newgdf(i,2);
+
+               % If the difference is small enough, increase the count
+               if tdiff < multiChTime
+                   scount = scount + 1;
+               end
+
+               % if the total number of channels spiking in this very close
+               % proximity is >80% of the total number of channels
+               if scount > 0.8*nchan
+
+                    % Remove these spikes
+                    tooManyChs = [tooManyChs;newgdf(i:j,:)];
+                    newgdf(i:j,:) = [];
+
+                    % Break the inner for loop and move to the next spike
+                    i = j;
+                    break
+               end
+
+           end
+
+           % advance the index of the spike
+           i = i+1;
+        end
+        fprintf('%d total spikes detected\n',size(gdf,1));
+        fprintf('Percentage of spikes discarded for being across too many channels: %1.1f\n',...
+            size(tooManyChs,1)/size(gdf,1)*100)
+        fprintf('%d spikes remain\n',size(newgdf,1));
+        gdf = newgdf;
+    end
+    
+    %% For vanleer
     if vanleer == 1
         % If doing the vanleer approach, input the gdf into a separate
         % function to get delay and rms info

@@ -1,41 +1,54 @@
-function visualizeSpikes
+function visualizeSpikes(dataName,csvFile,ptname,pt,times,whichCh)
 
 
 %% Parameters to change every time
 
+% ictal or pre-ictal
+ictal = 1;
 doplot =  1;
-
-% which channels
-%whichCh = [50,51,52];
-
 % which seizure
 whichSz = 2;
 
-% ictal or pre-ictal
-ictal = 0;
+if nargin == 0
+% which channels
+%whichCh = [50,51,52];
+
+
+
+
 
 % data name (for ieeg.org)
-dataName = 'HUP80_phaseII';
+dataName = 'I022_P001_D05';
+%dataName = 'HUP80_phaseII';
 %dataName = 'HUP78_phaseII-Annotations';  
 
 % CSV file with electrode locations
-csvFile = 'HUP080_T1_19991213_electrode_labels.csv';
+csvFile = [];
+%csvFile = 'HUP080_T1_19991213_electrode_labels.csv';
 %csvFile = 'HUP078_T1_19971218_electrode_labels.csv';
 
 % The patient name with format as used in the json file
-ptname = 'HUP080';
+ptname = 'Cog patient';
+%ptname = 'HUP080';
 %ptname = 'HUP078';
 
 % The number of the patient
 pt = 80;
 %pt = 78;
 
+times = [1616,1636];
+end
+
 % Remove EKG artifact?
 rmEKGArtifact = 0;
 
 
-%% Get paths and load seizure info and channel info
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
+electrodeFile = 0;
+ptInfo = 1;
+if isempty(csvFile) == 0
+%% Get paths and load seizure info and channel info
+
 electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
 addpath(p1);
@@ -56,6 +69,7 @@ for i = 1:length(fieldnames(Patient(pt).seizures))
     
 end
 
+
 %% Define the start and stop times of each seizure
 
 duration = Patient(pt).sz(whichSz).offset - Patient(pt).sz(whichSz).onset;
@@ -66,8 +80,12 @@ else
     times = [Patient(pt).sz(whichSz).onset-duration*1,Patient(pt).sz(whichSz).offset];
    
 end
+end
 
-times = 34117+[800,850];
+%times = 34117+[800,850];
+%times = 36000 + [0,500];
+%times = [37000 37116];
+
 
 %% Load EEG data info
 % calling this with 0 and 0 means I will just get basic info like sampling
@@ -77,35 +95,37 @@ fs = data.fs;
 
 %% calculate gdf (spike times and locations) and output the data in that time
 fprintf('Detecting spikes\n');
-[gdf,~,extraoutput] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0);
+[gdf,~,extraoutput] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,0,1);
 values = extraoutput{1};
 unignoredChLabels = extraoutput{2};
 plottimes =  [1:size(values,1)]/fs;
 
 
-%% calculate gdf and values of EKG channels
-[gdfEKG,~,extraoutputEKG] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,1);
-valuesEKG = extraoutputEKG{1};
-unignoredChLabelsEKG = extraoutputEKG{2};
-plottimesEKG =  [1:size(values,1)]/fs;
+
 
 %% remove spikes that occur too close to EKG channel spikes
 if rmEKGArtifact == 1
+    %% calculate gdf and values of EKG channels
+[gdfEKG,~,extraoutputEKG] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,1,0,1);
+valuesEKG = extraoutputEKG{1};
+unignoredChLabelsEKG = extraoutputEKG{2};
+plottimesEKG =  [1:size(values,1)]/fs;
+    
+    
     prox = 0.01; %10 ms
     oldgdf =  gdf;
     gdf = removeEKGArtifact(gdf,gdfEKG,prox);
 end
 
 %% Get which channels to plot
+if isempty(csvFile) == 0
 [~,chIds] = ismember(Patient(pt).sz(whichSz).electrodes,unignoredChLabels);
-
-% Only plot the first 3
-whichCh = chIds(1:3);
-whichCh = [80 79 70];
+whichCh = chIds(1:5);
+end
 
 %% Plot 
 if doplot == 1
-colors = {'b','r','g','c','m'};
+colors = {'b','r','g','c','m','b','r','g','c','m'};
 figure
 range = 0;
 pl = zeros(length(whichCh),1);

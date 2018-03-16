@@ -1,5 +1,6 @@
-function visualizeSequences(Patient,whichSz,block,s)
-
+function visualizeSequences2(Patient,whichSz,block,s)
+% This is another function to plot sequences, using the spike times from
+% the inputted structure
 
 %% Parameters to change every time
 
@@ -20,10 +21,6 @@ ptname = 'HUP080';
 % The number of the patient
 pt = 80;
 %pt = 78;
-
-% Remove EKG artifact?
-rmEKGArtifact = 0;
-
 
 %% Get paths and load seizure info and channel info
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -60,27 +57,15 @@ whichCh = chan_col(1:5);
 data = getiEEGData(dataName,0,0,pwfile);  
 fs = data.fs;
 
-%% calculate gdf (spike times and locations) and output the data in that time
+%% Get the data for these times
 fprintf('Detecting spikes\n');
-[gdf,~,extraoutput] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,1,0);
+[~,~,extraoutput] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0);
 values = extraoutput{1};
 unignoredChLabels = extraoutput{2};
 plottimes =  [1:size(values,1)]/fs;
 
-
-%% calculate gdf and values of EKG channels
-[gdfEKG,~,extraoutputEKG] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,1,1,0);
-valuesEKG = extraoutputEKG{1};
-unignoredChLabelsEKG = extraoutputEKG{2};
-plottimesEKG =  [1:size(values,1)]/fs;
-
-%% remove spikes that occur too close to EKG channel spikes
-if rmEKGArtifact == 1
-    prox = 0.01; %10 ms
-    oldgdf =  gdf;
-    gdf = removeEKGArtifact(gdf,gdfEKG,prox);
-end
-
+%% Get the spike times
+spikes = [chan_col,time_col];
 
 %% Plot 
 if doplot == 1
@@ -96,7 +81,7 @@ for i = 1:length(whichCh)
     
     
     % find the times of the spikes with the desired channel
-    spiketimes = gdf(gdf(:,1) == ch,2);
+    spiketimes = spikes(spikes(:,1) == ch,2)-time_col(1)+8;
     
     spikeamp = ones(size(spiketimes,1),1)*max(values(:,ch))-range;
     

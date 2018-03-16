@@ -50,6 +50,7 @@ outputName = 'HUP80_allsz_5blocks_icandpreic_1000s_cleanall2.mat';
 %outputName = 'HUP78_oneMinBlocks.mat';
 
 % data name (for ieeg.org)
+
 dataName = 'HUP80_phaseII';
 %dataName = 'HUP78_phaseII-Annotations';  
 
@@ -67,10 +68,13 @@ pt = 80;
 
 % How many seconds you want per block. Max allowable appears to be 2000, or
 % possibly less
-sPerBlock = 1000;
+sPerBlock = 500;
+
+% Include ictal period?
+includeIc = 0;
 
 % How many blocks you want to compare before the seizure
-nblocks = 5;
+nblocks = 1;
 
 % Remove EKG artifact?
 rmEKGArtifact = 0;
@@ -94,7 +98,7 @@ data = getiEEGData(dataName,0,0,pwfile);
 fs = data.fs;
 
 %% Run the getSpikes script once as a dummy run just to produce a file of electrode locations
-[~,electrodeData,~] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,1,0,0,0,0);
+[~,electrodeData,~] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,1,0,0,0,0,1,0);
 
 %% Define seizure onset and offset times for each seizure
 for i = 1:length(fieldnames(Patient(pt).seizures))
@@ -105,7 +109,7 @@ end
 %% Define the start and stop times of each block prior to the seizure
 
 % Loop through all the seizures
-for i = 1:length(Patient(pt).sz)
+for i = 1:1%length(Patient(pt).sz)
     
     
     
@@ -124,7 +128,11 @@ for i = 1:length(Patient(pt).sz)
     % The initial time of the first block for the seizure is the seizure
     % onset time minus the number of blocks x time per block (nblocks -1
     % makes it include the ictal period)
-    initialTime = Patient(pt).sz(i).onset-(nblocks-1)*sPerBlock-1;
+    if includeIc == 1
+        initialTime = Patient(pt).sz(i).onset-(nblocks-1)*sPerBlock-1;
+    elseif includeIc == 0
+        initialTime = Patient(pt).sz(i).onset-(nblocks)*sPerBlock-1;
+    end
     
     % Loop through the blocks
     for j = 1:nblocks
@@ -149,7 +157,7 @@ for i = 1:length(Patient(pt).sz)
    if isempty(Patient(pt).sz(i).runTimes) == 0
        
        % Loop through all blocks
-       for j = 1:length(Patient(pt).sz(i).runTimes)
+       for j = 1:size(Patient(pt).sz(i).runTimes,1)
            tic
            fprintf('Doing block %d of %d in seizure %d of %d\n',...
                j,length(Patient(pt).sz(i).runTimes),i,length(Patient(pt).sz));
@@ -160,7 +168,8 @@ for i = 1:length(Patient(pt).sz)
            
            %% calculate gdf (spike times and locations) for the block
            fprintf('Detecting spikes\n');
-           [gdf,~,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,0,0,0,0,0);
+           [gdf,~,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,0,0,0,0,0,1,0);
+           size(gdf)
            
            %% EKG artifact removal
            if rmEKGArtifact == 1
@@ -292,7 +301,7 @@ end
 %% Put the spatial organizations together in a single array for each seizure
 for i = 1:length(Patient(pt).sz)
    if isempty(Patient(pt).sz(i).runTimes) == 0
-       for j = 1:length(Patient(pt).sz(i).runTimes)
+       for j = 1:size(Patient(pt).sz(i).runTimes,1)
            Patient(pt).sz(i).spatialOrg(j) = ...
                Patient(pt).sz(i).block(j).data.spatialOrg;
        end
@@ -302,7 +311,7 @@ for i = 1:length(Patient(pt).sz)
     
 end
 
-save([resultsFolder,outputName],'Patient');
+%save([resultsFolder,outputName],'Patient');
 toc
 end
 

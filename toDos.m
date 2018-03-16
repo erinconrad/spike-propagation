@@ -1,38 +1,17 @@
 %{
 
 TO DOs:
-- [] think more about the EKG artifact detection problem
-- [] figure out why it runs out of PermGen memory on Borel but not on my
-laptop
-- [] meet with Eric to ensure on right path. Specific questions:
-      - any gold standard spikes on HUP data? Or any data?
-      - discuss my method for the spatial restriction
-      - discuss the general methods (like pros and cons of restricting
-      ties)
-      - discuss whether I should make any attempt to have "clean" data or
-      do any additional artifact removal given that I am looking over a
-      much longer period of time than Hoameng did for his cognitive paper
-      - discuss whether, if I don't attempt artifact removal, I need to
-      do a new round of validation on this longer timed data set (make a
-      new set of gold standard spikes, for instance)
-      - discuss what steps, if any, I should take to ensure that sequences
-      themselves look "reasonable"
-      - discuss 2D vs 3D distances
-      - discuss this source localization idea
-      - I do the cleaning within each block. Should I instead run this
-      algorithm on all the data and then go back and put the remaining sequences back
-      into blocks?
+- [] validate the spike detectors
+- [] figure out why I have such a higher proportion of tied spikes compared
+to the Marsh lab
+- [] remove EKG artifact
+- [] figure out why it runs out of PermGen memory on Borel
 - [] confirm hard coded values - maybe ask Hoameng or Lohith what the voxel
 to mm conversion is in the electrode location file?
-- [] think about the value of these different cleaning measures, and think
-about why I get such a different result when I restrict ties versus not (I
-saved two sample versions in the results, one restricting ties and one not
-restricting ties)
-- [] decide about 2D vs 3D distance measure (right now everything is 3D)
-- [] try to validate the spike detectors: I need annotated data
-- [] remove EKG artifact? Or remove detected spikes that are detected at
-the same time in the EKG channel?
-- [] should make it nicer for doing it for multiple patients
+- 
+
+
+
 - [] try source localization instead? I may be falsely assuming that
 wherever I see the spike is where the actual source of the spike is.
 Instead it could be that there is a spike below the surface that I am
