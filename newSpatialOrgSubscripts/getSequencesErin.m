@@ -17,7 +17,7 @@ discarded.origNum = 0; % number of original sequences pre-rejection
 discarded.total =  0; % total number of rejected sequences
 discarded.length = 0; % number of sequences rejected because too short
 discarded.ties = 0; % number of sequences rejected because too many ties
-discarded.spatialRestriction = 0;
+discarded.spatialRestriction = 0; % number of sequences rejected because spikes too far from each other
 
 allSeqsTies = [];
 

@@ -60,7 +60,7 @@ minUniqueSeqLength = 3;
 maxPercTies = 0.7; 
 
 % some distance between channels for channel weights. In the paper this was
-% 1.5 cm so I need to figure out the conversion. I think for me 1 unit is 1 mm. MUST CHECK.
+% 1.5 cm. For me 1 unit is 1 mm. 
 dmin = 15; 
 
 % This is used when two channels are not within an allowable distance of
@@ -78,10 +78,10 @@ minConcurrentFreqAbs = 5;
 % "partitioning" approach and required that successive spikes be in
 % adjacent partitions. I downloaded a paper Hirsh1991 (Synaptic physiology
 % of horizontal connections in the cats visual cortex), which says that CV
-% is about 0.3-1 m/s. Let's assume that the fastest it can go is 1 m/s.
-% This is 1000 mm/s. I believe my spatial units are in mm and my time units
+% is about 0.3-1 m/s. Let's assume that the fastest it can go is 10 m/s.
+% This is 10000 mm/s. I believe my spatial units are in mm and my time units
 % are in s.
-maxSpeed = 1000;
+maxSpeed = 10000; %10,000 mm/s
 
 % How long the spike sequence needs to be after the spatial constraint.
 % This was 5 in Sam's code but not explicitly mentioned in the paper.
@@ -106,7 +106,7 @@ cleaning = 0;
 % is correct. It looks like my locations of points are in mm because
 % distance between 2 electrodes in my coordinates is about 10 units, and
 % the interelectrode distance should be 10 mm. So 1 unit = 1 mm.
-ss_thresh     = 15;    % PROBABLY WRONG                
+ss_thresh     = 15;              
 tt_thresh     = 0.015;  
 
 
@@ -120,7 +120,6 @@ if nargin == 0
 
 end
 
-%% Add path to the cleaning scripts
 
 %% Initialize patient variables
 Patient                = struct;
@@ -128,10 +127,6 @@ Patient                = struct;
 % nx4 array, where n is the number of unignored channels, 1st column is
 % index, and 2nd-4th columns are x,y,z positions
 Patient.xyChan         = electrodeData.locs;
-
-% Prepare to loop through gdf 
-nspikes           = size(gdf,1);
-chans             = Patient.xyChan(:,1); 
 
 
 %% Get sequences
@@ -142,30 +137,27 @@ chans             = Patient.xyChan(:,1);
     maxSpeed, fs, minSpikesCloseEnough);
 
 %% Do cleaning step
-% At some point I should consider whether to do the cleaning step in each
-% block (as I am doing now) or with all the data. If I do it with all the
-% data then I will have it on n_blocks*n_seizures as much data, but it will
-% be much more complicated to do
+% Now I do this at the end once all blocks are obtained
 
 dirtysequences = sequences;
 if cleaning == 1
     
-if size(sequences,2) >2
-iclean =  spt_seqclust(Patient.xyChan,sequences,ss_thresh,tt_thresh);
-y = zeros(length(iclean)*2, 1); y(1:2:end-1)=(iclean-1)*2+1; y(2:2:end)=(iclean-1)*2+2;
-sequences = dirtysequences(:,y);
-end
+    if size(sequences,2) >2
+    iclean =  spt_seqclust(Patient.xyChan,sequences,ss_thresh,tt_thresh);
+    y = zeros(length(iclean)*2, 1); y(1:2:end-1)=(iclean-1)*2+1; y(2:2:end)=(iclean-1)*2+2;
+    sequences = dirtysequences(:,y);
+    end
 
-%% Get recruitment latency and spatial organization
-if size(sequences,2) >2
-[recruitmentLatencySingle,spikeCount] = getRecruitmentLatency(sequences,Patient.xyChan);
-[Patient.avgRecruitmentLat,Patient.spatialOrg] = getSpatialOrg(recruitmentLatencySingle,Patient.xyChan,indexToms,dmin);
-else
-    Patient.avgRecruitmentLat = nan;Patient.spatialOrg = nan;
-end
+    %% Get recruitment latency and spatial organization
+    if size(sequences,2) >2
+    [recruitmentLatencySingle,spikeCount] = getRecruitmentLatency(sequences,Patient.xyChan);
+    [Patient.avgRecruitmentLat,Patient.spatialOrg] = getSpatialOrg(recruitmentLatencySingle,Patient.xyChan,indexToms,dmin);
+    else
+        Patient.avgRecruitmentLat = nan;Patient.spatialOrg = nan;
+    end
 
-Patient.discarded.cleaning = -size(sequences,2)/2 + size(dirtysequences,2)/2;
-Patient.discarded.total = Patient.discarded.total + Patient.discarded.cleaning;
+    Patient.discarded.cleaning = -size(sequences,2)/2 + size(dirtysequences,2)/2;
+    Patient.discarded.total = Patient.discarded.total + Patient.discarded.cleaning;
 
 end
 

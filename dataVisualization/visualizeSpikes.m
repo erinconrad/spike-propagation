@@ -6,37 +6,38 @@ function visualizeSpikes(dataName,csvFile,ptname,pt,times,whichCh)
 % ictal or pre-ictal
 ictal = 1;
 doplot =  1;
+
 % which seizure
 whichSz = 2;
 
 if nargin == 0
 % which channels
-%whichCh = [50,51,52];
+whichCh = [50,51,52,53,54];
 
 
 
-
+funnyname = 0;
 
 % data name (for ieeg.org)
-dataName = 'I022_P001_D05';
-%dataName = 'HUP80_phaseII';
+%dataName = 'I022_P001_D05';
+dataName = 'HUP80_phaseII';
 %dataName = 'HUP78_phaseII-Annotations';  
 
 % CSV file with electrode locations
-csvFile = [];
-%csvFile = 'HUP080_T1_19991213_electrode_labels.csv';
+%csvFile = [];
+csvFile = 'HUP080_T1_19991213_electrode_labels.csv';
 %csvFile = 'HUP078_T1_19971218_electrode_labels.csv';
 
 % The patient name with format as used in the json file
-ptname = 'Cog patient';
-%ptname = 'HUP080';
+%ptname = 'Cog patient';
+ptname = 'HUP080';
 %ptname = 'HUP078';
 
 % The number of the patient
 pt = 80;
 %pt = 78;
 
-times = [1616,1636];
+times = [36000 36516];
 end
 
 % Remove EKG artifact?
@@ -82,10 +83,14 @@ else
 end
 end
 
+
+times = [36617 37116];
+%times = [594955 595019];
+
 %times = 34117+[800,850];
 %times = 36000 + [0,500];
+%times = [36000 37116];
 %times = [37000 37116];
-
 
 %% Load EEG data info
 % calling this with 0 and 0 means I will just get basic info like sampling
@@ -95,7 +100,7 @@ fs = data.fs;
 
 %% calculate gdf (spike times and locations) and output the data in that time
 fprintf('Detecting spikes\n');
-[gdf,~,extraoutput] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,0,1);
+[gdf,~,extraoutput] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,0,funnyname);
 values = extraoutput{1};
 unignoredChLabels = extraoutput{2};
 plottimes =  [1:size(values,1)]/fs;
@@ -106,7 +111,7 @@ plottimes =  [1:size(values,1)]/fs;
 %% remove spikes that occur too close to EKG channel spikes
 if rmEKGArtifact == 1
     %% calculate gdf and values of EKG channels
-[gdfEKG,~,extraoutputEKG] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,1,0,1);
+[gdfEKG,~,extraoutputEKG] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,1,0,funnyname);
 valuesEKG = extraoutputEKG{1};
 unignoredChLabelsEKG = extraoutputEKG{2};
 plottimesEKG =  [1:size(values,1)]/fs;

@@ -1,16 +1,28 @@
 %{
 
 TO DOs:
+- try longer times. Would be awesome to capture multiple seizures in one
+plot!
+- decide whether it makes sense to do a cleaning step (it's removing
+dissimilar sequences, which is potentially removing an important part of
+the data)
+
+
 - [] validate the spike detectors
-- [] figure out why I have such a higher proportion of tied spikes compared
-to the Marsh lab
-- [] remove EKG artifact
+- [] remove EKG artifact?
 - [] figure out why it runs out of PermGen memory on Borel
 - [] confirm hard coded values - maybe ask Hoameng or Lohith what the voxel
 to mm conversion is in the electrode location file?
 - 
 
+- by far the longest time period comes in grabbing data from ieeg.org. If I
+can save gdf's that I have a decent amount of faith in, then this will be
+very helpful.
 
+Important info about the Tomlinson paper:
+- about 4 spikes per second (about 100,000 spikes in 400 minutes)
+- about 0.07 sequences per second (about 4 sequences per minute)
+- so about every 60 spikes there is a sequence
 
 - [] try source localization instead? I may be falsely assuming that
 wherever I see the spike is where the actual source of the spike is.

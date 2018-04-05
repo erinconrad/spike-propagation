@@ -1,11 +1,21 @@
-function visualizeSequences2(Patient,whichSz,block,s)
+function visualizeSequences2(Patient,pt,whichSz,block,whichSeq)
 % This is another function to plot sequences, using the spike times from
 % the inputted structure
 
 %% Parameters to change every time
+prows = 2;
+columns =  length(whichSeq)/prows;
 
-doplot =  1;
+surroundtime = 4;
 
+dummyRun = 0;
+vanleer = 0;
+vtime = 0;
+outputData = 1;
+keepEKG = 0;
+ignore = 1;
+funnyname = 0;
+onlyclean = 0;
 % data name (for ieeg.org)
 dataName = 'HUP80_phaseII';
 %dataName = 'HUP78_phaseII-Annotations';  
@@ -19,7 +29,6 @@ ptname = 'HUP080';
 %ptname = 'HUP078';
 
 % The number of the patient
-pt = 80;
 %pt = 78;
 
 %% Get paths and load seizure info and channel info
@@ -44,62 +53,102 @@ for i = 1:length(fieldnames(Patient(pt).seizures))
     
 end
 
+
+
 %% Define the start and stop times of each seizure
-blockOnset = Patient(80).sz(whichSz).runTimes(block,1);
-time_col = Patient(pt).sz(whichSz).block(block).data.sequences(:,(s-1)*2+2);
-chan_col = Patient(pt).sz(whichSz).block(block).data.sequences(:,(s-1)*2+1);
-times = blockOnset+[time_col(1)-8,time_col(1)+8];
-whichCh = chan_col(1:5);
 
-%% Load EEG data info
-% calling this with 0 and 0 means I will just get basic info like sampling
-% rate and channel labels
-data = getiEEGData(dataName,0,0,pwfile);  
-fs = data.fs;
 
-%% Get the data for these times
-fprintf('Detecting spikes\n');
-[~,~,extraoutput] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0);
-values = extraoutput{1};
-unignoredChLabels = extraoutput{2};
-plottimes =  [1:size(values,1)]/fs;
+for i = 1:length(whichSeq)
+    
+    s = whichSeq(i);
+    if isnan(block) == 1
+        
+        onsettime = Patient(pt).sz(whichSz).runTimes(1);
+        
+        time_col = Patient(pt).sz(whichSz).data.sequences(:,(s-1)*2+2);
+        chan_col = Patient(pt).sz(whichSz).data.sequences(:,(s-1)*2+1);
+        times = onsettime + [time_col(1)-surroundtime,time_col(1)+surroundtime];
+        whichCh = chan_col(1:5);
+    else
+    
+        blockOnset = Patient(pt).sz(whichSz).runTimes(block,1);
+    
+        if onlyclean == 0
+            time_col = Patient(pt).sz(whichSz).block(block).data.sequences(:,(s-1)*2+2);
+            chan_col = Patient(pt).sz(whichSz).block(block).data.sequences(:,(s-1)*2+1);
+        elseif onlyclean == 1
+            time_col = Patient(pt).sz(whichSz).block(block).data.cleanseq(:,(s-1)*2+2);
+            chan_col = Patient(pt).sz(whichSz).block(block).data.cleanseq(:,(s-1)*2+1);
+        end
+        times = blockOnset+[time_col(1)-surroundtime,time_col(1)+surroundtime];
+        whichCh = chan_col(1:5);
+    end
 
-%% Get the spike times
-spikes = [chan_col,time_col];
+    %% Load EEG data info
+    % calling this with 0 and 0 means I will just get basic info like sampling
+    % rate and channel labels
+    data = getiEEGData(dataName,0,0,pwfile);  
+    fs = data.fs;
+
+    %% Get the data for these times
+    fprintf('Detecting spikes\n');
+    [~,~,extraoutput] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,...
+        dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname);
+    values = extraoutput{1};
+    unignoredChLabels = extraoutput{2};
+    plottimes =  [1:size(values,1)]/fs;
+
+    %% Get the spike times
+    spikes = [chan_col,time_col];
+    
+    seq(i).seq = s;
+    seq(i).spikes = spikes;
+    seq(i).plottimes = plottimes;
+    seq(i).values = values;
+    seq(i).whichCh = whichCh;
+    seq(i).time_col = time_col;
+
+end
 
 %% Plot 
-if doplot == 1
 colors = {'b','r','g','c','m'};
 figure
-range = 0;
-pl = zeros(length(whichCh),1);
-for i = 1:length(whichCh)
-    ch = whichCh(i);
-    amps = values(:,ch) - range;
-    pl(i) = plot(plottimes,amps,colors{i});
-    hold on
-    
-    
-    % find the times of the spikes with the desired channel
-    spiketimes = spikes(spikes(:,1) == ch,2)-time_col(1)+8;
-    
-    spikeamp = ones(size(spiketimes,1),1)*max(values(:,ch))-range;
-    
-    scatter(spiketimes,spikeamp,colors{i});
-    range = range + max(values(:,ch)) - min(values(:,ch));
+set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.9, 0.8]);
+
+for s = 1:length(whichSeq)
+    whichcol = ceil(s/2);
+    whichrow = mod(s+1,2)+1;
+    subplot('Position',[(whichcol-1)*1/columns (prows-whichrow)*1/prows 1/columns 1/prows])
+    range = 0;
+    pl = zeros(length(seq(s).whichCh),1);
+    for i = 1:length(seq(s).whichCh)
+        ch = seq(s).whichCh(i);
+        amps = seq(s).values(:,ch) - range;
+        pl(i) = plot(seq(s).plottimes,amps,colors{i});
+        hold on
+
+
+        % find the times of the spikes with the desired channel
+        spiketimes = seq(s).spikes(seq(s).spikes(:,1) == ch,2)-seq(s).time_col(1)+surroundtime;
+
+        spikeamp = ones(size(spiketimes,1),1)*max(seq(s).values(:,ch))-range;
+
+        scatter(spiketimes,spikeamp,60,colors{i},'filled');
+        range = range + max(seq(s).values(:,ch)) - min(seq(s).values(:,ch));
+    end
+    legnames = unignoredChLabels(seq(s).whichCh);
+    legend(pl,legnames,'Location','northeast');
+    xlabel('Time (s)');
+    %ylabel('Amplitude');
+    set(gca,'YTickLabel',[]);
+
+    text(0.7,0.1,sprintf('Sequence %d',seq(s).seq),'units','normalized','FontSize',15);
+    set(gca,'fontsize',15);
+
 end
-legnames = unignoredChLabels(whichCh);
-legend(pl,legnames,'Location','northeast');
-xlabel('Time (s)');
-ylabel('Amplitude');
-
-title(sprintf('Data and spike detections for %s seizure %d block %d sequences %d',...
-    ptname,whichSz,block,s));
-set(gca,'fontsize',15);
 
 
-
-
+%{
 if 1 == 0
 % add on EKG channel
 yl = ylim;
@@ -112,16 +161,16 @@ yl(1) =  yl(1)-range*2;
 
 ylim(yl)
 end
-set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.6, 1, 0.4]);
+%}
+
 
 outputFile = [ptname,'_','_sz_',sprintf('%d',whichSz),'_block_',...
-    sprintf('%d',block),'seq_',sprintf('%d',s),'.png'];
+    sprintf('%d',block),'.png'];
 
 saveas(gcf,[resultsFolder,outputFile])
 
 
 fprintf('no\n');
 
-end
 
 end

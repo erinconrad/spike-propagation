@@ -8,22 +8,14 @@ electrodes corresponds to how often that path was traversed.
 
 %}
 
-function visualizeAvgPath(P,pt,sz,block)
+function windowAvgPath(P,pt,sz,block)
 
 %% Parameters
-
-onlyclean = 0;
-if onlyclean == 1
-    cleantext = 'clean';
-else
-    cleantext = 'all';
-end
-
-Patient = P(pt).sz(sz).block(block).data;
+sIdx = P(pt).sz(sz).tblock(block).sIdx;
 
 % output file name
 [~,~,~,resultsFolder,~] = fileLocations;
-filename = ['HUP',sprintf('%d',pt),'_avgsequences_',cleantext,'.png'];
+filename = ['HUP',sprintf('%d',pt),'_avgsequences_block_',sprintf('%d',block),'.png'];
 
 % base size of electrodes
 baseSizeElec = 20;
@@ -40,20 +32,20 @@ multLines = 1;
 
 %% Initialize channel arrays
 % Get the channel locations for the patient
-chLocs = Patient.xyChan(:,2:4);
-allChs = Patient.xyChan(:,1);
+chLocs = P(pt).sz(sz).data.xyChan(:,2:4);
+allChs = P(pt).sz(sz).data.xyChan(:,1);
 chHits = zeros(size(allChs));
 pathHits = zeros(length(allChs),length(allChs));
 
 
 %% Get the sequence data
-% Change these lines each time. Which segment and which starting channel
-% and which spike sequence to visualize
-if onlyclean == 1
-    temp = Patient.cleanseq; % which segment and starting channel
-elseif onlyclean == 0
-    temp = Patient.sequences;
+% Get the columns from the sIdx
+sequences = P(pt).sz(sz).data.sequences;
+newseq = [];
+for k = 1:length(sIdx)
+    newseq = [newseq,sequences(:,k*2-1:k*2)];
 end
+temp = newseq;
 
 % Remove the times, now this has as many columns as there are sequences
 temp = temp(:,1:2:end-1);
@@ -126,12 +118,13 @@ for i = 1:length(allChs)
    end
 end
 grid off
-title(['HUP ',sprintf('%d',pt),' average ',cleantext, ' sequences for block ',sprintf('%d',block)]);
+axis off
+title(['HUP ',sprintf('%d',pt),' average',' sequences for block ',sprintf('%d',block)]);
 set(gca,'FontSize',15);
 set(gca,'XTickLabel',[]);
 set(gca,'YTickLabel',[]);
 set(gca,'ZTickLabel',[]);
-
+set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.4, 0.4, 0.3, 0.45]);
 
 saveas(fig,[resultsFolder,filename]);
 

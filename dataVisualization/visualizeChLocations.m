@@ -8,12 +8,13 @@ spike (which is not actually true).
 
 %}
 
-function visualizeChLocations(Patient,sz,b,s)
+function visualizeChLocations(Patient,pt,sz,b,s)
+
+onlyclean = 1;
 
 % output file name
-filename = ['HUP080_sz_',sprintf('%d',sz),'_block_',sprintf('%d',b),...
+filename = ['HUP',sprintf('%d',pt),'_sz_',sprintf('%d',sz),'_block_',sprintf('%d',b),...
     '_sequence_',sprintf('%d',s),'.gif'];
-pt = 80;
 
 [~,~,~,resultsFolder,~] = fileLocations;
 
@@ -34,7 +35,12 @@ delay = 0.4; % time delay between steps
 
 % Change these lines each time. Which segment and which starting channel
 % and which spike sequence to visualize
-temp = Patient(pt).sz(sz).block(b).data.sequences; % which segment and starting channel
+
+if onlyclean == 0
+    temp = Patient(pt).sz(sz).block(b).data.sequences; % which segment and starting channel
+elseif onlyclean == 1
+    temp = Patient(pt).sz(sz).block(b).data.cleanseq;
+end
 seq = temp(:,(s-1)*2+1:(s-1)*2+2); % which sequence
 seq = seq(any(seq~=0,2),:); % remove rows of zeros
 

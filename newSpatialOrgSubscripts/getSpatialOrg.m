@@ -5,7 +5,7 @@ the spatial organization metric
 
 %}
 
-function [avgRecruitmentLat,spatialOrg] = getSpatialOrg(recruitmentLatencySingle,xyChan,indexToms,dmin)
+function [avgRecruitmentLat,spatialOrg] = getSpatialOrg(recruitmentLatencySingle,xyChan,dmin)
 
 
 nChannels = size(xyChan,1); % Number of channels

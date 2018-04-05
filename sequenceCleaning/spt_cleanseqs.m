@@ -17,9 +17,40 @@ grp2     = mean(degree(find(idx==2)));
 grp3     = mean(degree(find(idx==3)));
 grps     = [grp1,grp2,grp3];
 [~,toss] = min(grps);
+[~,highest] = max(grps);
+middle = setdiff([1 2 3],[toss,highest]);
 
 %Toss noisy sequences from clueGraph
 toss_idx                     = find(idx==toss)';
 clueGraph(:,toss_idx)        = [];
 clueGraph(toss_idx,:)        = [];
 seq_track(toss_idx)          = [];
+
+%Plot an image of the sequence similarity matrix (clueGraph)
+figure
+imagesc(clueGraph)
+colorbar
+xlabel('Sequence number');
+ylabel('Sequence number');
+title('Sequence similarity matrix');
+set(gca,'fontsize',15)
+filen = '/Users/erinconrad/Desktop/residency stuff/R25/actual work/results/SSM';
+print(filen,'-depsc');
+newPath = [filen,'.eps'];
+
+%Plot a histogram of degree centrality and save it
+figure
+h = histogram(degree,round(length(idx)/3));
+set(h,'facecolor','k');
+hold on
+lowborder = (max(degree(find(idx==toss)))+min(degree(find(idx==middle))))/2;
+highborder = (max(degree(find(idx==middle)))+min(degree(find(idx==highest))))/2;
+plot([lowborder lowborder],get(gca,'ylim'),'--','linewidth',3,'color','k');
+plot([highborder highborder],get(gca,'ylim'),'--','linewidth',3,'color','k');
+xlabel('Degree centrality');
+ylabel('Count');
+set(gca,'FontSize',15);
+
+filen = '/Users/erinconrad/Desktop/residency stuff/R25/actual work/results/histogram';
+print(filen,'-depsc');
+newPath = [filen,'.eps'];

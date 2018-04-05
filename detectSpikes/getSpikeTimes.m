@@ -26,19 +26,33 @@ signal envelope.
 written by Camilo Bermudez 7/31/13, and appears to work by finding peaks in
 high frequency data and then requires that the peaks have a minimum
 amplitude and appropriate duration. I have not modifed this at all yet
+    
+Other parameters:
+- vanleer: 1 if I'm doing the vanleer method
+- vtime: time for the vanleer method
+- outputData: 1 if I want to output the EEG data along with the spikes 
+- keepEKG: 1 if I just want to pull out the EKG channel
+- ignore: 1 if I ignore the channels listed in the json file, 0 if I ignore
+nothing
+- funnyname: 0 if it's one of the standard-named HUP patients who I can
+look up in the json file. 1 if it's another type of dataset
 
 Janca et al paper:
 Janca, Radek, et al. "Detection of interictal epileptiform discharges using signal envelope distribution modelling: application to epileptic and non-epileptic intracranial recordings." Brain topography 28.1 (2015): 172-183.
 
 %}
 
-%% Parameters to change each time
-whichDetector = 3; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
-timeToLookForPeak = .025; % look 25 ms before and 25 ms after the detected spike to find the peak 
+%% Parameters
+whichDetector = 2; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
+timeToLookForPeak = .1; % look 100 ms before and 100 ms after the detected spike to find the peak 
 
 setChLimits = 1;
 multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
 multiChTime = .025; % The time period over which spikes need to occur across multiple channels to toss
+
+% Bermudez algorithm parameters
+tmul=13; % threshold multiplier
+absthresh=300;
 
 % If you didn't pass it arguments, then use the ones written here
 if nargin == 0
@@ -68,21 +82,10 @@ end
 
 
 
-
-
-%% Parameters that probably don't need to change each time
-
-
-% Bermudez algorithm parameters
-tmul=13; % threshold multiplier
-absthresh=300;
-
-
 %% Load EEG data info
 % calling this with 0 and 0 means I will just get basic info like sampling
 % rate and channel labels
 data = getiEEGData(dataName,0,0,pwfile);  
-
 
 
 %% Select correct patient in order to get ignore electrode info from json file
@@ -116,6 +119,8 @@ channels = 1:nchan;
      % loop through all channel labels
      for i = 1:length(data.chLabels)   
          
+         % Don't need to do this for non-HUP datasets as I don't have them
+         % in the json file
          if funnyname == 0
             %% parsing of channel names (labeled odd in the iEEG)
 
@@ -197,7 +202,6 @@ if dummyRun == 1
     % Don't need gdf for dummy run
     gdf = 0;
     %% make the list of channel locations
-    
     electrodeData = chanLocUseGdf(unignoredChLabels,electrodeFile);
 
 elseif dummyRun == 0
@@ -213,15 +217,17 @@ elseif dummyRun == 0
     data = getiEEGData(dataName,channels,indices,pwfile);
     
     %% Remove channels that are just nans and zeros
-    allsum = zeros(nchan,1);
-    for i = 1:nchan
-    allsum(i) = nansum(abs(data.values(:,i)));
+    if ignore == 0
+        allsum = zeros(nchan,1);
+        for i = 1:nchan
+        allsum(i) = nansum(abs(data.values(:,i)));
+        end
+        nanidx = (allsum == 0);
+        data.values = data.values(:,~nanidx);
+        channels = find(nanidx == 0);
+        unignoredChLabels = chNames(channels);
+        nchan = length(channels);
     end
-    nanidx = (allsum == 0);
-    data.values = data.values(:,~nanidx);
-    channels = find(nanidx == 0);
-    unignoredChLabels = chNames(channels);
-    nchan = length(channels);
 
     %% Run spike detector
     if whichDetector == 1
@@ -253,7 +259,7 @@ elseif dummyRun == 0
         if isempty(gdf) == 1
             fprintf('No spikes detected\n');
         else
-            %fprintf('Detected %d spikes\n',size(gdf,1));
+            fprintf('Detected %d spikes\n',size(gdf,1));
              % put it in seconds
              gdf(:,2) = gdf(:,2)/data.fs;
 
@@ -261,6 +267,7 @@ elseif dummyRun == 0
         end
         
     elseif whichDetector == 3
+        %this is the unedited Janca detector
         
         [out,~,~,~,~,~] = spike_detector_hilbert_v16_nodownsample(data.values,data.fs,'-h 60');
 
@@ -272,13 +279,15 @@ elseif dummyRun == 0
         if isempty(out.pos) == 1
             fprintf('Warning: No spikes detected\n');
         else
-            %fprintf('Detected %d spikes\n',length(out.pos));
+            fprintf('Detected %d spikes\n',length(out.pos));
             gdf = [chanSort,timeSort];
         end
 
     end
     
     %% Re-define the spike time as the peak
+    %{
+    
     gdfnew = gdf;
     % convert times to indices
     gdfIdx = round([gdf(:,1),gdf(:,2)*data.fs]);
@@ -311,14 +320,16 @@ elseif dummyRun == 0
     end
     gdf=gdfnew;
     
+    
     %% reorder gdf
     [timesort,I] = sort(gdf(:,2));
     chanSort = gdf(I,1);
     gdf = [chanSort,timesort];
-    
+    %}
     
     %% Toss spikes that occur across too high a percentage of channels at the same time
-    if setChLimits == 1
+    
+    if setChLimits == 1 && isempty(gdf) == 0
         newgdf =  gdf;
         tooManyChs = [];
         i = 1; % start with i = 1 (the first spike)
@@ -346,7 +357,7 @@ elseif dummyRun == 0
 
                % if the total number of channels spiking in this very close
                % proximity is >80% of the total number of channels
-               if scount > 0.8*nchan
+               if scount > multiChLimit*nchan
 
                     % Remove these spikes
                     tooManyChs = [tooManyChs;newgdf(i:j,:)];

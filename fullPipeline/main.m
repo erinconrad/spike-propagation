@@ -5,8 +5,8 @@ spike sequences, and 3) calculate the spatial organization of these spike
 sequences at various time points prior to seizures.
 
 It first finds the times of seizures and breaks the time intervals before
-the seizures into chunks. Then for each chunk, it goes through and detects
-spikes (calling getSpikeTimes). Then for each chunk, it looks through those
+the seizures into blocks. Then for each block, it goes through and detects
+spikes (calling getSpikeTimes). Then for each block, it looks through those
 spikes and detects spike sequences and calculates the spatial organization
 (calling mainSequences).
 
@@ -38,15 +38,14 @@ tic
 % is correct. It looks like my locations of points are in mm because
 % distance between 2 electrodes in my coordinates is about 10 units, and
 % the interelectrode distance should be 10 mm. So 1 unit = 1 mm.
-ss_thresh     = 15;    % PROBABLY WRONG                
+ss_thresh     = 15;                   
 tt_thresh     = 0.015;  
 
-% some distance between channels for channel weights. In the paper this was
-% 1.5 cm so I need to figure out the conversion. I think for me 1 unit is 1 mm. MUST CHECK.
+% some distance between channels for channel weights. 
 dmin = 15; 
 
 % Output file name to save
-outputName = 'HUP80_allsz_5blocks_icandpreic_1000s_cleanall2.mat';
+outputName = 'HUP80_sz1_8blocks.mat';
 %outputName = 'HUP78_oneMinBlocks.mat';
 
 % data name (for ieeg.org)
@@ -66,20 +65,31 @@ ptname = 'HUP080';
 pt = 80;
 %pt = 78;
 
-% How many seconds you want per block. Max allowable appears to be 2000, or
-% possibly less
-sPerBlock = 500;
+% How many seconds you want per block. 
+sPerBlock = 3600;
+
+% I break the block into chunks to detect spikes, because calling iEEG.org
+% with more than this causes permgen memory errors
+chunkSize = 1000;
 
 % Include ictal period?
 includeIc = 0;
 
 % How many blocks you want to compare before the seizure
-nblocks = 1;
+nblocks = 8;
 
 % Remove EKG artifact?
 rmEKGArtifact = 0;
 prox = 0.01; %10 ms
 indexToms = 0;
+
+% parameters that the spike detector needs
+vanleer = 0;
+vtime = 0;
+outputData = 0;
+keepEKG = 0;
+ignore = 1;
+funnyname = 0;
 
 %% Get paths and load seizure info and channel info
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -98,7 +108,10 @@ data = getiEEGData(dataName,0,0,pwfile);
 fs = data.fs;
 
 %% Run the getSpikes script once as a dummy run just to produce a file of electrode locations
-[~,electrodeData,~] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,1,0,0,0,0,1,0);
+dummyRun = 1;
+outputData = 0;
+[~,electrodeData,extrastuff] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,...
+    dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname);
 
 %% Define seizure onset and offset times for each seizure
 for i = 1:length(fieldnames(Patient(pt).seizures))
@@ -111,7 +124,7 @@ end
 % Loop through all the seizures
 for i = 1:1%length(Patient(pt).sz)
     
-    
+   
     
     % Skip the seizure if it's too close to the start of the data
     if Patient(pt).sz(i).onset < nblocks*sPerBlock+2
@@ -162,29 +175,56 @@ for i = 1:length(Patient(pt).sz)
            fprintf('Doing block %d of %d in seizure %d of %d\n',...
                j,length(Patient(pt).sz(i).runTimes),i,length(Patient(pt).sz));
            
-          
            % Establish start and stop times
            desiredTimes = Patient(pt).sz(i).runTimes(j,1:2);
            
-           %% calculate gdf (spike times and locations) for the block
-           fprintf('Detecting spikes\n');
-           [gdf,~,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,ptInfo,pwfile,0,0,0,0,0,1,0);
-           size(gdf)
+           % Break it up into chunks to avoid permgen memory errors
+           nchunks = ceil(sPerBlock/chunkSize);
+           gdf = [];
+           for k = 1:nchunks 
+               
+               currTimes(1) = desiredTimes(1) + (k-1)*chunkSize;
+               currTimes(2) = min(desiredTimes(1) + sPerBlock - 1, currTimes(1) + chunkSize-1);
+                
+               %% calculate gdf (spike times and locations) for the chunk in the block
+               fprintf('Detecting spikes\n');
+               dummyRun = 0;
+               [gdft,~,~] = getSpikeTimes(currTimes,dataName,electrodeFile,ptInfo,pwfile,...
+                   dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname);
+               
+               % Adjust the times based on what chunk it is
+               gdft(:,2) = gdft(:,2)+currTimes(1)-desiredTimes(1);
+
+               % Add the spikes found in this chunk to all the spikes in
+               % the block
+               gdf = [gdf;gdft];
+           end
            
-           %% EKG artifact removal
+           %% EKG artifact removal (this currently won't work)
            if rmEKGArtifact == 1
                % calculate gdf and values of EKG channels
+               dummyRun = 0;
+               keepEKG = 1;
+               ignore = 0;
                [gdfEKG,~,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,...
-                   ptInfo,pwfile,0,0,0,0,1);
+                   ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname);
 
                % remove spikes that occur too close to EKG channel spikes
                 gdf = removeEKGArtifact(gdf,gdfEKG,prox);
            end
            
+           Patient(pt).sz(i).block(j).stats.nspikes = size(gdf,1);
+           Patient(pt).sz(i).block(j).stats.spikefreq = size(gdf,1)/sPerBlock;
+           
+           
            %% Get spike sequences and spatial organization for the block
            fprintf('Detecting sequences and calculating spatial organization\n');
            Patient(pt).sz(i).block(j).data = mainSequences(gdf,electrodeData, fs);
-           toc
+           
+           Patient(pt).sz(i).block(j).stats.nseqs = size(Patient(pt).sz(i).block(j).data.sequences,2)/2;
+           Patient(pt).sz(i).block(j).stats.seqfreq = Patient(pt).sz(i).block(j).stats.nseqs/sPerBlock;
+           
+           fprintf('It took %1.1f seconds to do block %d in seizure %d\n', toc,j,i);
        end
    end
     
@@ -192,6 +232,7 @@ end
 
 
 %% concatenate all sequences for the purpose of cleaning
+fprintf('Doing cleaning step\n');
 
 % The array with all sequences
 allseq = [];
@@ -275,6 +316,10 @@ end
 for i = 1:length(Patient(pt).sz)
    for j = 1:length(Patient(pt).sz(i).block)
        
+       
+       Patient(pt).sz(i).block(j).stats.nseqsclean = size(Patient(pt).sz(i).block(j).data.cleanseq,2)/2;
+       Patient(pt).sz(i).block(j).stats.seqfreqclean = Patient(pt).sz(i).block(j).stats.nseqsclean/sPerBlock;
+       
        % Remove rows of all zeros
        Patient(pt).sz(i).block(j).data.cleanseq =...
            Patient(pt).sz(i).block(j).data.cleanseq(any(...
@@ -287,13 +332,26 @@ for i = 1:length(Patient(pt).sz)
                 Patient(pt).sz(i).block(j).data.xyChan);
             
             
-            [Patient(pt).sz(i).block(j).data.avgRecruitmentLat,...
-            Patient(pt).sz(i).block(j).data.spatialOrg] =...
+            [Patient(pt).sz(i).block(j).data.avgRecruitmentLatClean,...
+            Patient(pt).sz(i).block(j).data.spatialOrgClean] =...
             getSpatialOrg(recruitmentLatencySingle,Patient(pt).sz(i).block(j).data.xyChan,indexToms,dmin);
+        
+        
+            [recruitmentLatencySingle,spikeCount] = ...
+                getRecruitmentLatency(Patient(pt).sz(i).block(j).data.sequences,...
+                Patient(pt).sz(i).block(j).data.xyChan);
+            
+            
+            [Patient(pt).sz(i).block(j).data.avgRecruitmentLatDirty,...
+            Patient(pt).sz(i).block(j).data.spatialOrgDirty] =...
+            getSpatialOrg(recruitmentLatencySingle,Patient(pt).sz(i).block(j).data.xyChan,indexToms,dmin);
+        
+        
         else
             Patient(pt).sz(i).block(j).data.avgRecruitmentLat = nan;...
                 Patient(pt).sz(i).block(j).data.spatialOrg = nan;
         end
+        
        
    end
 end
@@ -302,8 +360,8 @@ end
 for i = 1:length(Patient(pt).sz)
    if isempty(Patient(pt).sz(i).runTimes) == 0
        for j = 1:size(Patient(pt).sz(i).runTimes,1)
-           Patient(pt).sz(i).spatialOrg(j) = ...
-               Patient(pt).sz(i).block(j).data.spatialOrg;
+           Patient(pt).sz(i).spatialOrgClean(j) = ...
+               Patient(pt).sz(i).block(j).data.spatialOrgClean;
        end
        
        
@@ -311,7 +369,14 @@ for i = 1:length(Patient(pt).sz)
     
 end
 
-%save([resultsFolder,outputName],'Patient');
-toc
+
+%% Make some sample plots
+P = Patient;
+visualizeChLocations(P,pt,1,1,1);
+visualizeSequences2(P,pt,1,1,randperm(length(P(pt).sz(1).block(1).data.cleanseq)/2,6));
+visualizeAvgPath(P,pt,1,1)
+
+save([resultsFolder,outputName],'P');
+fprintf('It took %1.1f seconds to do everything\n',toc);
 end
 
