@@ -30,4 +30,7 @@ data.fs = fs;
 data.name = dataName;
 data.chLabels = channelLabels;
 
+session.delete;
+clearvars -except data
+
 end

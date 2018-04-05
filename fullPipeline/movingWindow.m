@@ -35,7 +35,7 @@ pt = 80;
 %pt = 78;
 
 % How many seconds you want per block (the total chunk of time)
-sPerBlock = 360*24; %12 hours before the seizure and 12 hours after the seizure
+sPerBlock = 3600*24; %12 hours before the seizure and 12 hours after the seizure
 
 % How much overlap for the moving window of recruitment latencies
 window = 600; % 600 s = 10 minutes
