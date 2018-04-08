@@ -46,7 +46,7 @@ Janca, Radek, et al. "Detection of interictal epileptiform discharges using sign
 whichDetector = 2; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
 timeToLookForPeak = .1; % look 100 ms before and 100 ms after the detected spike to find the peak 
 
-setChLimits = 1;
+setChLimits = 0;
 multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
 multiChTime = .025; % The time period over which spikes need to occur across multiple channels to toss
 
