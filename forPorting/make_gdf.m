@@ -25,7 +25,14 @@ for i = 1:length(pt)
     
     
     dataName = pt(i).ieeg_name;
+    if isempty(dataName) == 1
+        continue
+    end
     electrodeFile = pt(i).electrode_labels;
+    if strcmp(electrodeFile,'??') ==1
+        continue
+    end
+    
     ignoreElectrodes = pt(i).ignore_electrodes;
     
     for j = 1:length(pt(i).sz)

@@ -26,7 +26,7 @@ for i = 1:length(ptnames)
     pt(i).name = ptnames{i};
     pt(i).ignore_electrodes = info.IGNORE_ELECTRODES;
     pt(i).electrode_labels =  info.ELECTRODE_LABELS;
-    pt(i).ieeg_name = 'placeholder_name';
+    pt(i).ieeg_name = ieegNames(pt(i).name);
     pt(i).chLocationFile = [resultsFolder,'chLocations/',pt(i).name,'_chLocations.mat'];
     
     % Get seizures
