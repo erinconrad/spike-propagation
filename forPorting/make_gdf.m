@@ -24,15 +24,6 @@ load([resultsFolder,timeFile]);
 for i = 1:length(pt)
     
     
-    
-    % THIS CODE IS FOR TESTING
-    if strcmp(pt(i).name,'HUP080') == 0
-        continue
-    else
-        pt(i).ieeg_name = 'HUP80_phaseII';
-        pt(i).electrode_labels = [electrodeFolder,'HUP080_T1_19991213_electrode_labels.csv'];
-    end
-    
     dataName = pt(i).ieeg_name;
     electrodeFile = pt(i).electrode_labels;
     ignoreElectrodes = pt(i).ignore_electrodes;
