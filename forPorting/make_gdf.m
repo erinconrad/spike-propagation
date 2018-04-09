@@ -43,6 +43,7 @@ for i = 1:length(pt)
             
             if exist([pt(i).sz(j).chunkFiles{k}],'file') ~= 0
                 if overwrite == 0
+                    fprintf('File %s already found, skipping\n',[pt(i).sz(j).chunkFiles{k}]);
                     continue
                 end
             end
