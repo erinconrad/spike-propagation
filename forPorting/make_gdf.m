@@ -46,7 +46,6 @@ for i = 1:length(pt)
                 dataName,j,k)];
             fid = fopen('/tmp/desmond.txt','wt');
             fprintf(fid,allwrite);
-            fflush(fid);
             fclose(fid);
             
             if exist([pt(i).sz(j).chunkFiles{k}],'file') ~= 0
