@@ -63,8 +63,10 @@ nchan = length(data.chLabels);
     % Get the numbers
     numIdx = regexp(C,'\d');
     
-    if strcmp(C(numIdx(1)),'0') == 1
-        C(numIdx(1)) = [];
+    if isempty(numIdx) == 0
+        if strcmp(C(numIdx(1)),'0') == 1
+            C(numIdx(1)) = [];
+        end
     end
 
     
