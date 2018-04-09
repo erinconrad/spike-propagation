@@ -49,19 +49,28 @@ nchan = length(data.chLabels);
     if strcmp(C{1},'EEG') == 0
         fprintf('Warning, there is something weird in the channel labels for channel %d\n',i);
     end
+    
+    C = strrep(origStr,[C{1},' '],'');
+    
+    % Remove -Ref
+    D = strsplit(C,'-');
+    
+    C = strrep(C,['-',D{2}],'');
+    
+    % Remove space if present
+    C = strrep(C,' ','');
 
-    % Remove leading zero from the number
-    if strcmp(C{3}(1),'0') == 1
-        endOfChan = C{3}(2:end);
-    else
-        endOfChan = C{3};
+    % Get the numbers
+    numIdx = regexp(C,'\d');
+    
+    if strcmp(C(numIdx(1)),'0') == 1
+        C(numIdx(1)) = [];
     end
 
-    % Remove -Ref
-    D = strsplit(endOfChan,'-');
+    
 
     % Final channel name
-    chName = [C{2},D{1}];
+    chName = C;
     chNames{i} = chName;
 
  end
