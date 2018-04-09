@@ -16,7 +16,6 @@ gdfFolder = 'gdf/';
 chLocationsFolder = 'chLocations/';
 newptfile = 'ptWithfs.mat';
 
-
 %% Load file with filenames and run times
 load([resultsFolder,timeFile]);
 
@@ -40,6 +39,15 @@ for i = 1:length(pt)
             continue
         end
         for k = 1:size(pt(i).sz(j).runTimes,1)
+            
+            % Add a button push to the desmond file
+            buttonpush = datestr(now,'yyyy-mm-dd HH:MM:SS');
+            allwrite = [buttonpush,'\n',sprintf('Patient %s seizure %d chunk %d\n',...
+                dataName,j,k)];
+            fid = fopen('/tmp/desmond.txt','wt');
+            fprintf(fid,allwrite);
+            fflush(fid);
+            fclose(fid);
             
             if exist([pt(i).sz(j).chunkFiles{k}],'file') ~= 0
                 if overwrite == 0
@@ -69,3 +77,9 @@ end
 
 % Resave pt file now that I have fs
 save([resultsFolder,newptfile],'pt');
+
+% Make a new document if I make it here
+fid2 = fopen('/tmp/ok.txt','wt');
+fprintf(fid2,'Done\n');
+fflush(fid2);
+fclose(fid2);
