@@ -15,7 +15,7 @@ gdfFolder = 'gdf/';
 
 %% Desired times
 totalTime = 3600*24; % Look 12 hours before the sz and 12 hours after
-chunkTime = 3600; % Save it in one hour chunks
+chunkTime = 2000; % Save it in one hour chunks
 nchunks = ceil(totalTime/chunkTime);
 window = 3600;
 overlap = 600;
