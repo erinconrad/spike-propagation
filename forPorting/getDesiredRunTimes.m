@@ -25,9 +25,14 @@ for i = 1:length(ptnames)
     info = ptInfo.PATIENTS.(ptnames{i});
     pt(i).name = ptnames{i};
     pt(i).ignore_electrodes = info.IGNORE_ELECTRODES;
-    pt(i).electrode_labels =  info.ELECTRODE_LABELS;
     pt(i).ieeg_name = ieegNames(pt(i).name);
     pt(i).chLocationFile = [resultsFolder,'chLocations/',pt(i).name,'_chLocations.mat'];
+    
+    % Get electrode label file names
+    origname = info.ELECTRODE_LABELS;
+    temp = strsplit(origname,'/');
+    fname = temp{end};
+    pt(i).electrode_labels = [electrodeFolder,fname];
     
     % Get seizures
     szs = fieldnames(info.Events.Ictal);
