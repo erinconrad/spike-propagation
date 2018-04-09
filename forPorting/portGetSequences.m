@@ -46,6 +46,11 @@ for i = 1:length(pt)
             % Load chLocations file
             load([pt(i).chLocationFile]);
             
+            if isempty(gdf) == 1
+                continue
+            end
+            
+            gdf(:,2) = gdf(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
             gdf_all = [gdf_all;gdf];
             
         end
