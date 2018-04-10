@@ -68,14 +68,14 @@ for i = 1:length(pt)
             save([pt(i).chLocationFile],'electrodeData');
             
            
-            
+            % Resave pt file now that I have fs
+            save([resultsFolder,newptfile],'pt');
             
         end
     end
 end
 
-% Resave pt file now that I have fs
-save([resultsFolder,newptfile],'pt');
+
 
 % Make a new document if I make it here
 fid2 = fopen('/tmp/ok.txt','wt');
