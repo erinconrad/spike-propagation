@@ -50,14 +50,17 @@ for i = 1:length(ptnames)
        initialTime = max(pt(i).sz(j).onset - totalTime/2,1);
        
        % This will break if it's too close to the end of the file
-       finalTime = max(pt(i).sz(j).onset + totalTime/2,initialTime+(nchunks)*chunkTime);
+       if initialTime == 1
+           finalTime = max(pt(i).sz(j).onset + totalTime/2,initialTime+(nchunks)*chunkTime);
+       else
+           finalTime = pt(i).sz(j).onset + totalTime/2;
+       end
        
        % Initialize run times and file names
        pt(i).sz(j).runTimes = zeros(nchunks,2);
        pt(i).sz(j).chunkFiles = cell(nchunks,1);
        
-       % re-initialize it if the seizure is too close to the start of the
-       % file
+       
        
        
        % Create the times
