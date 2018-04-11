@@ -1,8 +1,8 @@
 clear
 
-%getDesiredRunTimes
+getDesiredRunTimes
 
-%make_gdf
+make_gdf
 
 portGetSequences
 
