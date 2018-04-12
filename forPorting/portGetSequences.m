@@ -29,6 +29,11 @@ for i = 1:length(pt)
         if isfield(pt,'fs') == 0
             continue
         end
+        
+        if isempty(pt(i).fs) == 1
+            pt(i).fs = 512;
+            fprintf('Warning, no fs for patient %d, assuming it is 512 Hz\n',i);
+        end
        
         
         
