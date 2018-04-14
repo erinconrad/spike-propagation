@@ -16,8 +16,8 @@ for i = 1:length(P(pt).sz(sz).blockRL)
     times = [times,(P(pt).sz(sz).blockRL(i).times(1)+...
         P(pt).sz(sz).blockRL(i).times(2))/2+P(pt).sz(sz).runTimes(1)];
     
-    allSF = [allSF,length(P(pt).sz(sz).blockRL(i).sIdx)/...
-        (P(pt).sz(sz).blockRL(i).times(2)-P(pt).sz(sz).blockRL(i).times(1))];
+    allSF = [allSF,length(P(pt).sz(sz).blockRL(i).sIdx)];%/...
+  %      (P(pt).sz(sz).blockRL(i).times(2)-P(pt).sz(sz).blockRL(i).times(1))];
 end
 
 allRat =  allSO./allSF;
@@ -58,12 +58,12 @@ plot(times/scale,toPlot,'color','k','linewidth',2);
 plot([szTimes(1) szTimes(1)]/scale,get(gca,'ylim'),'--','color','k','linewidth',3);
 ylabel(sprintf('%s',ptitle));
 xlabel('Time (h)');
-title([sprintf('%s',ptitle),' surrounding seizure']);
+title([sprintf('%s',ptitle),' surrounding seizure for ',sprintf('%s',P(pt).name)]);
 set(gca,'FontSize',15)
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
-outputFile = ['HUP_',sprintf('%d',pt),'_','_sz_',sprintf('%d',sz)...
+outputFile = [sprintf('%s',P(pt).name),'_','_sz_',sprintf('%d',sz)...
     ,sprintf('%s',pname),'.png'];
-saveas(gcf,[resultsFolder,outputFile])
+saveas(gcf,[resultsFolder,'plots/',outputFile])
 
 end

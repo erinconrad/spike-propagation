@@ -30,7 +30,7 @@ elseif strcmp(name,'HUP087') == 1
 elseif strcmp(name,'HUP088') == 1
     ieeg_name = 'HUP88_phaseII';
 elseif strcmp(name,'HUP094') == 1
-    ieeg_name = 'HUP94_phaseII';
+    ieeg_name = [];
 elseif strcmp(name,'HUP105') == 1
     ieeg_name = 'HUP105_phaseII';
 elseif strcmp(name,'HUP106') == 1

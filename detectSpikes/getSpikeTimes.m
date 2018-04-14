@@ -124,6 +124,8 @@ channels = 1:nchan;
          if funnyname == 0
             %% parsing of channel names (labeled odd in the iEEG)
 
+             %% parsing of channel names (labeled odd in the iEEG)
+
             % get the name
             origStr = data.chLabels{i};
 
@@ -135,18 +137,27 @@ channels = 1:nchan;
                 fprintf('Warning, there is something weird in the channel labels for channel %d\n',i);
             end
 
-            % Remove leading zero from the number
-            if strcmp(C{3}(1),'0') == 1
-                endOfChan = C{3}(2:end);
-            else
-                endOfChan = C{3};
-            end
+            C = strrep(origStr,[C{1},' '],'');
 
             % Remove -Ref
-            D = strsplit(endOfChan,'-');
+            D = strsplit(C,'-');
+
+            C = strrep(C,['-',D{2}],'');
+
+            % Remove space if present
+            C = strrep(C,' ','');
+
+            % Get the numbers
+            numIdx = regexp(C,'\d');
+
+            if isempty(numIdx) == 0
+                if strcmp(C(numIdx(1)),'0') == 1
+                    C(numIdx(1)) = [];
+                end
+            end
 
             % Final channel name
-            chName = [C{2},D{1}];
+            chName = C;
             chNames{i} = chName;
          else
              origStr = data.chLabels{i};
