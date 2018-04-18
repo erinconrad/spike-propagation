@@ -17,7 +17,7 @@ chLocationsFolder = 'chLocations/';
 newptfile = 'ptWithfs.mat';
 
 %% Load file with filenames and run times
-load([resultsFolder,timeFile]);
+load([resultsFolder,'ptStructs/',timeFile]);
 
 %% Loop through patients, szs, run times
 for i = 1:length(pt)

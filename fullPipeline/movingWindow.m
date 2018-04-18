@@ -9,28 +9,46 @@ function P = movingWindow(gdf)
 
 %% Parameters to change every time
 
+% remove depths?
+remove_electrodes = 0;
+remove_type = {'D'};
+
+% do cleaning step?
+doClean = 0;
+ss_thresh     = 15;                   
+tt_thresh     = 0.015;  
+
 % some distance between channels for channel weights. 
 dmin = 15; 
 
-% Output file name to save
-outputName = 'HUP80_movingWindow_sz1_includesz_6hrs_test.mat';
-%outputName = 'HUP78_oneMinBlocks.mat';
+% threshold for Marsh lab algorithm
+tmul = 13;
 
-outputGDF = 'HUP080_sz1_gdf_test.mat';
+% Output file name to save
+outputName = 'HUP80_movingWindow_sz1_24hrs_noremove_noclean.mat';
+%outputName = 'HUP78_oneMinBlocks.mat';
+%outputName = 'HUP107_movingWindow_test.mat';
+
+outputGDF = 'HUP080_sz1_gdf.mat';
+%outputGDF = 'HUP107_sz1_gdf.mat';
 
 % data name (for ieeg.org)
+%dataName = 'HUP107_phaseII';
 dataName = 'HUP80_phaseII';
 %dataName = 'HUP78_phaseII-Annotations';  
 
 % CSV file with electrode locations
+%csvFile = 'HUP107_T1_19991219_electrode_labels.csv';
 csvFile = 'HUP080_T1_19991213_electrode_labels.csv';
 %csvFile = 'HUP078_T1_19971218_electrode_labels.csv';
 
 % The patient name with format as used in the json file
+%ptname = 'HUP107';
 ptname = 'HUP080';
 %ptname = 'HUP078';
 
 % The number of the patient
+%pt = 107;
 pt = 80;
 %pt = 78;
 
@@ -73,8 +91,9 @@ fs = data.fs;
 %% Run the getSpikes script once as a dummy run just to produce a file of electrode locations
 dummyRun = 1;
 outputData = 0;
-[~,electrodeData,~] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,...
-    dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname);
+[~,electrodeData,~] = getSpikeTimes(0,ptname,dataName,electrodeFile,ptInfo,pwfile,...
+    dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,tmul);
+Patient(pt).electrodeData = electrodeData;
 
 %% Define seizure onset and offset times for each seizure
 for i = 1:length(fieldnames(Patient(pt).seizures))
@@ -85,17 +104,18 @@ end
 %% Define the start and stop times of each block prior to the seizure
 
 % Loop through all the seizures
-for i = 2:2%length(Patient(pt).sz)
+for i = 1:1%length(Patient(pt).sz)
     
     
     % Skip the seizure if it's too close to the start of the data
     if Patient(pt).sz(i).onset < sPerBlock/2+2
-        continue
+     %   continue
     end
     
     % The initial time of the first block for the seizure is the seizure
     % onset time minus the number of blocks x time per block/2    
-    initialTime = Patient(pt).sz(i).onset-sPerBlock/2-1;
+    initialTime = max(Patient(pt).sz(i).onset-sPerBlock/2,1);
+    
     
     % Define the run times
     Patient(pt).sz(i).runTimes(1:2) = [initialTime, initialTime+sPerBlock-1];
@@ -110,7 +130,7 @@ end
 if nargin ==0
     
 % Loop through all seizures
-for i = 1:length(Patient(pt).sz)
+for i = 1:1%length(Patient(pt).sz)
     tic
     fprintf('Doing seizure %d of %d\n',i,length(Patient(pt).sz));
     
@@ -134,8 +154,8 @@ for i = 1:length(Patient(pt).sz)
            %% calculate gdf (spike times and locations) for the chunk in the block
            fprintf('Detecting spikes\n');
            dummyRun = 0;
-           [gdft,~,~] = getSpikeTimes(currTimes,dataName,electrodeFile,ptInfo,pwfile,...
-               dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname);
+           [gdft,~,~] = getSpikeTimes(currTimes,ptname,dataName,electrodeFile,ptInfo,pwfile,...
+               dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,tmul);
 
            if isempty(gdft) == 0
                % Adjust the times based on what chunk it is
@@ -165,6 +185,13 @@ if nargin == 0
     P = 0;
     
 else
+    
+%% Remove depth electrodes
+if remove_electrodes == 1
+    
+    gdf = removeChs(gdf,electrodeData,remove_type);
+    
+end
 
 %% Get spike sequences for the block
 for i = 1:length(Patient(pt).sz)
@@ -181,7 +208,24 @@ for i = 1:length(Patient(pt).sz)
 
     Patient(pt).sz(i).stats.nseqs = size(Patient(pt).sz(i).data.sequences,2)/2;
     Patient(pt).sz(i).stats.seqfreq = Patient(pt).sz(i).stats.nseqs/sPerBlock;
-
+    
+    % Do cleaning step
+    if doClean == 1
+        allSeq = Patient(pt).sz(i).data.sequences;
+        iclean = spt_seqclust(Patient(pt).sz(i).data.xyChan,allSeq,ss_thresh,tt_thresh);
+        
+        % Get an array of the iclean indices and the subsequent ones going up by 2
+        % per sequence to help index allseq
+        y = zeros(length(iclean)*2, 1); 
+        y(1:2:end-1)=(iclean-1)*2+1; 
+        y(2:2:end)=(iclean-1)*2+2;
+        
+        cleanSeq = allSeq(:,y);
+        Patient(pt).sz(i).data.oldSequences = allSeq;
+        Patient(pt).sz(i).data.sequences = cleanSeq;
+        Patient(pt).sz(i).data.iclean = iclean;
+        
+    end
     
 end
 

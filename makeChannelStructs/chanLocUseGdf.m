@@ -75,6 +75,7 @@ for i = 1:nChans % this loops through the electrode file channels
            electrodeData.electrodes(j).xyz = [electrodeData.electrodes(j).x,...
            electrodeData.electrodes(j).y,electrodeData.electrodes(j).z];
            electrodeData.electrodes(j).name = out{(i-1)*8+5};
+           electrodeData.electrodes(j).type = out{(i-1)*8+6};
            ignoreCh = 0;
            break
        else

@@ -1,5 +1,5 @@
 function [gdf,electrodeData,fs] = portGetSpikes(desiredTimes,dataName,...
-    electrodeFile,ignoreElectrodes,pwfile)
+    electrodeFile,ignoreElectrodes,pwfile,tmul,absthresh)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -10,14 +10,9 @@ of spikes, the first column has the channel location of the spike and the
 
 %% Parameters
 whichDetector = 2; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
-
 setChLimits = 0;
 multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
 multiChTime = .025; % The time period over which spikes need to occur across multiple channels to toss
-
-% Bermudez algorithm parameters
-tmul=13; % threshold multiplier
-absthresh=300;
 
 
 %% Load EEG data info
@@ -59,10 +54,7 @@ nchan = length(data.chLabels);
         C = strrep(C,['-',D{2}],'');
     end
     
-    
-    
-    
-    
+     
     % Remove space if present
     C = strrep(C,' ','');
 
@@ -75,8 +67,6 @@ nchan = length(data.chLabels);
         end
     end
 
-    
-
     % Final channel name
     chName = C;
     chNames{i} = chName;
@@ -86,7 +76,6 @@ nchan = length(data.chLabels);
    
 for i = 1:length(data.chLabels)
     chName = chNames{i};
-   
     for j = 1:length(ignoreElectrodes)
         if strcmp(chName,ignoreElectrodes{j}) == 1
             chIgnore(i) = 1;
@@ -108,8 +97,7 @@ nchan = length(channels);
 % identities of these newly indexed channels
 
 
-
-%% make the list of channel locations
+% make the list of channel locations
 electrodeData = chanLocUseGdf(unignoredChLabels,electrodeFile);
 
 % Get the indices I want to look at
@@ -140,9 +128,7 @@ if whichDetector == 1
     end
 
 elseif whichDetector == 2
-     addpath('./SamCode');
-    % This calls the Bermudez detector
-    % 
+    
     % I have not edited this at all at this point.
     gdf = fspk2(data.values,tmul,absthresh,length(channels),data.fs);
 

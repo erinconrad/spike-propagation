@@ -111,7 +111,7 @@ fs = data.fs;
 dummyRun = 1;
 outputData = 0;
 [~,electrodeData,extrastuff] = getSpikeTimes(0,dataName,electrodeFile,ptInfo,pwfile,...
-    dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname);
+    dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,tmul);
 
 %% Define seizure onset and offset times for each seizure
 for i = 1:length(fieldnames(Patient(pt).seizures))
@@ -190,7 +190,7 @@ for i = 1:length(Patient(pt).sz)
                fprintf('Detecting spikes\n');
                dummyRun = 0;
                [gdft,~,~] = getSpikeTimes(currTimes,dataName,electrodeFile,ptInfo,pwfile,...
-                   dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname);
+                   dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,tmul);
                
                % Adjust the times based on what chunk it is
                gdft(:,2) = gdft(:,2)+currTimes(1)-desiredTimes(1);
@@ -206,7 +206,7 @@ for i = 1:length(Patient(pt).sz)
                dummyRun = 0;
                keepEKG = 1;
                ignore = 0;
-               [gdfEKG,~,~] = getSpikeTimes(desiredTimes,dataName,electrodeFile,...
+               [gdfEKG,~,~] = getSpikeTimes(desiredTimes,ptname,dataName,electrodeFile,...
                    ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname);
 
                % remove spikes that occur too close to EKG channel spikes

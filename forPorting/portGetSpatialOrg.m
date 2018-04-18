@@ -8,12 +8,10 @@ dmin = 15;
 %electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
 addpath(p1);
-gdfFolder = 'gdf/';
-chLocationsFolder = 'chLocations/';
 ptWithSeq = 'ptWithSeq.mat';
 finalPt = 'finalPt.mat';
 
-load([resultsFolder,ptWithSeq]);
+load([resultsFolder,'ptStructs/',ptWithSeq]);
 
 
 for i = 1:length(pt)
@@ -72,4 +70,4 @@ for i = 1:length(pt)
  
 end
 
-save([resultsFolder,finalPt],'pt');
+save([resultsFolder,'ptStructs/',finalPt],'pt');

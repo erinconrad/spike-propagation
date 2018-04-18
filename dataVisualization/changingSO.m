@@ -16,8 +16,7 @@ for i = 1:length(P(pt).sz(sz).tblock)
     times = [times,(P(pt).sz(sz).tblock(i).times(1)+...
         P(pt).sz(sz).tblock(i).times(2))/2+P(pt).sz(sz).runTimes(1)];
     
-    allSF = [allSF,length(P(pt).sz(sz).tblock(i).sIdx)/...
-        (P(pt).sz(sz).tblock(i).times(2)-P(pt).sz(sz).tblock(i).times(1))];
+    allSF = [allSF,length(P(pt).sz(sz).tblock(i).sIdx)];
 end
 
 allRat =  allSO./allSF;
@@ -58,7 +57,7 @@ plot(times/scale,toPlot,'color','k','linewidth',2);
 plot([szTimes(1) szTimes(1)]/scale,get(gca,'ylim'),'--','color','k','linewidth',3);
 ylabel(sprintf('%s',ptitle));
 xlabel('Time (h)');
-title([sprintf('%s',ptitle),' surrounding seizure']);
+title([sprintf('%s surrounding seizure for patient HUP%d',ptitle,pt)]);
 set(gca,'FontSize',15)
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;

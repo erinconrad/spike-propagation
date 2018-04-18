@@ -3,16 +3,16 @@ function visualizeSpikes(dataName,csvFile,ptname,pt,times,whichCh)
 
 %% Parameters to change every time
 
-% ictal or pre-ictal
-ictal = 1;
+% ictal, pre-ictal, or inter-ictal
+ictal = 3;
 doplot =  1;
 
 % which seizure
-whichSz = 2;
+whichSz = 1;
 
 if nargin == 0
 % which channels
-whichCh = [50,51,52,53,54];
+whichCh = [10,30,50,60,70];
 
 
 
@@ -37,7 +37,6 @@ ptname = 'HUP080';
 pt = 80;
 %pt = 78;
 
-times = [36000 36516];
 end
 
 % Remove EKG artifact?
@@ -76,15 +75,18 @@ end
 duration = Patient(pt).sz(whichSz).offset - Patient(pt).sz(whichSz).onset;
 
 if ictal == 1
-    times = [Patient(pt).sz(whichSz).onset,Patient(pt).sz(whichSz).offset];
-else
-    times = [Patient(pt).sz(whichSz).onset-duration*1,Patient(pt).sz(whichSz).offset];
+    times = [Patient(pt).sz(whichSz).onset,Patient(pt).sz(whichSz).onset + 15];
+elseif ictal == 2
+    times = [Patient(pt).sz(whichSz).onset-15,Patient(pt).sz(whichSz).onset];
+elseif ictal == 3
+    times = [Patient(pt).sz(whichSz).onset-60*10,...
+        Patient(pt).sz(whichSz).onset-60*10+15];
    
 end
 end
 
 
-times = [36617 37116];
+%times = [36617 37116];
 %times = [594955 595019];
 
 %times = 34117+[800,850];
@@ -100,7 +102,7 @@ fs = data.fs;
 
 %% calculate gdf (spike times and locations) and output the data in that time
 fprintf('Detecting spikes\n');
-[gdf,~,extraoutput] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,0,funnyname);
+[gdf,~,extraoutput] = getSpikeTimes(times,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,0,funnyname);
 values = extraoutput{1};
 unignoredChLabels = extraoutput{2};
 plottimes =  [1:size(values,1)]/fs;
@@ -111,7 +113,7 @@ plottimes =  [1:size(values,1)]/fs;
 %% remove spikes that occur too close to EKG channel spikes
 if rmEKGArtifact == 1
     %% calculate gdf and values of EKG channels
-[gdfEKG,~,extraoutputEKG] = getSpikeTimes(times,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,1,0,funnyname);
+[gdfEKG,~,extraoutputEKG] = getSpikeTimes(times,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,1,0,funnyname);
 valuesEKG = extraoutputEKG{1};
 unignoredChLabelsEKG = extraoutputEKG{2};
 plottimesEKG =  [1:size(values,1)]/fs;
@@ -154,7 +156,8 @@ legend(pl,legnames,'Location','northeast');
 xlabel('Time (s)');
 ylabel('Amplitude');
 
-if ictal == 1, ictext = 'Ictal'; else, ictext = 'Pre-ictal and ictal'; end
+if ictal == 1, ictext = 'Ictal'; elseif ictal == 2, ictext = 'Pre-ictal';...
+elseif ictal == 3, ictext = 'inter-ictal'; end
 title(sprintf('%s data and spike detections for %s seizure %d',...
     ictext,ptname,whichSz));
 set(gca,'fontsize',15);

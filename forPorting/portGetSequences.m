@@ -1,5 +1,8 @@
 clear
 
+%% Remove depth electrodes
+rmDepth = 1;
+rmType = 'D';
 
 %% File names
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -7,22 +10,25 @@ clear
 p1 = genpath(scriptFolder);
 addpath(p1);
 ptWithFs = 'ptWithfs.mat';
-gdfFolder = 'gdf/';
+gdfFolder = [resultsFolder,'gdf/'];
 chLocationsFolder = 'chLocations/';
 ptWithSeq = 'ptWithSeq.mat';
 
 %% Load file with filenames and run times
-load([resultsFolder,ptWithFs]);
+load([resultsFolder,'ptStructs/',ptWithFs]);
 
 %% Loop through patients and seizures
 for i = 1:length(pt)
     
-    if exist(pt(i).chLocationFile,'file') == 0
-        continue
-    end
+    % Get electrode data
+    electrodeData =  pt(i).electrodeData;
     
     for j = 1:length(pt(i).sz)
         if isfield(pt(i).sz,'runTimes') == 0
+            continue
+        end
+        
+        if isempty(pt(i).electrodeData) == 1
             continue
         end
         
@@ -41,15 +47,14 @@ for i = 1:length(pt)
         
         for k = 1:length(pt(i).sz(j).chunkFiles)
             
-            if exist([pt(i).sz(j).chunkFiles{k}],'file') == 0
+            if exist([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'file') == 0
                 continue
             end
             
             % Load gdf file
-            load([pt(i).sz(j).chunkFiles{k}]);
+            load([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}]);
             
-            % Load chLocations file
-            load([pt(i).chLocationFile]);
+            
             
             if isempty(gdf) == 1
                 continue
@@ -58,6 +63,10 @@ for i = 1:length(pt)
             gdf(:,2) = gdf(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
             gdf_all = [gdf_all;gdf];
             
+        end
+        
+        if rmDepth == 1
+            gdf_all = removeChs(gdf_all,electrodeData,rmType);
         end
         
         % Now that you have all the spikes for the desired patient and
@@ -72,5 +81,5 @@ for i = 1:length(pt)
 end
 
 
-save([resultsFolder,ptWithSeq],'pt');
+save([resultsFolder,'ptStructs/',ptWithSeq],'pt');
 

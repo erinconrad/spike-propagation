@@ -1,7 +1,6 @@
 %% fspk2 By: Camilo Bermudez 7/31/13
 
 function [gdf] = fspk2(eeg,tmul,absthresh,n_chans,srate)
-fprintf('Hello\n');
 %{
 
 This program is the non-GUI version of the spike detection algorithm fspk.

@@ -1,5 +1,5 @@
-function [gdf,electrodeData,extraOutput] = getSpikeTimes(desiredTimes,json_name,dataName,...
-    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,tmul)
+function [gdf,electrodeData,extraOutput] = getSpikeTimes(desiredTimes,dataName,...
+    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -51,7 +51,7 @@ multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at 
 multiChTime = .025; % The time period over which spikes need to occur across multiple channels to toss
 
 % Bermudez algorithm parameters
-%tmul=10; % threshold multiplier, default is 13
+tmul=13; % threshold multiplier
 absthresh=300;
 
 % If you didn't pass it arguments, then use the ones written here
@@ -80,7 +80,7 @@ if nargin == 0
     ignore = 0; % should we ignore any electrodes? 
 end
 
-ptname = json_name;
+
 
 %% Load EEG data info
 % calling this with 0 and 0 means I will just get basic info like sampling
@@ -92,7 +92,18 @@ data = getiEEGData(dataName,0,0,pwfile);
 % requires parsing because the name of the patient in json file is
 % different from iEEG
 % only look at the part of the name before the _
+C = strsplit(dataName,'_');
+ptname = C{1};
 
+% Find the indices in the name with the numbers
+ptnum = regexp(ptname,'\d');
+
+% if the number is only 2 digits, pad it with a leading zero
+if length(ptnum) == 2
+    ptname = [ptname(1:ptnum(1)-1),'0',ptname(ptnum(1):end)];
+elseif length(ptnum) < 2
+    fprintf('The name of the patient is unexpected\n');
+end
 
 
 
@@ -111,7 +122,7 @@ channels = 1:nchan;
          % Don't need to do this for non-HUP datasets as I don't have them
          % in the json file
          if funnyname == 0
-            
+            %% parsing of channel names (labeled odd in the iEEG)
 
              %% parsing of channel names (labeled odd in the iEEG)
 
@@ -123,18 +134,15 @@ channels = 1:nchan;
 
             % I would expect all of the names to start with EEG
             if strcmp(C{1},'EEG') == 0
-                fprintf('Warning, there is something weird in the channel labels for channel %d in patient %s\n',i,dataName);
-                C = C{1};
-
-            else
-                C = strrep(origStr,[C{1},' '],'');
-
-                % Remove -Ref
-                D = strsplit(C,'-');
-
-                C = strrep(C,['-',D{2}],'');
+                fprintf('Warning, there is something weird in the channel labels for channel %d\n',i);
             end
 
+            C = strrep(origStr,[C{1},' '],'');
+
+            % Remove -Ref
+            D = strsplit(C,'-');
+
+            C = strrep(C,['-',D{2}],'');
 
             % Remove space if present
             C = strrep(C,' ','');
@@ -147,7 +155,7 @@ channels = 1:nchan;
                     C(numIdx(1)) = [];
                 end
             end
-            
+
             % Final channel name
             chName = C;
             chNames{i} = chName;
@@ -395,22 +403,22 @@ elseif dummyRun == 0
         %% Save spike times
         % note that this only has data from the unignored channels
         save([gdfFolder outFile], 'gdf','unignoredChLabels');
+
+        %% Sample plot
+        if 1 == 0
+        figure
+        indicesToPlot = 10000:14000;
+        chsToPlot = [68];
+        plotSpikeTimes(data,out,indicesToPlot,chsToPlot)
+        end
     end
-    %% Sample plot
-    if 1 == 0
-    figure
-    indicesToPlot = 10000:14000;
-    chsToPlot = [10,30,50,68,80];
-    plotSpikeTimes(data,out,indicesToPlot,chsToPlot)
-    end
-    
     
    
     
 end
 
 if outputData == 1
-   extraOutput = {data.values,unignoredChLabels,tmul};
+   extraOutput = {data.values,unignoredChLabels};
 else
    extraOutput = 0; 
 end

@@ -15,7 +15,7 @@ outputData = 1;
 keepEKG = 0;
 ignore = 1;
 funnyname = 0;
-onlyclean = 0;
+onlyclean = 1;
 % data name (for ieeg.org)
 dataName = 'HUP80_phaseII';
 %dataName = 'HUP78_phaseII-Annotations';  
