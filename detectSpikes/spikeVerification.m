@@ -3,9 +3,10 @@ function spikeVerification(P)
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 
 
-thresholds_to_try = [13 10 8];
-times_to_try = [1 2 3];
-soz = [0 1];
+thresholds_to_try = [5 13 18];
+absthresh_to_try = [50 300 600];
+times_to_try = [1 3];
+soz = [0];
 
 for i = 1:length(P)
     outputFolder = [resultsFolder,'spike verification/',P(i).name,'/'];
@@ -28,8 +29,11 @@ for i = 1:length(P)
        
         for k = thresholds_to_try
             
+            for m = absthresh_to_try
             
-            portVisualizeSpikes(P,i,1,j,s,chIds,k);
+                portVisualizeSpikes(P,i,1,j,s,chIds,k,m);
+                
+            end
             
             
             

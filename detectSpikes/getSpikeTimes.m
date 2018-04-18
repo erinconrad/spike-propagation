@@ -1,5 +1,5 @@
 function [gdf,electrodeData,extraOutput] = getSpikeTimes(desiredTimes,json_name,dataName,...
-    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,tmul)
+    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,tmul,absthresh)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -52,7 +52,7 @@ multiChTime = .025; % The time period over which spikes need to occur across mul
 
 % Bermudez algorithm parameters
 %tmul=10; % threshold multiplier, default is 13
-absthresh=300;
+%absthresh=300;
 
 % If you didn't pass it arguments, then use the ones written here
 if nargin == 0

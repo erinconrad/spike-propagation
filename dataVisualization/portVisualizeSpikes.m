@@ -1,4 +1,4 @@
-function portVisualizeSpikes(Patient,pt,whichSz,ictal,szOnsetZone,chIds,tmul)
+function portVisualizeSpikes(Patient,pt,whichSz,ictal,szOnsetZone,chIds,tmul,absthresh)
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 
@@ -59,7 +59,7 @@ fs = data.fs;
 
 %% calculate gdf (spike times and locations) and output the data in that time
 fprintf('Detecting spikes\n');
-[gdf,~,extraoutput] = getSpikeTimes(times,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,1,0,tmul);
+[gdf,~,extraoutput] = getSpikeTimes(times,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,1,0,tmul,absthresh);
 values = extraoutput{1};
 unignoredChLabels = extraoutput{2};
 tmul = extraoutput{3};
@@ -118,8 +118,8 @@ legend(pl,legnames,'Location','northeast');
 xlabel('Time (s)');
 ylabel('Amplitude');
 
-title(sprintf('%s data and spike detections for %s seizure %d\n showing %s electrodes, threshold of %d',...
-    ictext,ptname,whichSz,elec_text,tmul));
+title(sprintf('%s data and spike detections for %s seizure %d\n showing %s electrodes, threshold of %d, absthresh of %d',...
+    ictext,ptname,whichSz,elec_text,tmul,absthresh));
 set(gca,'fontsize',15);
 
 
@@ -127,7 +127,7 @@ set(gca,'fontsize',15);
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.6, 1, 0.6]);
 
 
-outputFile = [ptname,'_',ictext,'_sz_',sprintf('%d',whichSz),elecf_text,'_threshold_',sprintf('%d',tmul),'.png'];
+outputFile = [ptname,'_',ictext,'_sz_',sprintf('%d',whichSz),elecf_text,'_threshold_',sprintf('%d',tmul),'_absthresh_',sprintf('%d',absthresh),'.png'];
 
 saveas(gcf,[outputFolder,outputFile])
 close(gcf);

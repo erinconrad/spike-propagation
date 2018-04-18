@@ -17,7 +17,7 @@ ptInfo = loadjson(jsonfile);
 ptnames = fieldnames(ptInfo.PATIENTS);
 
 %% Desired times
-totalTime = 3600*12; % Look 12 hours before the sz and 12 hours after
+totalTime = 3600*24; % Look 12 hours before the sz and 12 hours after
 chunkTime = 2000; % Save it in 2000 s chunks (ieeg crashes if more than this)
 nchunks = ceil(totalTime/chunkTime);
 window = 3600; % For spatial organization calculation, calculate SO over a one hour window
