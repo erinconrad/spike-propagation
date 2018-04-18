@@ -32,7 +32,7 @@ chLocationsFolder = 'chLocations/';
 newptfile = 'ptWithfs.mat';
 
 %% Load file with filenames and run times
-if merge == 1
+if merge == 1 && exist([resultsFolder,'ptStructs/',newptfile],'file') ~= 0
     load([resultsFolder,'ptStructs/',newptfile]);
 else
     load([resultsFolder,'ptStructs/',timeFile]);
