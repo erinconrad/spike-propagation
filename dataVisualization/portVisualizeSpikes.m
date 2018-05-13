@@ -1,9 +1,41 @@
-function portVisualizeSpikes(Patient,pt,whichSz,ictal,szOnsetZone,chIds,tmul,absthresh)
+%{
+
+This function visualizes spike detections for a specified time
+
+Inputs:
+Patient: the standard patient structure
+pt: which patient
+whichSz: which seizure
+ictal: what time period I want to look at: ictal, immediately pre-ictal, or
+a specified time that I input.
+szOnsetZone: look at seizure onset zone electrodes or specified channels
+that I enter
+chIds: the specific channels to plot (if szOnsetZone == 0)
+tmul: what tmul to use for the spike detector
+absthresh: what absthresh to use for the spike detector
+startTime: what time to look at (if ictal == 3)
+
+
+%}
+
+
+function portVisualizeSpikes(Patient,pt,whichSz,ictal,szOnsetZone,chIds,tmul,absthresh,startTime)
+
+%% Parameters
+
+% do EKG
+ekg_only = 0;
+
+% how much time to detect
+duration = 60; %default 15
+
+% how much time to plot
+plot_duration = 15;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 
 if ictal == 1, ictext = 'Ictal'; elseif ictal == 2, ictext = 'Pre-ictal';...
-elseif ictal == 3, ictext = 'inter-ictal'; end
+elseif ictal == 3, ictext = 'spec-time'; end
 outputFolder = [resultsFolder,'spike verification/',Patient(pt).name,'/'];
 
 if szOnsetZone == 0
@@ -37,12 +69,11 @@ end
 
 %% Define the start and stop times of each seizure
 if ictal == 1
-    times = [Patient(pt).sz(whichSz).onset,Patient(pt).sz(whichSz).onset + 15];
+    times = [Patient(pt).sz(whichSz).onset,Patient(pt).sz(whichSz).onset + duration];
 elseif ictal == 2
     times = [Patient(pt).sz(whichSz).onset-15,Patient(pt).sz(whichSz).onset];
 elseif ictal == 3
-    times = [Patient(pt).sz(whichSz).onset-60*10,...
-        Patient(pt).sz(whichSz).onset-60*10+15];
+    times = [startTime,startTime+duration];
    
 end
 
@@ -57,9 +88,10 @@ end
 data = getiEEGData(dataName,0,0,pwfile);  
 fs = data.fs;
 
+
 %% calculate gdf (spike times and locations) and output the data in that time
 fprintf('Detecting spikes\n');
-[gdf,~,extraoutput] = getSpikeTimes(times,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,1,0,tmul,absthresh);
+[gdf,~,extraoutput] = getSpikeTimes(times,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,ekg_only,1,0,tmul,absthresh);
 values = extraoutput{1};
 unignoredChLabels = extraoutput{2};
 tmul = extraoutput{3};
@@ -86,10 +118,16 @@ if isempty(gdf) == 1
 end
 
 %% Get which channels to plot
-if szOnsetZone == 1
-    [~,chIds] = ismember(Patient(pt).sz(whichSz).electrodes,unignoredChLabels);
+if ekg_only == 0
+    if szOnsetZone == 1
+        [~,chIds] = ismember(Patient(pt).sz(whichSz).electrodes,unignoredChLabels);
+        nchs = length(chIds);
+        whichCh = chIds(1:min(10,nchs));
+    end
+else
+    chIds = 1:length(unignoredChLabels);
     nchs = length(chIds);
-    whichCh = chIds(1:min(10,nchs));
+    whichCh = chIds(1:min(10,nchs)); 
 end
 
 %% Plot 
@@ -110,13 +148,14 @@ for i = 1:length(whichCh)
     
     spikeamp = ones(size(spiketimes,1),1)*max(values(:,ch))-range;
     
-    scatter(spiketimes,spikeamp,colors{i});
+    scatter(spiketimes,spikeamp,60,colors{i});
     range = range + max(values(:,ch)) - min(values(:,ch));
 end
 legnames = unignoredChLabels(whichCh);
 legend(pl,legnames,'Location','northeast');
 xlabel('Time (s)');
 ylabel('Amplitude');
+xlim([0 plot_duration]);
 
 title(sprintf('%s data and spike detections for %s seizure %d\n showing %s electrodes, threshold of %d, absthresh of %d',...
     ictext,ptname,whichSz,elec_text,tmul,absthresh));
@@ -130,7 +169,7 @@ set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.6, 1, 0.6]);
 outputFile = [ptname,'_',ictext,'_sz_',sprintf('%d',whichSz),elecf_text,'_threshold_',sprintf('%d',tmul),'_absthresh_',sprintf('%d',absthresh),'.png'];
 
 saveas(gcf,[outputFolder,outputFile])
-close(gcf);
+%close(gcf);
 
 fprintf('\n');
 

@@ -1,4 +1,4 @@
-function portVisualizeSequences(P,pt,whichSz,whichSeq)
+function portVisualizeSequences(P,pt,whichSz,whichSeq,allSpikes)
 % This is another function to plot sequences, using the spike times from
 % the inputted structure
 
@@ -6,7 +6,7 @@ function portVisualizeSequences(P,pt,whichSz,whichSeq)
 prows = 2;
 columns =  6/prows;
 
-surroundtime = 4;
+surroundtime = 7.5;
 
 dummyRun = 0;
 vanleer = 0;
@@ -84,8 +84,7 @@ addpath(p1);
 ptInfo = loadjson(jsonfile);
 
 
-
-
+if allSpikes == 0, asText = 'justSeq'; elseif allSpikes ==1, asText = 'newSpike'; end
 
 %% Define the start and stop times of each seizure
 
@@ -109,28 +108,32 @@ for i = 1:length(whichSeq)
 
     %% Get the data for these times
     fprintf('Detecting spikes\n');
-    [~,~,extraoutput] = getSpikeTimes(times,dataName,1,ptInfo,pwfile,...
-        dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname);
+    [gdf,~,extraoutput] = getSpikeTimes(times,ptname,dataName,1,ptInfo,pwfile,...
+        dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,8,300);%P(pt).tmul,P(pt).absthresh);
     values = extraoutput{1};
     unignoredChLabels = extraoutput{2};
     plottimes =  [1:size(values,1)]/fs;
 
     %% Get the spike times
-    spikes = [chan_col,time_col];
-    
+    if allSpikes == 0
+        spikes = [chan_col,time_col];
+    elseif allSpikes == 1
+        spikes = gdf;
+        spikes(:,2) = spikes(:,2) + time_col(1) - surroundtime;
+    end
+
     seq(i).seq = s;
     seq(i).spikes = spikes;
     seq(i).plottimes = plottimes;
     seq(i).values = values;
     seq(i).whichCh = whichCh;
     seq(i).time_col = time_col;
-
 end
 
 %% Plot 
 colors = {'b','r','g','c','m'};
 figure
-set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.9, 0.8]);
+set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.95, 0.8]);
 
 for s = 1:length(whichSeq)
     whichcol = ceil(s/2);
@@ -150,7 +153,7 @@ for s = 1:length(whichSeq)
 
         spikeamp = ones(size(spiketimes,1),1)*max(seq(s).values(:,ch))-range;
 
-        scatter(spiketimes,spikeamp,60,colors{i},'filled');
+        scatter(spiketimes,spikeamp,80,colors{i},'filled');
         range = range + max(seq(s).values(:,ch)) - min(seq(s).values(:,ch));
     end
     legnames = unignoredChLabels(seq(s).whichCh);
@@ -161,6 +164,12 @@ for s = 1:length(whichSeq)
 
     text(0.7,0.1,sprintf('Sequence %d',seq(s).seq),'units','normalized','FontSize',15);
     set(gca,'fontsize',15);
+    xticks = 1:2:surroundtime*2-1;
+    yl = ylim;
+    yloc = yl(1)+(yl(2)-yl(1))*0.05;
+    for t = 1:length(xticks)
+       tt = text(xticks(t),yloc,sprintf('%d s',xticks(t)),'FontSize',15); 
+    end
 
 end
 
@@ -181,9 +190,9 @@ end
 %}
 
 
-outputFile = [ptname,'_sz_',sprintf('%d',whichSz),'.png'];
+outputFile = [ptname,'_sz_',sprintf('%d',whichSz),'_',asText,'_tmul8_.png'];
 
-saveas(gcf,[resultsFolder,'plots/',outputFile])
+saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/',outputFile])
 
 
 fprintf('no\n');

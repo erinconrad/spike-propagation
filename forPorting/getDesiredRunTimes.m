@@ -24,13 +24,13 @@ window = 3600; % For spatial organization calculation, calculate SO over a one h
 overlap = 600; % Allow 10 minutes of overlap between the SO windows
 
 %% Loop through the patients in the json file
-for i = 1:length(ptnames)
+for i = 1%:length(ptnames)
     info = ptInfo.PATIENTS.(ptnames{i});
     
     % Get basic info
     pt(i).name = ptnames{i};
     pt(i).ignore_electrodes = info.IGNORE_ELECTRODES;
-    [pt(i).ieeg_name,electrodeFile] = ieegAndElectodeNames(pt(i).name);
+    [pt(i).ieeg_name,electrodeFile,pt(i).tmul,pt(i).absthresh] = ieegAndElectodeNames(pt(i).name);
     pt(i).chLocationFile = [pt(i).name,'_chLocations.mat'];
     pt(i).sz_onset = info.SeizureOnset;
 
@@ -66,7 +66,7 @@ for i = 1:length(ptnames)
        % Initialize run times and file names
        pt(i).sz(j).runTimes = zeros(nchunks,2);
        pt(i).sz(j).chunkFiles = cell(nchunks,1);
-       
+       pt(i).sz(j).EKGchunkFiles = cell(nchunks,1);
 
        
        % Create the times (in 2000 second chunks) over which we will detect
@@ -80,6 +80,10 @@ for i = 1:length(ptnames)
            pt(i).sz(j).chunkFiles{k} = ...
                [pt(i).name,'_sz_',sprintf('%d',j),'_times_',sprintf('%d',startTime),...
                '-',sprintf('%d',endTime),'.mat'];
+           
+           pt(i).sz(j).EKGchunkFiles{k} = ...
+               [pt(i).name,'_sz_',sprintf('%d',j),'_times_',sprintf('%d',startTime),...
+               '-',sprintf('%d',endTime),'_ekg_','.mat'];
        end
        
        % Also create the times for doing the moving window to calculate RL,

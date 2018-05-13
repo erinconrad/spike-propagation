@@ -11,25 +11,25 @@ clear
 
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
-overwrite = 0; 
+overwrite = 1; 
 
 % Should we try to merge the patient structure with an existing, incomplete
 % patient structure?
-merge = 1;
+merge = 0;
 
 % Berumudez spike detector parameters
-tmul = 13; % the threshold value for the Bermudez spike detector (default is 13)
-absthresh = 300; % absolute threshold value for the Bermudez spike detector (default is 300)
+%tmul = 13; % the threshold value for the Bermudez spike detector (default is 13)
+%absthresh = 300; % absolute threshold value for the Bermudez spike detector (default is 300)
 
 %% File names
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 %electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
 addpath(p1);
-timeFile = 'desiredTimes.mat'; 
+timeFile = 'ptWithElectrodeData.mat'; 
 gdfFolder = [resultsFolder,'gdf/'];
 chLocationsFolder = 'chLocations/';
-newptfile = 'ptWithfs.mat';
+newptfile = 'ptPostGDF.mat';
 
 %% Load file with filenames and run times
 if merge == 1 && exist([resultsFolder,'ptStructs/',newptfile],'file') ~= 0
@@ -69,6 +69,21 @@ for i = 1:length(pt)
             fprintf(fid,allwrite);
             fclose(fid);
             
+            desiredTimes = [pt(i).sz(j).runTimes(k,:)];
+            
+            if overwrite == 1 || exist([gdfFolder,pt(i).name,'/',pt(i).sz(j).EKGchunkFiles{k}],'file') == 0
+            
+                % get ekg spikes
+                gdf_ekg = portEKG(desiredTimes,dataName,pwfile,pt(i).tmul,pt(i).absthresh);
+
+                % save ekg gdf file
+                save([gdfFolder,pt(i).name,'/',pt(i).sz(j).EKGchunkFiles{k}],'gdf_ekg');
+                
+            else
+                fprintf('File %s already found, skipping\n',pt(i).sz(j).EKGchunkFiles{k});
+            end
+            
+            
             if exist([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'file') ~= 0
                 if overwrite == 0
                     fprintf('File %s already found, skipping\n',[pt(i).sz(j).chunkFiles{k}]);
@@ -76,19 +91,13 @@ for i = 1:length(pt)
                 end
             end
             
-            desiredTimes = [pt(i).sz(j).runTimes(k,:)];
-            [gdf,electrodeData,fs] = portGetSpikes(desiredTimes,dataName,...
-                [electrodeFolder,electrodeFile],ignoreElectrodes,pwfile,tmul,absthresh);
             
-            % Add fs and electode data to the patient structure
-            pt(i).fs = fs;
-            pt(i).electrodeData = electrodeData;
+            [gdf] = portGetSpikes(desiredTimes,dataName,...
+                pt(i).channels,pwfile,pt(i).tmul,pt(i).absthresh);
+          
             
             % Save gdf file
             save([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'gdf');
-            
-            % Save chLocations file
-            save([electrodeFolder,pt(i).chLocationFile],'electrodeData');
             
            
             % Resave pt file now that I have fs

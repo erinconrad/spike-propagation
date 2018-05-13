@@ -1,10 +1,19 @@
-function [unclean,idx] = findUnclean(P,pt,sz,block)
 
-nseq = size(P(pt).sz(sz).block(block).data.sequences,2)/2;
-nclean = size(P(pt).sz(sz).block(block).data.cleanseq,2)/2;
+%% findUnclean
 
-full = P(pt).sz(sz).block(block).data.sequences;
-full_clean = P(pt).sz(sz).block(block).data.cleanseq;
+% This function takes a group of sequences and cleaned sequences and pulls
+% out the unclean sequences and their corresponding indices
+
+% It takes sequences in the form of P(pt).sz(sz).data
+
+
+function [unclean,idx] = findUnclean(data)
+
+nseq = size(data.sequences,2)/2;
+nclean = size(data.cleanseq,2)/2;
+
+full = data.sequences;
+full_clean = data.cleanseq;
 
 % Pad clean seqs with zeros
 vertdiff = size(full,1)-size(full_clean,1);

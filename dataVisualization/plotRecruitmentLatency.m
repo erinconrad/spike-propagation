@@ -1,15 +1,19 @@
-function plotRecruitmentLatency(P,sz,block)
+function plotRecruitmentLatency(P,pt,sz,block)
 %{ 
 
 This script plots recruitment latencies over the electrodes
 
+It is old and needs to be re-built for the new patient structure
+
 %}
-ptname = 'HUP80';
-dotsize = 70;
-avgRecruitmentLat = P(80).sz(sz).block(block).data.avgRecruitmentLat;
+
+[electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
+ptname = P(pt).name;
+dotsize = 100;
+avgRecruitmentLat = P(pt).sz(sz).blockRL(block).avgRecruitmentLat;
 
 % Get the channel locations for the patient
-chLocs = P(80).sz(sz).block(block).data.xyChan(:,2:4);
+chLocs = P(pt).sz(sz).data.xyChan(:,2:4);
 colormin = min(avgRecruitmentLat);
 colormax = max(avgRecruitmentLat);
 
@@ -26,15 +30,17 @@ for i = 1:size(chLocs,1)
     end
     
 end
-
+title(sprintf('Average recruitment latency across channels for %s block %d',ptname, block));
 colormap jet
 colorbar
-
+grid off
+axis off
+set(gca,'FontSize',15)
 
 outputFile = [ptname,'_','_sz_',sprintf('%d',sz),'_block_',...
     sprintf('%d',block),'_recruitmentLatency','.png'];
 
-saveas(gcf,[resultsFolder,outputFile])
+saveas(gcf,[resultsFolder,'plots/',ptname,'/',outputFile])
 
 
 end

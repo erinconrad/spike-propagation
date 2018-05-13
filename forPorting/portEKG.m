@@ -1,5 +1,4 @@
-function [gdf] = portGetSpikes(desiredTimes,dataName,...
-    channels,pwfile,tmul,absthresh)
+function gdf = portEKG(desiredTimes,dataName,pwfile,tmul,absthresh)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -10,15 +9,36 @@ of spikes, the first column has the channel location of the spike and the
 
 %% Parameters
 whichDetector = 2; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
-setChLimits = 0;
-multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
-multiChTime = .025; % The time period over which spikes need to occur across multiple channels to toss
 
 
 %% Load EEG data info
 % calling this with 0 and 0 means I will just get basic info like sampling
 % rate and channel labels
 data = getiEEGData(dataName,0,0,pwfile);  
+
+
+%% Find ekg electrode numbers
+ekg_electrode_nums = [];
+ekg_electrode_labels = {};
+
+
+ % loop through all channel labels
+ for i = 1:length(data.chLabels)   
+
+    %% parsing of channel names (labeled odd in the iEEG)
+
+    % get the name
+    origStr = data.chLabels{i};
+
+    if contains(origStr,'EKG') == 1
+        ekg_electrode_nums = [ekg_electrode_nums,i];
+        ekg_electrode_labels = [ekg_electrode_labels,origStr];
+    end
+
+ end
+
+ channels = ekg_electrode_nums;
+ fprintf('%d EKG channels found for %s\n',length(ekg_electrode_nums),dataName);
 
 
 %% Prep what data I want to look at
@@ -61,9 +81,10 @@ elseif whichDetector == 2
     else
         fprintf('Detected %d spikes\n',size(gdf,1));
          % put it in seconds
-        gdf(:,2) = gdf(:,2)/data.fs;
+         gdf(:,2) = gdf(:,2)/data.fs;
+
+        out.pos = gdf(:,2); out.chan = gdf(:,1);
     end
-   
 
 elseif whichDetector == 3
     %this is the unedited Janca detector
@@ -83,60 +104,5 @@ elseif whichDetector == 3
     end
 
 end
-
-%% Toss spikes that occur across too high a percentage of channels at the same time
-
-if setChLimits == 1 && isempty(gdf) == 0
-    newgdf =  gdf;
-    tooManyChs = [];
-    i = 1; % start with i = 1 (the first spike)
-    % Loop through the spikes (we are going to variably move through the spikes)
-    while 1
-        scount = 1;
-
-        % if i is the last spike, break
-        if i == size(newgdf,1)
-            break
-        end
-
-       % for each spike, loop through subsequent spikes to see how many
-       % there are across multiple channels occuring at the same time
-       for j = i+1:size(newgdf,1)
-
-           % Get the time difference between the first spike and the last
-           % spike
-           tdiff = newgdf(j,2)-newgdf(i,2);
-
-           % If the difference is small enough, increase the count
-           if tdiff < multiChTime
-               scount = scount + 1;
-           end
-
-           % if the total number of channels spiking in this very close
-           % proximity is >80% of the total number of channels
-           if scount > multiChLimit*nchan
-
-                % Remove these spikes
-                tooManyChs = [tooManyChs;newgdf(i:j,:)];
-                newgdf(i:j,:) = [];
-
-                % Break the inner for loop and move to the next spike
-                i = j;
-                break
-           end
-
-       end
-
-       % advance the index of the spike
-       i = i+1;
-    end
-    fprintf('%d total spikes detected\n',size(gdf,1));
-    fprintf('Percentage of spikes discarded for being across too many channels: %1.1f\n',...
-        size(tooManyChs,1)/size(gdf,1)*100)
-    fprintf('%d spikes remain\n',size(newgdf,1));
-    gdf = newgdf;
-end
-    
-fs = data.fs;
 
 end

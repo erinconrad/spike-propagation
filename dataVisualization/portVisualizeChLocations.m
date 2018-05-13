@@ -65,15 +65,18 @@ for iTime = 1:size(seq,1)
         end
     end
     
+    grid off
+    axis off
+    
     % capture the figure as a frame in the gif
     F(iTime) = getframe(fig);
     im = frame2im(F(iTime));
     [imind,cm] = rgb2ind(im,256);
     
     if iTime == 1
-        imwrite(imind,cm,[resultsFolder,'plots/',filename],'gif', 'Loopcount',inf,'DelayTime',delay);
+        imwrite(imind,cm,[resultsFolder,'plots/',ptname,'/',filename],'gif', 'Loopcount',inf,'DelayTime',delay);
     else
-        imwrite(imind,cm,[resultsFolder,'plots/',filename],'gif','WriteMode','append','DelayTime',delay);
+        imwrite(imind,cm,[resultsFolder,'plots/',ptname,'/',filename],'gif','WriteMode','append','DelayTime',delay);
     end
 
     close(fig)

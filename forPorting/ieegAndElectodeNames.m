@@ -4,8 +4,10 @@
 % the corresponding ieeg.org data name and the electrode file location
 
 
-function [ieeg_name,electrode_name] =  ieegAndElectodeNames(name)
+function [ieeg_name,electrode_name,tmul,absthresh] =  ieegAndElectodeNames(name)
 
+tmul = 13;
+absthresh = 300;
 
 if strcmp(name,'HUP064') == 1
     ieeg_name = 'HUP64_phaseII-Annotations';

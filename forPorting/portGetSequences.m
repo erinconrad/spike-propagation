@@ -1,5 +1,9 @@
 clear
 
+%% Remove EKG artifact
+rmEKG = 1;
+prox = 0.02; % NEED TO CHANGE
+
 %% Remove depth electrodes
 rmDepth = 1;
 rmType = 'D';
@@ -9,7 +13,7 @@ rmType = 'D';
 %electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
 addpath(p1);
-ptWithFs = 'ptWithfs.mat';
+ptWithFs = 'ptPostGDF.mat';
 gdfFolder = [resultsFolder,'gdf/'];
 chLocationsFolder = 'chLocations/';
 ptWithSeq = 'ptWithSeq.mat';
@@ -44,6 +48,7 @@ for i = 1:length(pt)
         
         
         gdf_all = [];
+        gdf_ekg_all = [];
         
         for k = 1:length(pt(i).sz(j).chunkFiles)
             
@@ -54,14 +59,24 @@ for i = 1:length(pt)
             % Load gdf file
             load([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}]);
             
-            
-            
             if isempty(gdf) == 1
                 continue
             end
             
+            % Load gdf ekg file
+            load([gdfFolder,pt(i).name,'/',pt(i).sz(j).EKGchunkFiles{k}]);
+            
+            % remove EKG artifact
+            if rmEKG == 1
+                gdf = removeEKGArtifact(gdf,gdf_ekg,prox);
+            end
+            
             gdf(:,2) = gdf(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
+            gdf_ekg(:,2) = gdf_ekg(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
+            
+            
             gdf_all = [gdf_all;gdf];
+            gdf_ekg_all = [gdf_ekg_all;gdf_ekg];
             
         end
         
@@ -74,6 +89,9 @@ for i = 1:length(pt)
         pt(i).sz(j).stats.nspikes = size(gdf_all,1);
         pt(i).sz(j).data = mainSequences(gdf_all,electrodeData, pt(i).fs);
         pt(i).sz(j).stats.nseqs = size(pt(i).sz(j).data.sequences,2)/2;
+        
+        % Add EKG times
+        pt(i).sz(j).ekg = gdf_ekg_all;
             
     end
     
