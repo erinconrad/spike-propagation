@@ -58,6 +58,9 @@ for i = 1:length(pt)
             continue
         end
         for k = 1:size(pt(i).sz(j).runTimes,1)
+
+            fprintf('Doing chunk %d of %d for patient %d seizure %d\n',...
+                k,size(pt(i).sz(j).runTimes,1),i,j);
             
             % Add a button push to the desmond file (for the purpose of
             % restarting the program if it crashes due to random server

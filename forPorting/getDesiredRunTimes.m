@@ -115,6 +115,9 @@ for i = 1%:length(ptnames)
        end
 
     end
+    
+    % Add a date stamp
+    pt(i).timestamp = datetime('now');
   
 end
 

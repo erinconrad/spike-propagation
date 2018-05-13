@@ -15,7 +15,7 @@ ptnames = fieldnames(ptInfo.PATIENTS);
 timeFile = 'desiredTimes.mat';
 
 %% Load file with filenames and run times
-if overwrite == 1 && exist([resultsFolder,'ptStructs/',newptfile],'file') ~= 0
+if overwrite == 0 && exist([resultsFolder,'ptStructs/',newptfile],'file') ~= 0
     load([resultsFolder,'ptStructs/',newptfile]);
 else
     load([resultsFolder,'ptStructs/',timeFile]);
