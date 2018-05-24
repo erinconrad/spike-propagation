@@ -60,44 +60,30 @@ for iChannel = 1:nChannels
     
 end
 
+spatialOrg = getMI(avgRecruitmentLat,wij);
 
-% Calculate average mean recruitment latency across all channels
-allChannelAvgRecruitmentLat = nanmean(avgRecruitmentLat);  
+%{
+%% Get spatial autocorrelation and statistics
+spatialOrg = getMI(avgRecruitmentLat,wij,1:length(avgRecruitmentLat),spikeCount);
+MIstat = zeros(nperm,1);
 
+for ip = 1:nperm
+    perm = randperm(length(avgRecruitmentLat));
+    MIstat(ip) = getMI(avgRecruitmentLat,wij,perm,spikeCount);
+end
 
-% Calculate spatial organization
-    outsidemultiple = nChannels/nansum(nansum(wij));
-    numerator = 0;
-    denominator = 0;
-    
-    
-    % calculate numerator
-    for iChannel = 1:nChannels
-        if isnan(avgRecruitmentLat(iChannel)) == 1 
-            continue
-        end
-        for jChannel = 1:nChannels
-            if jChannel == iChannel
-                continue
-            end
-            if isnan(avgRecruitmentLat(jChannel)) == 1 
-                continue
-            end
-            numerator = numerator + wij(iChannel,jChannel)*...
-                (avgRecruitmentLat(iChannel)-allChannelAvgRecruitmentLat)*...
-                (avgRecruitmentLat(jChannel)-allChannelAvgRecruitmentLat);
-        end
-    end
-    
-    % calculate denominator
-    for iChannel = 1:nChannels
-        if isnan(avgRecruitmentLat(iChannel)) == 1 
-            continue
-        end
-        denominator = denominator + (avgRecruitmentLat(iChannel)-allChannelAvgRecruitmentLat)^2;       
-    end
-    
-    spatialOrg = outsidemultiple*numerator/denominator;
-    
+MIstat = sort(MIstat);
+CI = [MIstat(alpha*nperm/2),MIstat(end-alpha*nperm/2)];
+if spatialOrg < CI(1) || spatialOrg > CI(2)
+    h = 1;
+else
+    h = 0;
+end
+
+soDiff = abs(spatialOrg-MIstat);
+[~,I] = min(soDiff);
+p = 2*min(I/nperm,(1-I/nperm));
+
+%}
 
 end

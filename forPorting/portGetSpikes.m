@@ -1,4 +1,4 @@
-function [gdf] = portGetSpikes(desiredTimes,dataName,...
+function [gdf,vanleer,bad] = portGetSpikes(desiredTimes,dataName,...
     channels,pwfile,tmul,absthresh)
 
 %{
@@ -13,6 +13,10 @@ whichDetector = 2; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig
 setChLimits = 0;
 multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
 multiChTime = .025; % The time period over which spikes need to occur across multiple channels to toss
+
+% segment time (50 ms segments going from 2 ms before the spike detection
+% to 48 ms after the spike detection)
+vtime = [-0.002,0.048];
 
 
 %% Load EEG data info
@@ -30,6 +34,11 @@ indices = startAndEndIndices(1):startAndEndIndices(2);
 % get the data from those indices and channels (ignoring ignored channels)
 data = getiEEGData(dataName,channels,indices,pwfile);
 
+
+%% Get bad times
+bad = getBadTimes(data);
+bad.empty = bad.empty/data.fs;
+bad.noise(:,1) = bad.noise(:,1)/data.fs;
 
 %% Run spike detector
 if whichDetector == 1
@@ -136,7 +145,12 @@ if setChLimits == 1 && isempty(gdf) == 0
     fprintf('%d spikes remain\n',size(newgdf,1));
     gdf = newgdf;
 end
-    
-fs = data.fs;
+
+if isempty(gdf) == 1
+    vanleer = [];
+else
+    vanleer = vMakeSegments(gdf,data.values,data.fs,vtime);
+end
+
 
 end

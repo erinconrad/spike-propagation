@@ -25,3 +25,7 @@ portGetSequences
 % Calculate the spatial organization
 fprintf('Calculating stats on sequences\n');
 portGetSpatialOrg
+
+% Do vanleer
+fprintf('Doing vanleer\n');
+portVanleer

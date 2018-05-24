@@ -11,6 +11,7 @@ scale = 3600;
 allSO = [];
 allSF = [];
 times = [];
+allCI = [];
 for i = 1:length(P(pt).sz(sz).blockRL)
     allSO = [allSO,P(pt).sz(sz).blockRL(i).spatialOrg];
     times = [times,(P(pt).sz(sz).blockRL(i).times(1)+...
@@ -18,6 +19,8 @@ for i = 1:length(P(pt).sz(sz).blockRL)
     
     allSF = [allSF,length(P(pt).sz(sz).blockRL(i).sIdx)];%/...
   %      (P(pt).sz(sz).blockRL(i).times(2)-P(pt).sz(sz).blockRL(i).times(1))];
+  
+    allCI = [allCI;P(pt).sz(sz).blockRL(i).CI95];
 end
 
 allRat =  allSO./allSF;
@@ -56,6 +59,12 @@ patch([min(tsz) max(tsz) max(tsz) min(tsz)]/scale,[ylims(1) ylims(1) ylims(2) yl
     [0.6 0.6 0.6],'Edgecolor','none');
 plot(times/scale,toPlot,'color','k','linewidth',2);
 plot([szTimes(1) szTimes(1)]/scale,get(gca,'ylim'),'--','color','k','linewidth',3);
+
+if whichToPlot == 2
+   plot(times/scale,allCI(:,1),'--')
+   plot(times/scale,allCI(:,2),'--')
+end
+
 ylabel(sprintf('%s',ptitle));
 xlabel('Time (h)');
 title([sprintf('%s',ptitle),' surrounding seizure for ',sprintf('%s',P(pt).name)]);

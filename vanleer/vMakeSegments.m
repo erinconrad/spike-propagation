@@ -88,5 +88,6 @@ end
 gdf = struct;
 gdf.delay = delay;
 gdf.rms = rms;
+gdf.spikeTimes = spikeTimes;
 
 end

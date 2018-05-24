@@ -49,6 +49,8 @@ for i = 1:length(pt)
         
         gdf_all = [];
         gdf_ekg_all = [];
+        empty_all = [];
+        noise_all = [];
         
         for k = 1:length(pt(i).sz(j).chunkFiles)
             
@@ -72,11 +74,17 @@ for i = 1:length(pt)
             end
             
             gdf(:,2) = gdf(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
-            gdf_ekg(:,2) = gdf_ekg(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
+            bad.noise(:,1) = bad.noise(:,1) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
+            bad.empty = bad.empty + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
             
+            if isempty(gdf_ekg) == 0
+                gdf_ekg(:,2) = gdf_ekg(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
+            end
             
             gdf_all = [gdf_all;gdf];
             gdf_ekg_all = [gdf_ekg_all;gdf_ekg];
+            empty_all = [empty_all;bad.empty];
+            noise_all = [noise_all;bad.noise];
             
         end
         
@@ -89,6 +97,19 @@ for i = 1:length(pt)
         pt(i).sz(j).stats.nspikes = size(gdf_all,1);
         pt(i).sz(j).data = mainSequences(gdf_all,electrodeData, pt(i).fs);
         pt(i).sz(j).stats.nseqs = size(pt(i).sz(j).data.sequences,2)/2;
+        pt(i).sz(j).stats.empty = empty_all;
+        pt(i).sz(j).stats.noise = noise_all;
+        pt(i).sz(j).stats.noise_ictal = zeros(size(pt(i).sz(j).stats.noise,1),1);
+        
+        % for noise function, get if it's ictal
+        for t = 1:size(pt(i).sz(j).stats.noise,1)
+            time = pt(i).sz(j).stats.noise(t,1) + pt(i).sz(j).runTimes(1,1);
+            if time >= pt(i).sz(j).onset && ...
+                    time <= pt(i).sz(j).offset
+                pt(i).sz(j).stats.noise_ictal(t) = 1;
+            end
+            
+        end
         
         % Add EKG times
         pt(i).sz(j).ekg = gdf_ekg_all;

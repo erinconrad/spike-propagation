@@ -95,12 +95,23 @@ for i = 1:length(pt)
             end
             
             
-            [gdf] = portGetSpikes(desiredTimes,dataName,...
+            [gdf,vanleer,bad] = portGetSpikes(desiredTimes,dataName,...
                 pt(i).channels,pwfile,pt(i).tmul,pt(i).absthresh);
           
+            % check if spike is ictal or not
+            if isempty(vanleer) == 0
+            vanleer.ictal = zeros(length(vanleer.spikeTimes),1);
+            for s =  1:length(vanleer.spikeTimes)
+               realTime =  vanleer.spikeTimes(s) + pt(i).sz(j).runTimes(k,1);
+               if realTime >= pt(i).sz(j).onset && realTime <= pt(i).sz(j).offset
+                   vanleer.ictal(s) = 1;
+               end
+            end
+            end
+                
             
             % Save gdf file
-            save([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'gdf');
+            save([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'gdf','vanleer','bad');
             
            
             % Resave pt file now that I have fs

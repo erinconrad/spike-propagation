@@ -3,14 +3,15 @@ function plotRecruitmentLatency(P,pt,sz,block)
 
 This script plots recruitment latencies over the electrodes
 
-It is old and needs to be re-built for the new patient structure
+
 
 %}
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 ptname = P(pt).name;
 dotsize = 100;
-avgRecruitmentLat = P(pt).sz(sz).blockRL(block).avgRecruitmentLat;
+%avgRecruitmentLat = P(pt).sz(sz).blockRL(block).avgRecruitmentLat;
+avgRecruitmentLat = P(pt).sz(sz).ic.rl_interictal;
 
 % Get the channel locations for the patient
 chLocs = P(pt).sz(sz).data.xyChan(:,2:4);
