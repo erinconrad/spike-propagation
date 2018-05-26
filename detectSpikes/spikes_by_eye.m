@@ -1,7 +1,7 @@
 function [spikest,spikesch] = spikes_by_eye(name)
 
 if strcmp(name,'HUP064') == 1
-    spikest = 345944.66;
+    spikest = [345945.35, 430738.74, 431068.82, 933367.04];
     spikesch = {'LG34','LG52','LG54','LG57','LG58','LG59','LG3','LG10','LIH5','RFR3','LST2'};
 elseif strcmp(name, 'HUP065') == 1
     spikest = [];

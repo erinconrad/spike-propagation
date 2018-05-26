@@ -1,4 +1,4 @@
-function portHeatMap(P,pt,sz)
+function portHeatMap(P,pt,sz,whichToPlot)
 
 %% Parameters
 ptname = P(pt).name;
@@ -28,6 +28,12 @@ chLocs = P(pt).sz(sz).data.xyChan(:,2:4);
 allChs = P(pt).sz(sz).data.xyChan(:,1);
 
 
+allRec = [];
+for block = 1:length(P(pt).sz(sz).blockRL)
+    allRec = [allRec,P(pt).sz(sz).blockRL(block).avgRecruitmentLat];
+end
+
+crange = [nanmedian(allRec) - 2*nanstd(allRec),nanmedian(allRec) + 2*nanstd(allRec)];
 
 %% Loop through blocks
 for block = 1:length(P(pt).sz(sz).blockRL)
@@ -80,51 +86,28 @@ for block = 1:length(P(pt).sz(sz).blockRL)
 
     fig = figure;
 
+    if whichToPlot == 1
+        toPlot = chHits;
+    elseif whichToPlot == 2
+        toPlot = P(pt).sz(sz).blockRL(block).avgRecruitmentLat;
+    end
     % make all channels a base color
     scatter3(chLocs(:,1),chLocs(:,2),chLocs(:,3),...
-        baseSizeElec,chHits,'filled')
+        baseSizeElec,toPlot,'filled')
     hold on
 
-    % Loop through the channels
-    for i = 1:length(allChs)
-
-        % if the channel has a hit
-       if chHits(i) ~= 0
-
-           % weight the dot by how many hits
-          %circleSize = baseSizeElec + (chHits(i)-1)*multElec;
-
-          % plot the dot
-          %scatter3(chLocs(i,1) ,chLocs(i,2),chLocs(i,3),circleSize,'r','filled');
-
-
-       end
-
-       % loop through the other channels, looking for path hits
-       for j = 1:length(allChs)
-
-          if pathHits(i,j) ~= 0
-            %{
-              % weight the line by the number of path hits
-              linesize = (pathHits(i,j)-1)*multLines+baseSizeLine;
-
-              % plot the line
-              plot3([chLocs(i,1),chLocs(j,1)],...
-                  [chLocs(i,2),chLocs(j,2)],...
-                   [chLocs(i,3),chLocs(j,3)],'r','lineWidth',linesize);
-              
-              %}
-          end
-       end
-    end
+   
     grid off
     axis off
-    title(['HUP ',sprintf('%d',pt),' average',' sequences for block ',sprintf('%d',block)]);
+    title(['HUP ',sprintf('%d',pt),' average recruitment latency for block ',sprintf('%d',block)]);
     set(gca,'FontSize',15);
     set(gca,'XTickLabel',[]);
     set(gca,'YTickLabel',[]);
     set(gca,'ZTickLabel',[]);
     colormap jet
+    if whichToPlot == 2
+        caxis(crange)
+    end
     colorbar
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.4, 0.4, 0.3, 0.45]);
 

@@ -2,7 +2,7 @@ clear
 
 %% Bonus parameter
 dmin = 15;
-nperm = 1e4;
+nperm = 1e1;
 minSeq = 10;
 
 %% File names
@@ -72,7 +72,7 @@ for i = 1:length(pt)
        %% Now shuffle the ictal and interictal identities
        n_ic = length(find(ictal == 1));
        n_interic = length(find(ictal == 0));
-       nperm = 1e3;
+       nperm = 1e1;
        all_so_diff = zeros(1,nperm);
        
        for iperm = 1:nperm
@@ -83,19 +83,28 @@ for i = 1:length(pt)
            
            all_seq = 1:nseq;
            new_ic = randperm(nseq,n_ic);
-           new_interic = all_seq(~new_ic);
+           new_ic_logic = zeros(size(all_seq));
+           new_ic_logic(new_ic) = 1;
+           new_interic = all_seq(~new_ic_logic);
+           
+           seq_ictal = zeros(size(sequences,1),2*length(new_ic));
+           seq_interictal = zeros(size(sequences,1),2*length(new_interic));
            
            for s = 1:nseq
                col = s*2;
                seqtime = sequences(:,col);
                seqch = sequences(:,col-1);
                if ismember(new_ic,s) == 1
-                   seq_ictal = [seq_ictal,[seqch,seqtime]];
+                   %seq_ictal = [seq_ictal,[seqch,seqtime]];
+                    seq_ictal(:,col-1:col) = [seqch,seqtime];
                else
-                   seq_interictal = [seq_interictal,[seqch,seqtime]];
+                   %seq_interictal = [seq_interictal,[seqch,seqtime]];
+                   seq_interictal(:,col-1:col) = [seqch,seqtime];
                end
 
            end
+           
+           
            
            [rls_ictal,~] =getRecruitmentLatency(seq_ictal,chandata);
        
@@ -110,7 +119,6 @@ for i = 1:length(pt)
            
        end
        all_so_diff = sort(all_so_diff);
-       all_so_diff(nperm*.05/2)
        pt(i).sz(j).ic.all_so_diff = all_so_diff;
        
    end
