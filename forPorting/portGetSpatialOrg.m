@@ -1,3 +1,7 @@
+% This script calculates the spatial organization for each block and for
+% the whole seizure period.
+
+
 clear
 
 %% Bonus parameter
@@ -32,6 +36,7 @@ for i = 1:length(pt)
        for t = 1:size(times,1)
           pt(i).sz(j).blockRL(t).sIdx = [];
           
+          % find what sequences are in the block
           for s = 1:nseq
               
               col = s*2;
@@ -62,16 +67,13 @@ for i = 1:length(pt)
               getRecruitmentLatency(newseq,pt(i).sz(j).data.xyChan);
           
           [pt(i).sz(j).blockRL(t).avgRecruitmentLat,...
-              pt(i).sz(j).blockRL(t).spatialOrg,...
-              pt(i).sz(j).blockRL(t).CI,pt(i).sz(j).blockRL(t).h,pt(i).sz(j).blockRL(t).p] = ...
-              getSpatialOrg(recruitmentLatencySingle,pt(i).sz(j).data.xyChan,dmin,nperm,spikeCount);
+              pt(i).sz(j).blockRL(t).spatialOrg,~] = ...
+              getSpatialOrg(recruitmentLatencySingle,pt(i).sz(j).data.xyChan,dmin);
           
           % re-define the spatial org as nan if not enough sequences
           if length(sIdx) < minSeq
               pt(i).sz(j).blockRL(t).oldSpatialOrg = pt(i).sz(j).blockRL(t).spatialOrg;
               pt(i).sz(j).blockRL(t).spatialOrg = nan;
-              pt(i).sz(j).blockRL(t).oldCI = pt(i).sz(j).blockRL(t).CI;
-              pt(i).sz(j).blockRL(t).CI = [nan nan];
           end
            
        end
@@ -79,12 +81,11 @@ for i = 1:length(pt)
        % Get spatial org for the entire seizure period
        [recruitmentLatencySingleAll,spikeCountAll] =...
            getRecruitmentLatency(sequences,pt(i).sz(j).data.xyChan);
-       
+            
        [pt(i).sz(j).avgRecruitmentLatAll,...
-           pt(i).sz(j).spatialOrgAll,pt(i).sz(j).CIAll,...
-           pt(i).sz(j).hAll,pt(i).sz(j).pAll] = ...
+           pt(i).sz(j).spatialOrgAll,pt(i).sz(j).MI] = ...
            getSpatialOrg(recruitmentLatencySingleAll,...
-             pt(i).sz(j).data.xyChan,dmin,nperm,spikeCountAll);
+             pt(i).sz(j).data.xyChan,dmin);
    
    end
  

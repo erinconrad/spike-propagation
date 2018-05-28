@@ -12,6 +12,7 @@ ptname = P(pt).name;
 dotsize = 100;
 %avgRecruitmentLat = P(pt).sz(sz).blockRL(block).avgRecruitmentLat;
 avgRecruitmentLat = P(pt).sz(sz).ic.rl_interictal;
+%avgRecruitmentLat = P(pt).sz(sz).MI.rl;
 
 % Get the channel locations for the patient
 chLocs = P(pt).sz(sz).data.xyChan(:,2:4);
@@ -19,6 +20,7 @@ colormin = min(avgRecruitmentLat);
 colormax = max(avgRecruitmentLat);
 
 % Show all electrode locations, making them unfilled and dark
+figure
 scatter3(chLocs(:,1),chLocs(:,2),chLocs(:,3),dotsize,'k')
 
 hold on

@@ -20,7 +20,7 @@ for i = 1:length(P(pt).sz(sz).blockRL)
     allSF = [allSF,length(P(pt).sz(sz).blockRL(i).sIdx)];%/...
   %      (P(pt).sz(sz).blockRL(i).times(2)-P(pt).sz(sz).blockRL(i).times(1))];
   
-    allCI = [allCI;P(pt).sz(sz).blockRL(i).CI95];
+%    allCI = [allCI;P(pt).sz(sz).blockRL(i).CI95];
 end
 
 allRat =  allSO./allSF;
@@ -61,8 +61,8 @@ plot(times/scale,toPlot,'color','k','linewidth',2);
 plot([szTimes(1) szTimes(1)]/scale,get(gca,'ylim'),'--','color','k','linewidth',3);
 
 if whichToPlot == 2
-   plot(times/scale,allCI(:,1),'--')
-   plot(times/scale,allCI(:,2),'--')
+  % plot(times/scale,allCI(:,1),'--')
+  % plot(times/scale,allCI(:,2),'--')
 end
 
 ylabel(sprintf('%s',ptitle));

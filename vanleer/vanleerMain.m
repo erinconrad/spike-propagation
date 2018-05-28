@@ -203,7 +203,11 @@ C = C{minidx};
 sumd = sumd{minidx};
 midx = midx{minidx};
 
-
+%% Get delays and power for seizures and not seizures
+alldelay_ic = alldelay(logical(szOrNot));
+alldelay_inter = alldelay(~logical(szOrNot));
+allrms_ic = allrms(logical(szOrNot));
+allrms_interic = allrms(~logical(szOrNot));
 
 
 %% Do bootstrap

@@ -5,7 +5,7 @@ the spatial organization metric
 
 %}
 
-function [avgRecruitmentLat,spatialOrg] = getSpatialOrg(recruitmentLatencySingle,xyChan,dmin)
+function [avgRecruitmentLat,I,MI] = getSpatialOrg(recruitmentLatencySingle,xyChan,dmin)
 
 
 nChannels = size(xyChan,1); % Number of channels
@@ -33,8 +33,8 @@ wij = nan(nChannels,nChannels);
 for iChannel = 1:nChannels
    for jChannel = 1:nChannels
        if iChannel == jChannel
-           dij(iChannel,jChannel) = nan;
-           wij(iChannel,jChannel) = nan;
+           dij(iChannel,jChannel) = 0;
+           wij(iChannel,jChannel) = 0;
        else
            % calculate Euclidean distance between the two channels
            dij(iChannel,jChannel) =  sqrt(sum((xyChan(iChannel,2:end) - xyChan(jChannel,2:end)).^2));
@@ -60,7 +60,9 @@ for iChannel = 1:nChannels
     
 end
 
-spatialOrg = getMI(avgRecruitmentLat,wij);
+MI = moranStats(avgRecruitmentLat,wij,nChannels);
+I = MI.I;
+%spatialOrg = getMI(avgRecruitmentLat,wij);
 
 %{
 %% Get spatial autocorrelation and statistics

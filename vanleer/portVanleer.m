@@ -15,7 +15,7 @@ chLocationsFolder = 'chLocations/';
 ptVanleer = 'ptVanleer.mat';
 
 % number of permutations in permutation test
-nboot = 1e4;
+nboot = 1e3;
 
 %% Load file with filenames and run times
 load([resultsFolder,'ptStructs/',ptWithFs]);
@@ -81,12 +81,23 @@ for i = 1:length(pt)
             
         end
     end
+    
+    %% Get delays and power for seizures and not seizures
+    pt(i).vanleer.alldelay_ic = alldelay(logical(szOrNot),:);
+    pt(i).vanleer.alldelay_inter = alldelay(~logical(szOrNot),:);
+    pt(i).vanleer.allrms_ic = allrms(logical(szOrNot),:);
+    pt(i).vanleer.allrms_inter = allrms(~logical(szOrNot),:);
+
+    pt(i).vanleer.avgdelay_ic = nanmean(pt(i).vanleer.alldelay_ic);
+    pt(i).vanleer.avgdelay_inter = nanmean(pt(i).vanleer.alldelay_inter);
+    pt(i).vanleer.avgrms_ic = nanmean(pt(i).vanleer.allrms_ic);
+    pt(i).vanleer.avgrms_inter = nanmean(pt(i).vanleer.allrms_inter);
 
             
     %% Use PCA to reduce the dimensionality
 
     % concatenate the delay and rms power features
-    all_features = [alldelay,allrms];
+    all_features = [alldelay];%[alldelay,allrms];
 
     % run PCA
     [coeff,score,latent,tsquared,explained,mu] = pca(all_features);
@@ -168,3 +179,8 @@ for i = 1:length(pt)
    
 
 end
+
+save([resultsFolder,'ptStructs/',ptVanleer],'pt')
+
+fprintf('end\n');
+

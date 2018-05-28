@@ -25,7 +25,7 @@ propSzInClusterReal = (getSzProp(cluster_assignment,szOrNot,nclusters))';
 
 % Loop through the number of permutations
 for i = 1:nboot
-    if mod(i,5e4) == 0
+    if mod(i,1e3) == 0
         fprintf('On permutation %d\n',i);
     end
     
