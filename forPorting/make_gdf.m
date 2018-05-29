@@ -15,7 +15,7 @@ overwrite = 0;
 
 % Should we try to merge the patient structure with an existing, incomplete
 % patient structure?
-merge = 1;
+merge = 0;
 
 % Berumudez spike detector parameters
 %tmul = 13; % the threshold value for the Bermudez spike detector (default is 13)
