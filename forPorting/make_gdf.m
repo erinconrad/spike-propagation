@@ -11,11 +11,11 @@ clear
 
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
-overwrite = 1; 
+overwrite = 0; 
 
 % Should we try to merge the patient structure with an existing, incomplete
 % patient structure?
-merge = 0;
+merge = 1;
 
 % Berumudez spike detector parameters
 %tmul = 13; % the threshold value for the Bermudez spike detector (default is 13)
