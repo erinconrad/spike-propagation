@@ -33,6 +33,12 @@ for i = 1:length(pt)
        times = pt(i).sz(j).timesRL;
        nseq = pt(i).sz(j).stats.nseqs;
        
+       % Get the seizure times
+       szTimes = [pt(i).sz(j).onset-pt(i).sz(j).runTimes(1,1),...
+           pt(i).sz(j).offset-pt(i).sz(j).runTimes(1,1)];
+       
+      
+       
        for t = 1:size(times,1)
           pt(i).sz(j).blockRL(t).sIdx = [];
           
@@ -55,6 +61,8 @@ for i = 1:length(pt)
        
        % Calculate recruitment latencies and spatial orgs for each block
        sequences = pt(i).sz(j).data.sequences;
+       
+       
        for t = 1:length(pt(i).sz(j).blockRL)
           sIdx = pt(i).sz(j).blockRL(t).sIdx;
           newseq = [];
@@ -77,6 +85,42 @@ for i = 1:length(pt)
           end
            
        end
+       
+       %% Get ictal and interictal
+       ictal = zeros(nseq,1);
+       seq_ictal = [];
+       seq_interictal = [];
+       for s = 1:nseq
+           
+           % Get the time column and channel column for each sequence
+           col = s*2;
+           seqtime = sequences(:,col);
+           seqch = sequences(:,col-1);
+           
+           % If the first spike in the sequence falls between the seizure
+           % start and end time
+           if seqtime(1) > szTimes(1) && seqtime(1) < szTimes(2)
+               
+               % it is an ictal sequence
+               ictal(s) = 1;
+               
+               % add the sequence times and channels to the list of ictal sequences
+               seq_ictal = [seq_ictal,[seqch,seqtime]];
+           else
+               
+               % it's not an ictal sequence, add it to the list of
+               % interictal sequences
+               seq_interictal = [seq_interictal,[seqch,seqtime]];
+           end
+           
+       end
+       
+       % the indices of ictal sequences
+       pt(i).sz(j).data.ictal_idx = ictal;
+       
+       % The ictal and interictal sequences
+       pt(i).sz(j).data.seq_ictal = seq_ictal;
+       pt(i).sz(j).data.seq_interictal = seq_interictal;
        
        % Get spatial org for the entire seizure period
        [recruitmentLatencySingleAll,spikeCountAll] =...

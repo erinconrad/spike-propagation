@@ -16,7 +16,7 @@ redo = 0;
     
 
 % how much time to detect
-duration = 600; %default 600, less than this will screw up sensitivity of detector
+duration = 60; %default 60, less than this will screw up detector
 
 % how much time to plot
 plot_duration = 15; %default 15
@@ -32,7 +32,7 @@ outputFile = [ptname,'_tmul_',sprintf('%d',tmul),'_absthresh_',sprintf('%d',abst
 outputFolder = [resultsFolder,'spike verification/',Patient(pt).name,'/'];
 if exist([outputFolder,outputFile],'file') ~= 0 && redo == 0
     fprintf('Already did %s tmul %d absthresh %d, skipping\n',ptname,tmul,absthresh);
-    return
+   % return
 end
 
 for i = 1:length(startTimes)

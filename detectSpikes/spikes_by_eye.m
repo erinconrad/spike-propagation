@@ -13,7 +13,7 @@ elseif strcmp(name,'HUP070') ==1
     spikest = [];
     spikesch = [];
 elseif strcmp(name,'HUP073') == 1
-    spikest = [];
+    spikest = [81916.19, 121735.56, 185861.24];
     spikesch = {'LIH5','LIH6','LIH7','LIH8','LFP3','LFP4','RFP4','RFP5','RLT3'};
 elseif strcmp(name,'HUP074') ==1
     spikest = [228110.41, 242630.12, 242662.51, 465635.86, 486107.91];

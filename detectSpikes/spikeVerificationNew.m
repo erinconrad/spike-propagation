@@ -8,10 +8,10 @@ detector works for that time period
 
 function spikeVerificationNew(P)
 
-tmuls_to_try = [11 13 15];
-absthresh_to_try = [200 300 400];
+tmuls_to_try = [12];
+absthresh_to_try = [300];
 
-for i = 1:1%length(P)
+for i = 1%:length(P)
     
     if isempty(P(i).ieeg_name) == 1
         fprintf('Missing ieeg_name for patient %s, skipping\n',P(i).name);

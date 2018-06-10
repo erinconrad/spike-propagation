@@ -95,9 +95,9 @@ for i = 1:length(pt)
 
             
     %% Use PCA to reduce the dimensionality
-
+    fprintf('Doing PCA\n');
     % concatenate the delay and rms power features
-    all_features = [alldelay];%[alldelay,allrms];
+    all_features = [alldelay,allrms];
 
     % run PCA
     [coeff,score,latent,tsquared,explained,mu] = pca(all_features);
@@ -117,6 +117,7 @@ for i = 1:length(pt)
     new_scores = score(:,1:ndim);
 
     % Run a k-medoids algorithm to cluster the data, do it 30 times for fun
+    fprintf('Doing clustering\n');
     for x = 1:30
         [cluster_assignment{x},C{x},sumd{x},~,midx{x},~] = kmedoids(new_scores,10,'Distance','cityblock');
 
@@ -135,7 +136,7 @@ for i = 1:length(pt)
 
 
     %% Do bootstrap
-    stats =  vPermTest(cluster_assignment,szOrNot,10,nboot);
+    %stats =  vPermTest(cluster_assignment,szOrNot,10,nboot);
     
     
 

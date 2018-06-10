@@ -7,6 +7,7 @@ prox = 0.02; % NEED TO CHANGE
 %% Remove depth electrodes
 rmDepth = 1;
 rmType = 'D';
+rmNoisy = 1;
 
 %% File names
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -22,7 +23,7 @@ ptWithSeq = 'ptWithSeq.mat';
 load([resultsFolder,'ptStructs/',ptWithFs]);
 
 %% Loop through patients and seizures
-for i = 1:length(pt)
+for i = 5%1:length(pt)
     
     % Get electrode data
     electrodeData =  pt(i).electrodeData;
@@ -90,6 +91,11 @@ for i = 1:length(pt)
         
         if rmDepth == 1
             gdf_all = removeChs(gdf_all,electrodeData,rmType);
+        end
+        
+        % remove spikes that came from noisy times
+        if rmNoisy == 1
+            [gdf_all,rmNoisy,rmEmpty] = removeNoisy(gdf_all,noise_all,empty_all);
         end
         
         % Now that you have all the spikes for the desired patient and

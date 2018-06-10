@@ -9,7 +9,7 @@ of spikes, the first column has the channel location of the spike and the
 %}
 
 %% Parameters
-whichDetector = 2; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
+whichDetector = 4; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
 setChLimits = 0;
 multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
 multiChTime = .025; % The time period over which spikes need to occur across multiple channels to toss
@@ -89,6 +89,22 @@ elseif whichDetector == 3
     else
         fprintf('Detected %d spikes\n',length(out.pos));
         gdf = [chanSort,timeSort];
+    end
+    
+elseif whichDetector == 4
+    % this is my edited version of Sam's spike detector, which instead of
+    % measuring the relative threshold based on the absolute value of the
+    % entire data, just looks at a minute surrounding the potential spike
+    window = 60*data.fs;
+    
+    gdf = fspk3(data.values,tmul,absthresh,length(channels),data.fs,window);
+    
+    if isempty(gdf) == 1
+        fprintf('No spikes detected\n');
+    else
+        fprintf('Detected %d spikes\n',size(gdf,1));
+         % put it in seconds
+        gdf(:,2) = gdf(:,2)/data.fs;
     end
 
 end
