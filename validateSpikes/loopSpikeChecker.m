@@ -1,4 +1,4 @@
-function pt=loopSpikeChecker(pt,whichDetector)
+function loopSpikeChecker(whichDetector)
 
 tmuls_to_try = [13];
 absthresh_to_try = [300];
