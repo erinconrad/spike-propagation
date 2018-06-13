@@ -57,6 +57,10 @@ end
 
 % Iterate channels and detect spikes
 for dd = 1:n_chans
+    
+    % Break the data into time segments, 1 minute each, so that the
+    % threshold we are using to see if the spike rises above the background
+    % is based on just the one minute we are considering.
     for tt = 1:num_segs-1
         time_points(1) = (tt-1)*window+1;
         time_points(2) = min(window*tt,size(eeg,1));

@@ -1,9 +1,13 @@
 function [sensitivity,accuracy] = spikeChecker(pt,whichPt,chs,...
-    times,isSpike,tmul,absthresh)
+    times,isSpike,tmul,absthresh,whichDetector)
 
 chunkSize = 7;
 
-detect_duration = [-1 59]; %1 seconds before, 59 after
+if whichDetector ==  2
+    detect_duration = [-1 599]; %1 seconds before, 59 after
+elseif whichDetector == 4
+    detect_duration = [-1 59]; %1 seconds before, 59 after 
+end
 check_duration = 2; % look for 2 seconds after the start of the detection period (which begins 1 s before the spike)
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -15,8 +19,8 @@ ptname = pt(whichPt).name;
 
 
 outputFolder = [resultsFolder,'spike verification/',pt(whichPt).name,'/'];
-mkdir(outputFolder,sprintf('tmul_%d_absthresh_%d/',tmul,absthresh))
-outputFolder = [outputFolder,'/',sprintf('tmul_%d_absthresh_%d/',tmul,absthresh)];
+mkdir(outputFolder,sprintf('tmul_%d_absthresh_%d_detector_%d/',tmul,absthresh,whichDetector))
+outputFolder = [outputFolder,'/',sprintf('tmul_%d_absthresh_%d_detector_%d/',tmul,absthresh,whichDetector)];
 
 for i = 1:length(times)
     time(i).runTimes = times(i)+detect_duration;
@@ -35,7 +39,7 @@ fs = data.fs;
 
 %% Detect spikes
 for i = 1:length(time)
-    [time(i).gdf,~,extraoutput] = getSpikeTimes(time(i).runTimes,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,1,0,tmul,absthresh);
+    [time(i).gdf,~,extraoutput] = getSpikeTimes(time(i).runTimes,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,1,0,tmul,absthresh,whichDetector);
     time(i).values = extraoutput{1};
     
     

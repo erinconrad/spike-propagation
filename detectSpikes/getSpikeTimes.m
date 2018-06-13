@@ -1,5 +1,5 @@
 function [gdf,electrodeData,extraOutput] = getSpikeTimes(desiredTimes,json_name,dataName,...
-    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,tmul,absthresh)
+    electrodeFile,ptInfo,pwfile,dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,tmul,absthresh,whichDetector)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -43,7 +43,7 @@ Janca, Radek, et al. "Detection of interictal epileptiform discharges using sign
 %}
 
 %% Parameters
-whichDetector = 4; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
+%whichDetector = 2; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
 timeToLookForPeak = .1; % look 100 ms before and 100 ms after the detected spike to find the peak 
 
 setChLimits = 0;
