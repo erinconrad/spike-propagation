@@ -61,7 +61,13 @@ for i = 1:length(time)
     time(i).unignoredChLabels = extraoutput{2};
     time(i).indicesInCheckTime = 1:check_duration*fs;
     time(i).valuesInCheckTime =  time(i).values(time(i).indicesInCheckTime,:);
-    time(i).spikesInCheckTime = time(i).gdf(time(i).gdf(:,2)<=check_duration,:);
+    
+    if isempty(time(i).gdf)==0
+        
+        time(i).spikesInCheckTime = time(i).gdf(time(i).gdf(:,2)<=check_duration,:);
+    else
+        time(i).spikesInCheckTime = [];
+    end
     time(i).plottimes =  [1:size(time(i).valuesInCheckTime,1)]/fs;  
 end
 
