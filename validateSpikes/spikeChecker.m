@@ -1,10 +1,10 @@
 function [sensitivity,accuracy] = spikeChecker(pt,whichPt,chs,...
-    times,isSpike,tmul,absthresh,whichDetector)
+    spikeTimes,notSpikeTimes,tmul,absthresh,whichDetector,trainOrTest,whichSpikes)
 
-chunkSize = 7;
+chunkSize = 10;
 
 if whichDetector ==  2
-    detect_duration = [-1 599]; %1 seconds before, 59 after
+    detect_duration = [-1 599]; %1 seconds before, 599 after
 elseif whichDetector == 4
     detect_duration = [-1 59]; %1 seconds before, 59 after 
 end
@@ -18,14 +18,29 @@ electrodeFile = pt(whichPt).electrode_labels;
 ptname = pt(whichPt).name;
 
 
-outputFolder = [resultsFolder,'spike verification/',pt(whichPt).name,'/'];
+if trainOrTest == 1
+    outputFolder = [resultsFolder,'validation/',pt(whichPt).name,'/train/'];
+    trainText = 'Training';
+elseif trainOrTest == 2
+    outputFolder = [resultsFolder,'validation/',pt(whichPt).name,'/test/'];
+    trainText = 'Testing';
+end
 mkdir(outputFolder,sprintf('tmul_%d_absthresh_%d_detector_%d/',tmul,absthresh,whichDetector))
 outputFolder = [outputFolder,'/',sprintf('tmul_%d_absthresh_%d_detector_%d/',tmul,absthresh,whichDetector)];
+
+
+times = [spikeTimes,notSpikeTimes];
+allWhichSpikes = [whichSpikes,whichSpikes];
 
 for i = 1:length(times)
     time(i).runTimes = times(i)+detect_duration;
     time(i).times = times(i);
-    time(i).isSpike = isSpike(i);
+    if i<=length(spikeTimes)
+        time(i).isSpike = 1;
+    else
+        time(i).isSpike = 0;
+    end
+    time(i).whichSpike = allWhichSpikes(i);
 end
 
 %% load seizure info and channel info
@@ -90,6 +105,11 @@ for i = 1:length(time)
            
        end
        
+    % my designation for not-sure
+   elseif time(i).isSpike == 2
+          time(i).designation = '??';
+          time(i).color = 'k';
+       
    end
     
 end
@@ -104,21 +124,27 @@ accuracy = TP/(TP + FP + FN);
 
 %% Do plots
 % Divide the times into chunks of 5
-nchunks = ceil(length(isSpike)/chunkSize);
+nchunks = ceil(length(times)/chunkSize);
 for ichunk = 1:nchunks
-    spike_idx = (ichunk-1)*chunkSize+1:min(ichunk*chunkSize,length(isSpike));
+    spike_idx = (ichunk-1)*chunkSize+1:min(ichunk*chunkSize,length(times));
     outputFile = [ptname,'_tmul_',sprintf('%d',tmul),'_absthresh_',sprintf('%d',absthresh),...
         'chunk_',sprintf('%d',ichunk),'.png'];
     prows = 1;
     pcolumns = length(spike_idx);
     figure
-    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.95, 0.8]);
+    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.99, 0.8]);
     for sidx = 1:length(spike_idx)
         s = spike_idx(sidx);
         sp(sidx) = subplot(1,length(spike_idx),sidx);
        
         range = 0;
         pl = zeros(length(chs),1);
+        
+        if time(s).isSpike == 1
+            spikeText = sprintf('Spike %d\n%s\n%s',time(s).whichSpike,time(s).designation,trainText);
+        elseif time(s).isSpike == 0
+            spikeText = sprintf('Not-a-spike %d\n%s\n%s',time(s).whichSpike,time(s).designation,trainText);
+        end
 
         for i = 1:length(chs)
             ch = chs(i);
@@ -152,7 +178,8 @@ for ichunk = 1:nchunks
         %end
 
         %fprintf('check\n');
-        text(0.5,0.97,sprintf('%s',time(s).designation),'units','normalized','FontSize',20,'color',time(s).color);
+        text(0.5,0.95,spikeText,'units','normalized','FontSize',20,...
+            'color',time(s).color,'HorizontalAlignment','center');
         set(gca,'fontsize',15);
 
     end

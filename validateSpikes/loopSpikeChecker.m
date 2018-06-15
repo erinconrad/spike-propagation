@@ -1,6 +1,10 @@
-function loopSpikeChecker(whichDetector)
+function [allSens,allAcc]=loopSpikeChecker(whichDetector,trainOrTest)
 
-tmuls_to_try = [13];
+if trainOrTest == 2
+    error('Are you sure you want to look at the testing data?\n');
+end
+
+tmuls_to_try = [11,12,13,14];
 absthresh_to_try = [300];
 
 %% File names
@@ -10,33 +14,43 @@ p1 = genpath(scriptFolder);
 addpath(p1);
 timeFile = 'ptWithElectrodeData.mat'; 
 newptfile = 'ptAccuracies.mat';
+validatedFile = 'validated.mat';
 
 %% Load file with filenames and run times
 load([resultsFolder,'ptStructs/',timeFile]);
+load([resultsFolder,'validation/',validatedFile]);
 
-for i = 1%:length(pt)
+for i = 1:length(validated)
     
     if isempty(pt(i).ieeg_name) == 1
         fprintf('Missing ieeg_name for patient %s, skipping\n',pt(i).name);
         continue
     end
    
-    %[startTimes,chnames] = spikes_by_eye(pt(i).name);
-    startTimes = [10801.11; 10861.95; 10880.03; 10881.60;42138.89;...
-         42074.98; 42076.13; 42120.25;42208.89; 42347.86;...
-          42626.85; 42647.54;42847.97; 43025.92;86426.04];
+    if strcmp(pt(i).name,validated(i).name)~=1
+        error(sprintf('Warning, pt struct ids do not match up for patient %d\n',i));
+    end
     
-    %{
-[362285.73;362400.88;362438.10;362754.34;362832.05;...
-         363268.78;364036.11;364701.39;365276.58;381829.00;...
-         381891.39;382705.56;382753.52;509454.24;509653.59;...
-         510860.65];
-     %}
-     chnames = {'LG2','LG3','LG4','LG10','LG17','LG25',...
-        'LG34','LG52','LG54','LG59','LIH5','RFR3','LST1',...
-        'LST2','LST3'};
+    mkdir([resultsFolder,'validation/',pt(i).name]);
+    mkdir([resultsFolder,'validation/',pt(i).name,'/train']);
+    mkdir([resultsFolder,'validation/',pt(i).name,'/test']);
     
-    if isempty(startTimes) || isempty(chnames)
+     chnames = validated(i).chs;
+     
+     if trainOrTest == 1
+         spikeTimes = validated(i).spike_times(validated(i).train);
+         notSpikeTimes = validated(i).not_spike_times(validated(i).train);
+         whichSpikes = validated(i).train;
+         outputDest = [resultsFolder,'validation/',pt(i).name,'/train/sensAndAccs.mat'];
+     elseif trainOrTest == 2
+         spikeTimes = validated(i).spike_times(validated(i).test);
+         notSpikeTimes = validated(i).not_spike_times(validated(i).test);
+         whichSpikes = validated(i).test;
+         outputDest = [resultsFolder,'validation/',pt(i).name,'/test/sensAndAccs.mat'];
+
+     end
+    
+    if isempty(spikeTimes) || isempty(chnames)
         fprintf('Missing start times or channel names for patient %s\n',P(i).name);
         continue
     end
@@ -51,12 +65,21 @@ for i = 1%:length(pt)
         end
     end
        
+    allSens = [];
+    allAcc = [];
+    
     for k = tmuls_to_try
 
         for m = absthresh_to_try
 
-            [pt(i).sensitivity,pt(i).accuracy] = spikeChecker(pt,i,chIds,...
-    startTimes,ones(length(startTimes),1),k,m,whichDetector);
+            [sensitivity,accuracy] = spikeChecker(pt,i,chIds,...
+   spikeTimes,notSpikeTimes,k,m,whichDetector,trainOrTest,whichSpikes);
+            
+            
+           
+            
+            allSens = [allSens;k m sensitivity];
+            allAcc = [allAcc;k m accuracy];
 
         end
 
@@ -66,13 +89,13 @@ for i = 1%:length(pt)
         
     
     
+%% Save output file
+save(outputDest,'allSens','allAcc');
     
     
     
 end
 
-%% Save output file
-save([resultsFolder,'ptStructs/',newptfile]);
 
 end
 
