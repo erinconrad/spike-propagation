@@ -80,6 +80,15 @@ for i = 1:length(time)
    % if there is a spike there per my gold standard human detection 
    if time(i).isSpike == 1 
       
+       
+       % If no spikes at all
+       if isempty(time(i).spikesInCheckTime) == 1
+           time(i).designation = 'FN';
+           time(i).color = 'r';
+           FN = FN + 1;
+           continue
+       end
+       
        % If I detected at least one spike, in ANY channel
        if isempty(find(ismember(time(i).spikesInCheckTime(:,1),chs),1)) == 0
            time(i).designation = 'TP';
@@ -96,6 +105,14 @@ for i = 1:length(time)
        
    % if there is NO spike there per my gold standard human detection
    elseif time(i).isSpike == 0
+       
+       % If no spikes at all
+       if isempty(time(i).spikesInCheckTime) == 1
+           time(i).designation = 'TN';
+           time(i).color = 'g';
+           TN = TN + 1;
+           continue
+       end
        
        % If I detected at least one spike, in ANY channel
        if isempty(find(ismember(time(i).spikesInCheckTime(:,1),chs),1)) == 0
