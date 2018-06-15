@@ -211,11 +211,14 @@ end
 
 gdf = all_spikes;
 gdf = unique(gdf,'stable','rows');
-times = gdf(:,1);
-chs = gdf(:,2);
-[times,I] = sort(times);
-chs = chs(I);
-gdf = [chs,times];
+
+if isempty(gdf) == 0
+    times = gdf(:,1);
+    chs = gdf(:,2);
+    [times,I] = sort(times);
+    chs = chs(I);
+    gdf = [chs,times];
+end
 
 
 %{
