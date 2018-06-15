@@ -175,12 +175,15 @@ for ichunk = 1:nchunks
             pl(i) = plot(time(s).plottimes,amps,'k');
             hold on
 
-            % find the times of the spikes with the desired channel
-            spiketimes = time(s).spikesInCheckTime(time(s).spikesInCheckTime(:,1) == ch,2);
+            if isempty(time(s).spikesInCheckTime) == 0
+                % find the times of the spikes with the desired channel
+                spiketimes = time(s).spikesInCheckTime(time(s).spikesInCheckTime(:,1) == ch,2);
 
-            spikeamp = ones(size(spiketimes,1),1)*max(time(s).valuesInCheckTime(:,ch))-range;
+                spikeamp = ones(size(spiketimes,1),1)*max(time(s).valuesInCheckTime(:,ch))-range;
 
-            scatter(spiketimes,spikeamp,80,'k','filled');
+                scatter(spiketimes,spikeamp,80,'k','filled');
+            end
+            
             range = range + max(time(s).valuesInCheckTime(:,ch)) - min(time(s).valuesInCheckTime(:,ch));
         end
 
