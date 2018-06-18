@@ -1,11 +1,12 @@
-function [allSens,allAcc]=loopSpikeChecker(whichDetector,trainOrTest)
+function [allSens,allAcc]=loopSpikeChecker(whichPt,whichDetector,trainOrTest,merge,tmuls_to_try,absthresh_to_try)
 
 if trainOrTest == 2
     error('Are you sure you want to look at the testing data?\n');
 end
 
-tmuls_to_try = [11,12,13,14];
-absthresh_to_try = [300];
+% If merge is 1, then I will not overwrite prior checks, just add new ones
+% to the overall sensitivity and accuracy. If it is 0, I will ignore prior
+% checks and overwrite everything.
 
 %% File names
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -20,7 +21,9 @@ validatedFile = 'validated.mat';
 load([resultsFolder,'ptStructs/',timeFile]);
 load([resultsFolder,'validation/',validatedFile]);
 
-for i = 1:length(validated)
+
+
+for i = whichPt
     
     if isempty(pt(i).ieeg_name) == 1
         fprintf('Missing ieeg_name for patient %s, skipping\n',pt(i).name);
@@ -41,14 +44,21 @@ for i = 1:length(validated)
          spikeTimes = validated(i).spike_times(validated(i).train);
          notSpikeTimes = validated(i).not_spike_times(validated(i).train);
          whichSpikes = validated(i).train;
-         outputDest = [resultsFolder,'validation/',pt(i).name,'/train/sensAndAccs.mat'];
+         outputDest = [resultsFolder,'validation/',pt(i).name,'/train/sensAndAccsDet',sprintf('%d',whichDetector),'.mat'];
      elseif trainOrTest == 2
          spikeTimes = validated(i).spike_times(validated(i).test);
          notSpikeTimes = validated(i).not_spike_times(validated(i).test);
          whichSpikes = validated(i).test;
-         outputDest = [resultsFolder,'validation/',pt(i).name,'/test/sensAndAccs.mat'];
+         outputDest = [resultsFolder,'validation/',pt(i).name,'/test/sensAndAccsDet',sprintf('%d',whichDetector),'.mat'];
 
      end
+     
+     
+     %% Try to load struct with accuracies if it exists
+    if merge == 1 && exist(outputDest,'file') ~= 0
+        a = load(outputDest);
+        oldAllSens = a.allSens; oldAllAcc = a.allAcc;
+    end
     
     if isempty(spikeTimes) || isempty(chnames)
         fprintf('Missing start times or channel names for patient %s\n',P(i).name);
@@ -71,6 +81,17 @@ for i = 1:length(validated)
     for k = tmuls_to_try
 
         for m = absthresh_to_try
+            
+            fprintf('Doing tmul %d and absthresh %d\n',k,m);
+            
+            if merge == 1
+               if sum(ismember([k,m],oldAllSens)) == 2
+                  fprintf('Already did tmul %d and absthresh %d, skipping...\n',k,m);
+                  continue; 
+                   
+               end
+                
+            end
 
             [sensitivity,accuracy] = spikeChecker(pt,i,chIds,...
    spikeTimes,notSpikeTimes,k,m,whichDetector,trainOrTest,whichSpikes);
@@ -80,6 +101,8 @@ for i = 1:length(validated)
             
             allSens = [allSens;k m sensitivity];
             allAcc = [allAcc;k m accuracy];
+            
+            
 
         end
 
@@ -90,6 +113,8 @@ for i = 1:length(validated)
     
     
 %% Save output file
+allSens = [oldAllSens;allSens];
+allAcc = [oldAllAcc;allAcc];
 save(outputDest,'allSens','allAcc');
     
     
