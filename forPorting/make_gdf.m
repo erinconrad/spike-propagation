@@ -13,7 +13,7 @@ whichDetector = 4;
 
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
-overwrite = 1; 
+overwrite = 0; 
 
 % Should we try to merge the patient structure with an existing, incomplete
 % patient structure?
