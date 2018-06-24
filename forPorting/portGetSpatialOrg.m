@@ -4,7 +4,7 @@
 
 clear
 
-%% Bonus parameter
+%% Parameters
 dmin = 15;
 nperm = 1e4;
 minSeq = 10;

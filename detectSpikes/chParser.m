@@ -33,6 +33,9 @@ if isempty(numIdx) == 0
     end
 end
 
+% Special thing to make ECG->EKG
+%C = strrep(C,'ECG','EKG');
+
 % Final channel name
 chName = C;
 newStr = chName;

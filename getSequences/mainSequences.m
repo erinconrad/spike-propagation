@@ -139,6 +139,7 @@ Patient.xyChan         = electrodeData.locs;
 %% Do cleaning step
 % Now I do this at the end once all blocks are obtained
 
+%{
 dirtysequences = sequences;
 if cleaning == 1
     
@@ -160,6 +161,7 @@ if cleaning == 1
     Patient.discarded.total = Patient.discarded.total + Patient.discarded.cleaning;
 
 end
+%}
 
 
 Patient.discarded.remaining = Patient.discarded.origNum - Patient.discarded.total;

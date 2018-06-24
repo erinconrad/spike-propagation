@@ -1,6 +1,6 @@
 %% fspk2 By: Camilo Bermudez 7/31/13. Edited by Erin Conrad 6/10/18 to using a moving window to get the baseline.
 
-function [gdf] = fspk3(eeg,tmul,absthresh,n_chans,srate,window)
+function [gdf,noise] = fspk3(eeg,tmul,absthresh,n_chans,srate,window)
 %{
 
 This program is the non-GUI version of the spike detection algorithm fspk.
@@ -52,8 +52,11 @@ alldata     = eeg;            % timepnts x chans
 
 % Check that it's enough time
 if size(alldata,1) < window
-    error('Need to run spike detector on at least 60 seconds of data\n');
+    fprintf('Warning: should run spike detector on at least 60 seconds of data.\n');
 end
+
+% Initialize a noise matrix
+noise = zeros(num_segs-1,n_chans);
 
 % Iterate channels and detect spikes
 for dd = 1:n_chans
@@ -74,6 +77,25 @@ for dd = 1:n_chans
         
         out     = [];
         data    = alldata(time_points(1):time_points(2),dd);
+        
+        %% Skip spike detection if the amplitude is zero during the time period for that channel
+        if sum(abs(data)) == 0
+            continue
+        end
+        
+        %% Run a noise detector; skip spike detection if it's a noisy minute for that channel
+        % The second input is determining which method of noise detection
+        % to use. If 1, then I use the sqrt of the sum of the squared
+        % differences between adjacent time points. If 0, then I use the
+        % RMS.
+        noise_bin = findNoisyPeriods(data,1);
+        noise(tt,dd) = noise_bin;
+        if noise_bin == 1
+            continue
+        end
+        
+        %% Run the spike detector
+        
 
         lthresh = mean(abs(data));  % this is the smallest the initial part of the spike can be
         thresh  = lthresh*tmul;     % this is the final threshold we want to impose
@@ -223,12 +245,14 @@ end
 
 %{
 % % Plotting
+if size(eeg,2) > 5
  offset = linspace(-10000,10000,n_chans);
- for chan = 1:n_chans
+ for chan =1:n_chans
 %     
 %     
      plot(eeg(:,chan)+offset(chan),'b'); hold on;
 %     
+    %{
      idx = find(gdf(:,1)==chan);
      if isempty(idx) == 0
         for i = 1:length(idx)
@@ -236,9 +260,15 @@ end
          text(tmp,eeg(tmp,chan)+offset(chan),'*','color','red','fontsize',35,'fontweight','bold');
         end 
      end
-     
+%}
+     col = zeros(size(noise,1),3);
+     for nn = 1:size(noise,1)
+        if noise(nn,chan) == -1, col(nn,:) = [0 0 1]; else, col(nn,:) = [1 0 0]; end
+     end
 %     
      hold on;
+     n_amp = noise(:,chan)*500+offset(chan);
+     scatter(linspace(1,size(eeg,1),size(noise,1)),n_amp,100,col,'filled')
 %     
  end
 % 
@@ -246,6 +276,7 @@ end
  set(gca,'ylim',[min(offset)-500,max(offset)+500])
  
  fprint('no\n');
+end
 
 %}
 

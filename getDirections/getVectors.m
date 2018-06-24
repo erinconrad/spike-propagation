@@ -1,4 +1,4 @@
-function info = getVectors(sequences,nseq,ictal,chanData)
+function info = getVectors(sequences,nseq,ictal,chanData,vectorMethod)
 
 nictal = sum(ictal);
 ninterictal = length(ictal) - nictal;
@@ -16,17 +16,35 @@ for s = 1:nseq
    seqchs = sequences(:,col-1);
    realChs = seqchs(seqchs~=0);
 
-   seqtime = sequences(1,col);
+   seqtimes = sequences(:,col);
 
     % For each sequence, get the first and last spike in the sequence
     firstCh = realChs(1);
     lastCh = realChs(end);
 
-    % Get the locations of the first and last spike, and calculate a direction
-    % vector
-    firstChLoc = chanData(firstCh,2:4);
-    lastChLoc = chanData(lastCh,2:4);
-    vector = lastChLoc -  firstChLoc;
+    if vectorMethod == 1
+        % Get the locations of the first and last spike, and calculate a direction
+        % vector
+        firstChLoc = chanData(firstCh,2:4);
+        lastChLoc = chanData(lastCh,2:4);
+        vector = lastChLoc -  firstChLoc;
+    elseif vectorMethod == 2
+        % Get the location of the mean of locations of the first half of
+        % spikes in the sequence, and get the location of the mean of
+        % locations of the 2nd half of spikes in the sequence. Calculate a
+        % direction vector between those two means.
+        
+        % Get identities of channels
+        firstHalfChs = realChs(1:floor(length(realChs)/2));
+        secondHalfChs = realChs(ceil(length(realChs)/2):end);
+        
+        % Get mean locations of these channels
+        firstHalfChLocsMean = mean(chanData(firstHalfChs,2:4));
+        secondHalfChLocsMean = mean(chanData(secondHalfChs,2:4));
+        
+        vector = secondHalfChLocsMean - firstHalfChLocsMean;
+        
+    end
 
     % Get a measure of line length (how much it jumps around)
     lineLength = 0;

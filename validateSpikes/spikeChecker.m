@@ -28,9 +28,16 @@ end
 mkdir(outputFolder,sprintf('tmul_%d_absthresh_%d_detector_%d/',tmul,absthresh,whichDetector))
 outputFolder = [outputFolder,'/',sprintf('tmul_%d_absthresh_%d_detector_%d/',tmul,absthresh,whichDetector)];
 
-
-times = [spikeTimes;notSpikeTimes];
-allWhichSpikes = [whichSpikes;whichSpikes];
+if size(spikeTimes,1)>size(spikeTimes,2)
+    times = [spikeTimes;notSpikeTimes];
+else
+    times = [spikeTimes,notSpikeTimes];
+end
+if size(whichSpikes,1)>size(whichSpikes,2)
+    allWhichSpikes = [whichSpikes;whichSpikes];
+else
+     allWhichSpikes = [whichSpikes,whichSpikes];
+end
 
 for i = 1:length(times)
     time(i).runTimes = times(i)+detect_duration;

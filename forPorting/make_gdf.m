@@ -9,13 +9,15 @@ clear
 
 %% Parameters
 
+whichDetector = 4;
+
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
-overwrite = 0; 
+overwrite = 1; 
 
 % Should we try to merge the patient structure with an existing, incomplete
 % patient structure?
-merge = 0;
+merge = 1;
 
 % Berumudez spike detector parameters
 %tmul = 13; % the threshold value for the Bermudez spike detector (default is 13)
@@ -51,9 +53,9 @@ for i = 1:length(pt)
         continue
     end
     
-    ignoreElectrodes = pt(i).ignore_electrodes;
     
     for j = 1:length(pt(i).sz)
+        
         if isfield(pt(i).sz(j),'runTimes') == 0
             continue
         end
@@ -77,7 +79,8 @@ for i = 1:length(pt)
             if overwrite == 1 || exist([gdfFolder,pt(i).name,'/',pt(i).sz(j).EKGchunkFiles{k}],'file') == 0
             
                 % get ekg spikes
-                gdf_ekg = portEKG(desiredTimes,dataName,pwfile,pt(i).tmul,pt(i).absthresh);
+                gdf_ekg = portEKG(desiredTimes,dataName,pwfile,pt(i).tmul,pt(i).absthresh,...
+                    whichDetector,pt(i).fs,pt(i).electrodeData.allLabels);
 
                 % save ekg gdf file
                 save([gdfFolder,pt(i).name,'/',pt(i).sz(j).EKGchunkFiles{k}],'gdf_ekg');
@@ -95,9 +98,12 @@ for i = 1:length(pt)
             end
             
             
-            [gdf,vanleer,bad] = portGetSpikes(desiredTimes,dataName,...
-                pt(i).channels,pwfile,pt(i).tmul,pt(i).absthresh);
-          
+            
+            [gdf,vanleer,noise] = portGetSpikes(desiredTimes,dataName,...
+                pt(i).channels,pwfile,pt(i).tmul,pt(i).absthresh,whichDetector,pt(i).fs);
+            
+            %noise(:,10)
+            
             % check if spike is ictal or not
             if isempty(vanleer) == 0
             vanleer.ictal = zeros(length(vanleer.spikeTimes),1);
@@ -111,7 +117,7 @@ for i = 1:length(pt)
                 
             
             % Save gdf file
-            save([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'gdf','vanleer','bad');
+            save([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'gdf','vanleer','noise');
             
            
             % Resave pt file now that I have fs

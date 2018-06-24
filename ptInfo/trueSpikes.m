@@ -15,6 +15,7 @@
 function validated = trueSpikes(name)
 
 if strcmp(name,'HUP064') == 1
+    validated.name = 'HUP064';
     validated.spike_times = [10801.11; 10861.95; 10880.03; 10881.60;42138.89;...
          42074.98; 42076.13; 42120.25;42208.89; 42347.86;...
           42626.85; 42647.54;42847.97; 43025.92;86426.04;...
@@ -238,7 +239,22 @@ if strcmp(name,'HUP064') == 1
    150
    151];
 elseif strcmp(name, 'HUP065') == 1
-    validated = [];
+    validated.name = 'HUP065';
+   %{
+    validated.chs = {'RAT1','RAT2',"RAT2","RAT3","RAT4","RG3","RG4","RG5",...
+        "RG6","RG9","RG10","RG11","RG17","RG22","RG23","RG24","RG25",...
+        "RG26","RG27", "RST1","RST2","RST3"};
+    %}
+    validated.chs = {"RG3","RG4","RG5",...
+        "RG6","RG9","RG10","RG11","RG17","RG22","RG23","RG24","RG25",...
+        "RG26","RG27"};
+    validated.spike_times = [8014.27;8332.92;8406.76;8604.59;10354.53;20460.30;...
+        20868.08;21157.02;21781.94;21915.69;21941.39];
+    validated.not_spike_times = [8018.99;8334.46;8422.99;8619.71;10352.39;20470.72;...
+    20878.56;21158.99;21783.81;21914.43;21945.13];
+    validated.train = 1:10;
+    validated.test= [];
+    validated.unsure = [];
 elseif strcmp(name,'HUP068') ==1
     validated = [];
 elseif strcmp(name,'HUP070') ==1

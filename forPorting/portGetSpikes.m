@@ -1,5 +1,5 @@
-function [gdf,vanleer,bad] = portGetSpikes(desiredTimes,dataName,...
-    channels,pwfile,tmul,absthresh)
+function [gdf,vanleer,noise] = portGetSpikes(desiredTimes,dataName,...
+    channels,pwfile,tmul,absthresh,whichDetector,fs)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -9,8 +9,8 @@ of spikes, the first column has the channel location of the spike and the
 %}
 
 %% Parameters
-whichDetector = 4; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
-setChLimits = 0;
+% whichDetector %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca, 4 = modified Bermudez detector
+setChLimits = 1; % Should I toss out spikes that occur across too many channels at the same time
 multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
 multiChTime = .025; % The time period over which spikes need to occur across multiple channels to toss
 
@@ -19,33 +19,30 @@ multiChTime = .025; % The time period over which spikes need to occur across mul
 vtime = [-0.002,0.048];
 
 
-%% Load EEG data info
-% calling this with 0 and 0 means I will just get basic info like sampling
-% rate and channel labels
-data = getiEEGData(dataName,0,0,pwfile);  
-
-
 %% Prep what data I want to look at
 
 % Get the indices I want to look at
-startAndEndIndices = desiredTimes*data.fs;
+startAndEndIndices = desiredTimes*fs;
 indices = startAndEndIndices(1):startAndEndIndices(2);
 
 % get the data from those indices and channels (ignoring ignored channels)
 data = getiEEGData(dataName,channels,indices,pwfile);
 
+noise = [];
 
 %% Get bad times
+%{
 bad = getBadTimes(data);
 bad.empty = bad.empty/data.fs;
 bad.noise(:,1) = bad.noise(:,1)/data.fs;
+%}
 
 %% Run spike detector
 if whichDetector == 1
 
     % This is the spike detector from Janca et al 2014, edited by me as
     % above
-    [out,~,~,~,~,~] = spike_detector_Erin(data.values,data.fs);
+    [out,~,~,~,~,~] = spike_detector_Erin(data.values,fs);
 
     % reorder spikes by time
     [timeSort,I] = sort(out.pos);
@@ -62,7 +59,7 @@ if whichDetector == 1
 elseif whichDetector == 2
     
     % I have not edited this at all at this point.
-    gdf = fspk2(data.values,tmul,absthresh,length(channels),data.fs);
+    gdf = fspk2(data.values,tmul,absthresh,length(channels),fs);
 
 
     if isempty(gdf) == 1
@@ -77,7 +74,7 @@ elseif whichDetector == 2
 elseif whichDetector == 3
     %this is the unedited Janca detector
 
-    [out,~,~,~,~,~] = spike_detector_hilbert_v16_nodownsample(data.values,data.fs,'-h 60');
+    [out,~,~,~,~,~] = spike_detector_hilbert_v16_nodownsample(data.values,fs,'-h 60');
 
     % reorder spikes by time
     [timeSort,I] = sort(out.pos);
@@ -95,22 +92,39 @@ elseif whichDetector == 4
     % this is my edited version of Sam's spike detector, which instead of
     % measuring the relative threshold based on the absolute value of the
     % entire data, just looks at a minute surrounding the potential spike
-    window = 60*data.fs;
+    window = 60*fs;
     
-    gdf = fspk3(data.values,tmul,absthresh,length(channels),data.fs,window);
+    [gdf,noise] = fspk3(data.values,tmul,absthresh,length(channels),fs,window);
+    
+    %{
+    [r,~] = (find(noise==1));
+    r=unique(r);
+    n_times = r*60+desiredTimes(1);
+    fprintf('%d is a noisy time \n',n_times);
+    %}
     
     if isempty(gdf) == 1
         fprintf('No spikes detected\n');
     else
         fprintf('Detected %d spikes\n',size(gdf,1));
          % put it in seconds
-        gdf(:,2) = gdf(:,2)/data.fs;
+        gdf(:,2) = gdf(:,2)/fs;
     end
 
 end
 
 %% Toss spikes that occur across too high a percentage of channels at the same time
 
+if setChLimits == 1 && isempty(gdf) == 0
+   maxChannels = multiChLimit * length(channels);
+   newgdf = tooManyElectrodes(gdf,maxChannels,multiChTime);
+   fprintf('Percentage of spikes discarded for being across too many channels: %1.1f\n',...
+        (size(gdf,1)-size(newgdf,1))/size(gdf,1)*100)
+   gdf = newgdf;
+    
+end
+
+%{
 if setChLimits == 1 && isempty(gdf) == 0
     newgdf =  gdf;
     tooManyChs = [];
@@ -162,10 +176,13 @@ if setChLimits == 1 && isempty(gdf) == 0
     gdf = newgdf;
 end
 
+%}
+
+
 if isempty(gdf) == 1
     vanleer = [];
 else
-    vanleer = vMakeSegments(gdf,data.values,data.fs,vtime);
+    vanleer = vMakeSegments(gdf,data.values,fs,vtime);
 end
 
 

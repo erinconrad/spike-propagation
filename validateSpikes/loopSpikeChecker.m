@@ -26,8 +26,11 @@ load([resultsFolder,'validation/',validatedFile]);
 for i = whichPt
     
     if isempty(pt(i).ieeg_name) == 1
-        fprintf('Missing ieeg_name for patient %s, skipping\n',pt(i).name);
-        continue
+        [pt(i).ieeg_name,pt(i).electrode_name,~,~] =  ieegAndElectodeNames(pt(i).name);
+        if isempty(pt(i).ieeg_name) == 1
+            fprintf('Missing ieeg_name for patient %s, skipping\n',pt(i).name);
+            continue
+        end
     end
    
     if strcmp(pt(i).name,validated(i).name)~=1
@@ -84,7 +87,7 @@ for i = whichPt
             
             fprintf('Doing tmul %d and absthresh %d\n',k,m);
             
-            if merge == 1
+            if merge == 1 && exist(outputDest,'file') ~= 0
                if sum(ismember([k,m],oldAllSens)) == 2
                   fprintf('Already did tmul %d and absthresh %d, skipping...\n',k,m);
                   continue; 
@@ -113,8 +116,10 @@ for i = whichPt
     
     
 %% Save output file
-allSens = [oldAllSens;allSens];
-allAcc = [oldAllAcc;allAcc];
+if merge == 1 && exist(outputDest,'file') ~= 0
+    allSens = [oldAllSens;allSens];
+    allAcc = [oldAllAcc;allAcc];
+end
 save(outputDest,'allSens','allAcc');
     
     

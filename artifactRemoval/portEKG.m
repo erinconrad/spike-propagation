@@ -1,4 +1,4 @@
-function gdf = portEKG(desiredTimes,dataName,pwfile,tmul,absthresh)
+function gdf = portEKG(desiredTimes,dataName,pwfile,tmul,absthresh,whichDetector,fs,allLabels)
 
 %{
 This is my primary function to detect spikes and output them to a gdf 
@@ -8,13 +8,6 @@ of spikes, the first column has the channel location of the spike and the
 %}
 
 %% Parameters
-whichDetector = 2; %1 = modified Janca detector, 2 = Bermudez detector, 3 = orig Janca
-
-
-%% Load EEG data info
-% calling this with 0 and 0 means I will just get basic info like sampling
-% rate and channel labels
-data = getiEEGData(dataName,0,0,pwfile);  
 
 
 %% Find ekg electrode numbers
@@ -23,12 +16,12 @@ ekg_electrode_labels = {};
 
 
  % loop through all channel labels
- for i = 1:length(data.chLabels)   
+ for i = 1:length(allLabels)   
 
     %% parsing of channel names (labeled odd in the iEEG)
 
     % get the name
-    origStr = data.chLabels{i};
+    origStr = allLabels{i};
 
     if contains(origStr,'EKG') == 1
         ekg_electrode_nums = [ekg_electrode_nums,i];
@@ -44,7 +37,7 @@ ekg_electrode_labels = {};
 %% Prep what data I want to look at
 
 % Get the indices I want to look at
-startAndEndIndices = desiredTimes*data.fs;
+startAndEndIndices = desiredTimes*fs;
 indices = startAndEndIndices(1):startAndEndIndices(2);
 
 % get the data from those indices and channels (ignoring ignored channels)
@@ -101,6 +94,22 @@ elseif whichDetector == 3
     else
         fprintf('Detected %d spikes\n',length(out.pos));
         gdf = [chanSort,timeSort];
+    end
+    
+elseif whichDetector == 4
+    % this is my edited version of Sam's spike detector, which instead of
+    % measuring the relative threshold based on the absolute value of the
+    % entire data, just looks at a minute surrounding the potential spike
+    window = 60*data.fs;
+    
+    [gdf,~] = fspk3(data.values,tmul,absthresh,length(channels),data.fs,window);
+    
+    if isempty(gdf) == 1
+        fprintf('No spikes detected\n');
+    else
+        fprintf('Detected %d spikes\n',size(gdf,1));
+         % put it in seconds
+        gdf(:,2) = gdf(:,2)/data.fs;
     end
 
 end

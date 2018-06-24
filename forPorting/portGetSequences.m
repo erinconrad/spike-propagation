@@ -23,7 +23,7 @@ ptWithSeq = 'ptWithSeq.mat';
 load([resultsFolder,'ptStructs/',ptWithFs]);
 
 %% Loop through patients and seizures
-for i = 5%1:length(pt)
+for i = 1:length(pt)
     
     % Get electrode data
     electrodeData =  pt(i).electrodeData;
@@ -50,8 +50,11 @@ for i = 5%1:length(pt)
         
         gdf_all = [];
         gdf_ekg_all = [];
-        empty_all = [];
         noise_all = [];
+        %{
+        empty_all = [];
+        
+        %}
         
         for k = 1:length(pt(i).sz(j).chunkFiles)
             
@@ -75,8 +78,11 @@ for i = 5%1:length(pt)
             end
             
             gdf(:,2) = gdf(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
+            
+            %{
             bad.noise(:,1) = bad.noise(:,1) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
             bad.empty = bad.empty + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
+            %}
             
             if isempty(gdf_ekg) == 0
                 gdf_ekg(:,2) = gdf_ekg(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
@@ -84,8 +90,11 @@ for i = 5%1:length(pt)
             
             gdf_all = [gdf_all;gdf];
             gdf_ekg_all = [gdf_ekg_all;gdf_ekg];
+            noise_all = [noise_all;noise];
+            %{
             empty_all = [empty_all;bad.empty];
-            noise_all = [noise_all;bad.noise];
+            
+            %}
             
         end
         
@@ -94,18 +103,42 @@ for i = 5%1:length(pt)
         end
         
         % remove spikes that came from noisy times
+        %{
         if rmNoisy == 1
             [gdf_all,rmNoisy,rmEmpty] = removeNoisy(gdf_all,noise_all,empty_all);
         end
+        %}
+        
+        %{
+        % Plot noise
+        chans_noise = [10 15 20 25 30];
+        y_offset = linspace(1,length(chans_noise)*4,length(chans_noise));
+        x_loc = linspace(pt(i).sz(j).runTimes(1,1),...
+            pt(i).sz(j).runTimes(1,1)+60*size(noise_all,1),size(noise_all,1));
+        figure
+        for chan = 1:length(chans_noise)
+            col = zeros(size(noise_all,1),3);
+            for nn = 1:size(noise_all,1)
+                if noise_all(nn,chans_noise(chan)) == -1, col(nn,:) = [0 0 1]; else, col(nn,:) = [1 0 0]; end
+            end
+
+            scatter(x_loc,(noise_all(:,chans_noise(chan))+y_offset(chan)),100,col,'filled')
+            hold on
+        end
+        %}
+        
         
         % Now that you have all the spikes for the desired patient and
         % seizure, calculate sequences
         pt(i).sz(j).stats.nspikes = size(gdf_all,1);
         pt(i).sz(j).data = mainSequences(gdf_all,electrodeData, pt(i).fs);
         pt(i).sz(j).stats.nseqs = size(pt(i).sz(j).data.sequences,2)/2;
+        
+        %{
         pt(i).sz(j).stats.empty = empty_all;
         pt(i).sz(j).stats.noise = noise_all;
         pt(i).sz(j).stats.noise_ictal = zeros(size(pt(i).sz(j).stats.noise,1),1);
+        
         
         % for noise function, get if it's ictal
         for t = 1:size(pt(i).sz(j).stats.noise,1)
@@ -117,6 +150,8 @@ for i = 5%1:length(pt)
             
         end
         
+        %}
+        
         % Add EKG times
         pt(i).sz(j).ekg = gdf_ekg_all;
             
@@ -125,6 +160,7 @@ for i = 5%1:length(pt)
     
 end
 
+%scatter(linspace(pt(5).sz(1).runTimes(1,1),pt(5).sz(1).runTimes(end,2),length(noise_all)),noise_all(:,1));
 
 save([resultsFolder,'ptStructs/',ptWithSeq],'pt');
 

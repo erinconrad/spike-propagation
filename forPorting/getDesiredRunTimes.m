@@ -18,19 +18,19 @@ ptnames = fieldnames(ptInfo.PATIENTS);
 
 %% Desired times
 totalTime = 3600*24; % Look 12 hours before the sz and 12 hours after
-chunkTime = 2000; % Save it in 2000 s chunks (ieeg crashes if more than this)
+chunkTime = 2000; % Save it in 2000 s chunks (ieeg crashes if request more than this)
 nchunks = ceil(totalTime/chunkTime);
 window = 3600; % For spatial organization calculation, calculate SO over a one hour window
 overlap = 600; % Allow 10 minutes of overlap between the SO windows
 
 %% Loop through the patients in the json file
-for i = 1:length(ptnames)
+for i = 8%1:length(ptnames)
     info = ptInfo.PATIENTS.(ptnames{i});
     
     % Get basic info
     pt(i).name = ptnames{i};
     pt(i).ignore_electrodes = info.IGNORE_ELECTRODES;
-    [pt(i).ieeg_name,electrodeFile,pt(i).tmul,pt(i).absthresh] = ieegAndElectodeNames(pt(i).name);
+    [pt(i).ieeg_name,electrodeFile,pt(i).tmul,pt(i).absthresh,pt(i).erin_ignore] = ieegAndElectodeNames(pt(i).name);
     pt(i).chLocationFile = [pt(i).name,'_chLocations.mat'];
     pt(i).sz_onset = info.SeizureOnset;
 
@@ -56,12 +56,20 @@ for i = 1:length(ptnames)
        % Start detecting spikes 12 hours before the seizure onset
        initialTime = max(pt(i).sz(j).onset - totalTime/2,1);
        
+       
+       
        % This will break if it's too close to the end of the file
        if initialTime == 1
            finalTime = max(pt(i).sz(j).onset + totalTime/2,initialTime+(nchunks)*chunkTime);
        else
            finalTime = pt(i).sz(j).onset + totalTime/2;
        end
+       
+       % MAKE SURE YOU REMOVE THIS
+       %% REMOVE ME
+      % initialTime = 410216.91; % right before a deliberately chosen noisy
+      % finalTime = initialTime + 1000;
+       
        
        % Initialize run times and file names
        pt(i).sz(j).runTimes = zeros(nchunks,2);

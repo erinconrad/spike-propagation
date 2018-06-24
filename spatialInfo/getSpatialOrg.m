@@ -26,7 +26,10 @@ for iChannel = 1:nChannels
     avgRecruitmentLat(iChannel) = avgRows(1);
 end
 
+% Get the weighting matrix
+wij = getwij(xyChan,dmin);
 
+%{
 % Calculate dij, distances between channels and weights wij
 dij = nan(nChannels,nChannels);
 wij = nan(nChannels,nChannels);
@@ -59,6 +62,7 @@ for iChannel = 1:nChannels
    end
     
 end
+%}
 
 MI = moranStats(avgRecruitmentLat,wij,nChannels);
 I = MI.I;
