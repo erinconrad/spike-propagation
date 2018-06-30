@@ -13,7 +13,7 @@ whichDetector = 4;
 
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
-overwrite = 0; 
+overwrite = 1; 
 
 % Should we try to merge the patient structure with an existing, incomplete
 % patient structure?
@@ -54,12 +54,12 @@ for i = 1:length(pt)
     end
     
     
-    for j = 1:length(pt(i).sz)
+    for j = 1%:length(pt(i).sz)
         
         if isfield(pt(i).sz(j),'runTimes') == 0
             continue
         end
-        for k = 1:size(pt(i).sz(j).runTimes,1)
+        for k = 40% 1:size(pt(i).sz(j).runTimes,1)
 
             fprintf('Doing chunk %d of %d for patient %d seizure %d\n',...
                 k,size(pt(i).sz(j).runTimes,1),i,j);
