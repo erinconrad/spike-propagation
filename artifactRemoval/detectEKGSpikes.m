@@ -53,8 +53,7 @@ for dd = 1:n_chans
 
             if HFdata(startdx1(i)) - HFdata(spkmintic) > sthresh & HFdata(startdx(i)) - HFdata(spkmintic) > lthresh 
                 if HFdata(startdx1(i)) - HFdata(spkmintic) > thresh
-                 spikes(end+1,1) = spkmintic+time_points(1); 
-                 spikes(end+1,2) = dd;
+                 spikes(end+1) = spkmintic+time_points(1); 
                 end % add timestamp to the spike list
             end
 
