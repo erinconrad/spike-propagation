@@ -108,8 +108,9 @@ for i = 1:length(whichSeq)
 
     %% Get the data for these times
     fprintf('Detecting spikes\n');
-    [gdf,~,extraoutput] = getSpikeTimes(times,ptname,dataName,1,ptInfo,pwfile,...
-        dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,8,300);%P(pt).tmul,P(pt).absthresh);
+    [gdf,extraoutput] = getSpikesSimple(Patient,pt,times,4);
+    %[gdf,~,extraoutput] = getSpikeTimes(times,ptname,dataName,1,ptInfo,pwfile,...
+    %    dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,8,300);%P(pt).tmul,P(pt).absthresh);
     values = extraoutput{1};
     unignoredChLabels = extraoutput{2};
     plottimes =  [1:size(values,1)]/fs;

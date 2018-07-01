@@ -45,6 +45,9 @@ data = getiEEGData(dataName,channels,indices,pwfile);
 
 
 %% Run spike detector
+gdf = detectEKGSpikes(data.values,data.fs);
+gdf(:,2) = gdf(:,2)/data.fs;
+%{
 if whichDetector == 1
 
     % This is the spike detector from Janca et al 2014, edited by me as
@@ -113,5 +116,6 @@ elseif whichDetector == 4
     end
 
 end
+%}
 
 end

@@ -18,7 +18,7 @@ avgRecruitmentLat = nan(1,nChannels);
 for iChannel = 1:nChannels
 
     % Average across the rows of the recruitment latencies
-    avgRows = mean(recruitmentLatencySingle{iChannel},1);
+    avgRows = nanmean(recruitmentLatencySingle{iChannel},1);
 
     % The first value of this is the average recruitment time (the
     % second is the average of the lead channel numbers which is

@@ -58,7 +58,7 @@ ylims = get(gca,'ylim');
 patch([min(tsz) max(tsz) max(tsz) min(tsz)]/scale,[ylims(1) ylims(1) ylims(2) ylims(2)],...
     [0.6 0.6 0.6],'Edgecolor','none');
 plot(times/scale,toPlot,'color','k','linewidth',2);
-plot([szTimes(1) szTimes(1)]/scale,get(gca,'ylim'),'--','color','k','linewidth',3);
+%plot([szTimes(1) szTimes(1)]/scale,get(gca,'ylim'),'--','color','k','linewidth',3);
 
 if whichToPlot == 2
   % plot(times/scale,allCI(:,1),'--')

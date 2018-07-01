@@ -72,6 +72,8 @@ for i = 1:length(pt)
             % Load gdf ekg file
             load([gdfFolder,pt(i).name,'/',pt(i).sz(j).EKGchunkFiles{k}]);
             
+          
+            
             % remove EKG artifact
             if rmEKG == 1
                 gdf = removeEKGArtifact(gdf,gdf_ekg,prox);
@@ -109,8 +111,9 @@ for i = 1:length(pt)
         end
         %}
         
-        %{
+        
         % Plot noise
+        %{
         chans_noise = [10 15 20 25 30];
         y_offset = linspace(1,length(chans_noise)*4,length(chans_noise));
         x_loc = linspace(pt(i).sz(j).runTimes(1,1),...
