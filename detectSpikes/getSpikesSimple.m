@@ -1,4 +1,4 @@
-function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector)
+function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thresh)
 
 %% Parameters
 setChLimits = 1; % Should I toss out spikes that occur across too many channels at the same time
@@ -19,18 +19,21 @@ oldStartEnd = oldtimes*fs;
 
 % Force it to look at least 60 seconds if detector 4
 if whichDetector == 4 && times(2)-times(1)<60
+    fprintf('Warning, need at least 60 seconds to use detector 4. Running with 60 s of data.');
     times(2) = times(1)+60;
 end
 
 channels = pt(whichPt).channels;
 startAndEndIndices = times*fs;
 indices = startAndEndIndices(1):startAndEndIndices(2);
-tmul = pt(whichPt).tmul;
-absthresh = pt(whichPt).absthresh;
+tmul = thresh.tmul;
+absthresh = thresh.absthresh;
+%tmul = pt(whichPt).tmul;
+%absthresh = pt(whichPt).absthresh;
 
 %% get the data from those indices and channels (ignoring ignored channels)
 data = getiEEGData(dataName,channels,indices,pwfile);
-%olddata = data;
+olddata = data;
 
 %% Notch filter
 
@@ -97,7 +100,7 @@ elseif whichDetector == 4
     % entire data, just looks at a minute surrounding the potential spike
     window = 60*data.fs;
 
-    [gdf] = fspk3(data.values,tmul,absthresh,length(channels),data.fs,window);
+    [gdf,noise] = fspk3(data.values,tmul,absthresh,length(channels),data.fs,window);
 
     if isempty(gdf) == 1
         fprintf('No spikes detected\n');
@@ -136,6 +139,10 @@ else
 end
 
 extraOutput.vanleer = vanleer;
+
+[~,noisychs] = find(noise == 1);
+extraOutput.noise.noisychs = pt(whichPt).electrodeData.unignoredChs(noisychs);
+extraOutput.noise.noisematrix = noise;
 
 
 end

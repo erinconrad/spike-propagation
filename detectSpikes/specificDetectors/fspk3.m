@@ -90,6 +90,7 @@ for dd = 1:n_chans
         % RMS.
         noise_bin = findNoisyPeriods(data,1);
         noise(tt,dd) = noise_bin;
+
         if noise_bin == 1
             continue
         end

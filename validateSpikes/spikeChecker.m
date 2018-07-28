@@ -2,6 +2,8 @@ function [sensitivity,accuracy] = spikeChecker(pt,whichPt,chs,...
     spikeTimes,notSpikeTimes,tmul,absthresh,whichDetector,trainOrTest,whichSpikes)
 
 chunkSize = 10;
+thresh.tmul = tmul;
+thresh.absthresh = absthresh;
 
 if whichDetector ==  2
     detect_duration = [-1 599]; %1 seconds before, 599 after
@@ -16,7 +18,7 @@ check_duration = 2; % look for 2 seconds after the start of the detection period
 if contains(pwfile,'residency stuff') == 1
     doPlot = 1;
 else
-    doPlot = 0;
+    doPlot = 1;
 end
 
 dataName = pt(whichPt).ieeg_name;
@@ -67,7 +69,7 @@ fs = data.fs;
 
 %% Detect spikes
 for i = 1:length(time)
-    [time(i).gdf,extraoutput] = getSpikesSimple(pt,whichPt,time(i).runTimes,whichDetector);
+    [time(i).gdf,extraoutput] = getSpikesSimple(pt,whichPt,time(i).runTimes,whichDetector,thresh);
     
    
     %[time(i).gdf,~,extraoutput] = getSpikeTimes(time(i).runTimes,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,1,0,tmul,absthresh,whichDetector);
@@ -162,7 +164,7 @@ sensitivity = TP/(TP+FN);
 
 accuracy = TP/(TP + FP + FN);
 
-if doPlots == 1
+if doPlot == 1
 %% Do plots
 % Divide the times into chunks of 5
 nchunks = ceil(length(times)/chunkSize);
