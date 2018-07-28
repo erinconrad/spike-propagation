@@ -12,6 +12,12 @@ check_duration = 2; % look for 2 seconds after the start of the detection period
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 
+% Don't do plots if I'm running on borel
+if contains(pwfile,'residency stuff') == 1
+    doPlot = 1;
+else
+    doPlot = 0;
+end
 
 dataName = pt(whichPt).ieeg_name;
 electrodeFile = pt(whichPt).electrode_labels;
@@ -61,11 +67,15 @@ fs = data.fs;
 
 %% Detect spikes
 for i = 1:length(time)
-    [time(i).gdf,~,extraoutput] = getSpikeTimes(time(i).runTimes,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,1,0,tmul,absthresh,whichDetector);
-    time(i).values = extraoutput{1};
+    [time(i).gdf,extraoutput] = getSpikesSimple(pt,whichPt,time(i).runTimes,whichDetector);
     
+   
+    %[time(i).gdf,~,extraoutput] = getSpikeTimes(time(i).runTimes,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,1,0,tmul,absthresh,whichDetector);
+   
+    time(i).values = extraoutput.values;
     
-    time(i).unignoredChLabels = extraoutput{2};
+    time(i).unignoredChLabels = pt(whichPt).electrodeData.unignoredChs;
+    %time(i).unignoredChLabels = extraoutput{2};
     time(i).indicesInCheckTime = 1:check_duration*fs;
     time(i).valuesInCheckTime =  time(i).values(time(i).indicesInCheckTime,:);
     
@@ -152,6 +162,7 @@ sensitivity = TP/(TP+FN);
 
 accuracy = TP/(TP + FP + FN);
 
+if doPlots == 1
 %% Do plots
 % Divide the times into chunks of 5
 nchunks = ceil(length(times)/chunkSize);
@@ -227,6 +238,7 @@ for ichunk = 1:nchunks
 
     saveas(gcf,[outputFolder,outputFile])
 
+end
 end
 
 %fprintf('test\n');

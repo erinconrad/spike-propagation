@@ -18,11 +18,11 @@ elseif strcmp(name, 'HUP065') == 1
     electrode_name = 'HUP065_T1_19991230_electrode_labels.csv';
     ignore = {"X1","X2","EKG1","EKG2"};
 elseif strcmp(name,'HUP068') ==1
-    ieeg_name = [];
+    ieeg_name = 'HUP68_phaseII-Annotations';
     electrode_name = 'HUP068_T1_19991230_electrode_labels.csv';
     ignore = {"EKG1","EKG2","X1","X2"};
 elseif strcmp(name,'HUP070') ==1
-    ieeg_name = [];
+    ieeg_name = 'HUP70_phaseII-Annotations';
     electrode_name = 'HUP070_T1_19980321_electrode_labels.csv';
     ignore = {"EKG1","EKG2","Rate","RR"};
 elseif strcmp(name,'HUP073') == 1

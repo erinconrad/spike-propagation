@@ -5,7 +5,7 @@ C = strsplit(origStr,' ');
 
 % I would expect all of the names to start with EEG
 if strcmp(C{1},'EEG') == 0
-    fprintf('Warning, there is something weird in the channel labels for channel %d in patient %s\n',i,dataName);
+    fprintf('Warning, there is something weird in the channel labels for channel %s\n',origStr);
     C = C{1};
 
 else

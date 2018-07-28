@@ -4,7 +4,7 @@ function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector)
 setChLimits = 1; % Should I toss out spikes that occur across too many channels at the same time
 multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
 multiChTime = .025;
-
+vtime = [-0.002,0.048];
 
 %% Load file paths, etc.
 [~,~,~,~,pwfile] = fileLocations;
@@ -30,6 +30,18 @@ absthresh = pt(whichPt).absthresh;
 
 %% get the data from those indices and channels (ignoring ignored channels)
 data = getiEEGData(dataName,channels,indices,pwfile);
+%olddata = data;
+
+%% Notch filter
+
+f = designfilt('bandstopiir','FilterOrder',2, ...
+               'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
+               'DesignMethod','butter','SampleRate',fs);
+           
+for i = 1:size(data.values,2)
+   data.values(:,i) = filtfilt(f,data.values(:,i));   
+end
+
 
 %% Run spike detector
 if whichDetector == 1
@@ -111,9 +123,19 @@ end
 % limit spikes and values to those in the desired times
 values = data.values;
 values = values(1:oldStartEnd(2)-oldStartEnd(1),:);
-gdf = gdf(gdf(:,2)<oldtimes(2)-oldtimes(1),:);
+if isempty(gdf) == 0
+    gdf = gdf(gdf(:,2)<oldtimes(2)-oldtimes(1),:);
+end
 
 extraOutput.values = values;
+
+if isempty(gdf) == 1
+    vanleer = [];
+else
+    vanleer = vMakeSegments(gdf,data.values,fs,vtime);
+end
+
+extraOutput.vanleer = vanleer;
 
 
 end

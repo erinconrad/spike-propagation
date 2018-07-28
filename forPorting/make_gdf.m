@@ -13,7 +13,7 @@ whichDetector = 4;
 
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
-overwrite = 0; 
+overwrite = 1; 
 
 % Should we try to merge the patient structure with an existing, incomplete
 % patient structure?
@@ -98,13 +98,16 @@ for i = 1:length(pt)
             end
             
             
-            
+            %{
             [gdf,vanleer,noise] = portGetSpikes(desiredTimes,dataName,...
                 pt(i).channels,pwfile,pt(i).tmul,pt(i).absthresh,whichDetector,pt(i).fs);
+            %}
+            [gdf,extraOutput] = getSpikesSimple(pt,i,desiredTimes,whichDetector);
             
             %noise(:,10)
             
             % check if spike is ictal or not
+            vanleer = extraOutput.vanleer;
             if isempty(vanleer) == 0
             vanleer.ictal = zeros(length(vanleer.spikeTimes),1);
             for s =  1:length(vanleer.spikeTimes)

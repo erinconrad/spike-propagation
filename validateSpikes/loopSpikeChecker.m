@@ -18,7 +18,7 @@ newptfile = 'ptAccuracies.mat';
 validatedFile = 'validated.mat';
 
 %% Load file with filenames and run times
-load([resultsFolder,'ptStructs/',timeFile]);
+load([resultsFolder,'ptStructs/allPtsElectrodeData/',timeFile]);
 load([resultsFolder,'validation/',validatedFile]);
 
 
@@ -90,7 +90,7 @@ for i = whichPt
             if merge == 1 && exist(outputDest,'file') ~= 0
                if sum(ismember([k,m],oldAllSens)) == 2
                   fprintf('Already did tmul %d and absthresh %d, skipping...\n',k,m);
-                  continue; 
+                %  continue; 
                    
                end
                 

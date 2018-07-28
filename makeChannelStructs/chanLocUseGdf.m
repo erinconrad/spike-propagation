@@ -112,4 +112,6 @@ if nargin == 0
     save([electrodeFolder,electrodeData.ptName,'_chanLoc.mat'], 'electrodeData')
 end
 
+fclose(fileID);
+
 end
