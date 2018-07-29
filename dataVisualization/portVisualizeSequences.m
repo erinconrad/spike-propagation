@@ -97,7 +97,8 @@ for i = 1:length(whichSeq)
 
     time_col = P(pt).sz(whichSz).data.sequences(:,(s-1)*2+2);
     chan_col = P(pt).sz(whichSz).data.sequences(:,(s-1)*2+1);
-    times = onsettime + [time_col(1)-surroundtime,time_col(1)+surroundtime];
+    times = [time_col(1)-surroundtime,time_col(1)+surroundtime];
+    %times = onsettime + [time_col(1)-surroundtime,time_col(1)+surroundtime];
     whichCh = chan_col(1:5);
    
     %% Load EEG data info
@@ -108,11 +109,13 @@ for i = 1:length(whichSeq)
 
     %% Get the data for these times
     fprintf('Detecting spikes\n');
-    [gdf,extraoutput] = getSpikesSimple(Patient,pt,times,4);
+    thresh.tmul = P(pt).tmul;
+    thresh.absthresh = P(pt).absthresh;
+    [gdf,extraoutput] = getSpikesSimple(P,pt,times,4,thresh);
     %[gdf,~,extraoutput] = getSpikeTimes(times,ptname,dataName,1,ptInfo,pwfile,...
     %    dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,8,300);%P(pt).tmul,P(pt).absthresh);
-    values = extraoutput{1};
-    unignoredChLabels = extraoutput{2};
+    values = extraoutput.values;
+    unignoredChLabels = P(pt).electrodeData.unignoredChs;
     plottimes =  [1:size(values,1)]/fs;
 
     %% Get the spike times
@@ -163,7 +166,12 @@ for s = 1:length(whichSeq)
     %ylabel('Amplitude');
     set(gca,'YTickLabel',[]);
 
-    text(0.7,0.1,sprintf('Sequence %d',seq(s).seq),'units','normalized','FontSize',15);
+    text(0.1,0.1,sprintf('Sequence %d %d s',seq(s).seq,...
+        seq(s).time_col(1)),'units','normalized','FontSize',15);
+    
+    text(0.1,0.9,sprintf('Plot starts at %d s',seq(s).time_col(1)-surroundtime),...
+        'units','normalized','FontSize',15);
+    
     set(gca,'fontsize',15);
     xticks = 1:2:surroundtime*2-1;
     yl = ylim;

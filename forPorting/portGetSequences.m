@@ -101,7 +101,7 @@ for i = 1:length(pt)
             
             gdf_all = [gdf_all;gdf];
             gdf_ekg_all = [gdf_ekg_all;gdf_ekg];
-            noise_all = [noise_all;noise];
+           % noise_all = [noise_all;noise];
             %{
             empty_all = [empty_all;bad.empty];
             

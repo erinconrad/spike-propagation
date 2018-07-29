@@ -82,7 +82,7 @@ for i = 1:length(time)
     time(i).valuesInCheckTime =  time(i).values(time(i).indicesInCheckTime,:);
     
     if isempty(time(i).gdf)==0
-        
+        time(i).gdf(:,2) = time(i).gdf(:,2) - time(i).runTimes(1);
         time(i).spikesInCheckTime = time(i).gdf(time(i).gdf(:,2)<=check_duration,:);
     else
         time(i).spikesInCheckTime = [];
