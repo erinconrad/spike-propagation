@@ -132,10 +132,7 @@ if isempty(gdf) == 0
     gdf = gdf(gdf(:,2)<oldtimes(2)-oldtimes(1),:);
 end
 
-% Re-align gdf times to be the actual times
-if isempty(gdf) == 0
-    gdf(:,2) = gdf(:,2) + times(1);
-end
+
 
 extraOutput.values = values;
 
@@ -146,6 +143,11 @@ else
 end
 
 extraOutput.vanleer = vanleer;
+
+% Re-align gdf times to be the actual times
+if isempty(gdf) == 0
+    gdf(:,2) = gdf(:,2) + times(1);
+end
 
 [~,noisychs] = find(noise == 1);
 extraOutput.noise.noisychs = pt(whichPt).electrodeData.unignoredChs(noisychs);
