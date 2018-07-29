@@ -123,7 +123,7 @@ for i = 1:length(pt)
                 
             
             % Save gdf file
-            save([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'gdf','vanleer','noise');
+            save([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'gdf','vanleer');
             
            
             % Resave pt file now that I have fs
