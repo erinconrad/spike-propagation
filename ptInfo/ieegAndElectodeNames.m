@@ -12,7 +12,7 @@ if strcmp(name,'HUP064') == 1
     ieeg_name = 'HUP64_phaseII-Annotations';
     electrode_name = 'HUP064_T1_19991230_electrode_labels.csv';
     ignore = {"EKG1","EKG2","RR","Rate","X1","X2","X3","X4"};
-    tmul = 13;
+    tmul = 15;
     absthresh = 300;
 elseif strcmp(name, 'HUP065') == 1
     ieeg_name = 'HUP65_phaseII-Annotations';
