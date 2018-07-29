@@ -29,8 +29,8 @@ for i = 1:length(ptnames)
     
     % Get basic info
     pt(i).name = ptnames{i};
-    pt(i).ignore_electrodes = info.IGNORE_ELECTRODES;
-    [pt(i).ieeg_name,electrodeFile,pt(i).tmul,pt(i).absthresh,pt(i).erin_ignore] = ieegAndElectodeNames(pt(i).name);
+    %pt(i).ignore_electrodes = info.IGNORE_ELECTRODES;
+    [pt(i).ieeg_name,electrodeFile,pt(i).tmul,pt(i).absthresh,~] = ieegAndElectodeNames(pt(i).name);
     pt(i).chLocationFile = [pt(i).name,'_chLocations.mat'];
     pt(i).sz_onset = info.SeizureOnset;
 

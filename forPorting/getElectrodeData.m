@@ -2,7 +2,7 @@
 clear
 
 
-useErinIgnore = 1; % use the ignore labels I made rather than the ones in the json file
+useErinIgnore = 2; % 2 means I ignore channels if and only if they don't have a location in the electrode csv file
 overwrite =  1;
 
 %% File names
@@ -41,6 +41,8 @@ for i = 1:length(pt)
         ignoreElectrodes = pt(i).ignore_electrodes;
     elseif useErinIgnore == 1
         ignoreElectrodes = pt(i).erin_ignore;
+    elseif useErinIgnore == 2
+        
     end
     
     for j = 1:length(pt(i).sz)
@@ -67,6 +69,11 @@ for i = 1:length(pt)
            chLabelsParsed{ch} = chParser(chLabels{ch}); 
         end
         
+        if useErinIgnore == 2
+            ignoreElectrodes = findChsToIgnore(pt,i,chLabelsParsed);
+        end
+       
+                 
         foundIgnoredChs = zeros(length(ignoreElectrodes),1);
         
         % Find channels that are equal to my ignored channels
@@ -99,6 +106,7 @@ for i = 1:length(pt)
         pt(i).electrodeData = electrodeData;
         pt(i).channels = channels;
 
+     
 
         % Save chLocations file
         save([electrodeFolder,pt(i).chLocationFile],'electrodeData');
