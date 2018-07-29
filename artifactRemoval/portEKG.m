@@ -55,76 +55,10 @@ else
     fprintf('Detected %d spikes\n',size(gdf,1));
      % put it in seconds
     gdf(:,2) = gdf(:,2)/data.fs;
+    
+    % re-align time
+    gdf(:,2) = gdf(:,2) + desiredTimes(1);
 end
-%{
-if whichDetector == 1
 
-    % This is the spike detector from Janca et al 2014, edited by me as
-    % above
-    [out,~,~,~,~,~] = spike_detector_Erin(data.values,data.fs);
-
-    % reorder spikes by time
-    [timeSort,I] = sort(out.pos);
-    chanSort = out.chan(I);
-
-    % make gdf
-    if isempty(out.pos) == 1
-        fprintf('Warning: No spikes detected\n');
-    else
-        %fprintf('Detected %d spikes\n',length(out.pos));
-        gdf = [chanSort,timeSort];
-    end
-
-elseif whichDetector == 2
-    
-    % I have not edited this at all at this point.
-    gdf = fspk2(data.values,tmul,absthresh,length(channels),data.fs);
-
-
-    if isempty(gdf) == 1
-        fprintf('No spikes detected\n');
-    else
-        fprintf('Detected %d spikes\n',size(gdf,1));
-         % put it in seconds
-         gdf(:,2) = gdf(:,2)/data.fs;
-
-        out.pos = gdf(:,2); out.chan = gdf(:,1);
-    end
-
-elseif whichDetector == 3
-    %this is the unedited Janca detector
-
-    [out,~,~,~,~,~] = spike_detector_hilbert_v16_nodownsample(data.values,data.fs,'-h 60');
-
-    % reorder spikes by time
-    [timeSort,I] = sort(out.pos);
-    chanSort = out.chan(I);
-
-    % make gdf
-    if isempty(out.pos) == 1
-        fprintf('Warning: No spikes detected\n');
-    else
-        fprintf('Detected %d spikes\n',length(out.pos));
-        gdf = [chanSort,timeSort];
-    end
-    
-elseif whichDetector == 4
-    % this is my edited version of Sam's spike detector, which instead of
-    % measuring the relative threshold based on the absolute value of the
-    % entire data, just looks at a minute surrounding the potential spike
-    window = 60*data.fs;
-    
-    [gdf,~] = fspk3(data.values,tmul,absthresh,length(channels),data.fs,window);
-    
-    if isempty(gdf) == 1
-        fprintf('No spikes detected\n');
-    else
-        fprintf('Detected %d spikes\n',size(gdf,1));
-         % put it in seconds
-        gdf(:,2) = gdf(:,2)/data.fs;
-    end
-
-end
-%}
 
 end

@@ -2,12 +2,18 @@ clear
 
 %% Remove EKG artifact
 rmEKG = 1;
-prox = 0.02; % NEED TO CHANGE
 
-%% Remove depth electrodes
+% how close the EKG spike can be from the EEG spike to throw out the EEG
+% spike
+prox = 0.02; %20 ms
+
+% Remove depth electrodes
 rmDepth = 1;
 rmType = 'D';
-rmNoisy = 1;
+
+% remove noisy electrodes? I don't think I need to because I remove noisy
+% times for each electrode
+rmNoisy = 0;
 
 %% File names
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -41,11 +47,12 @@ for i = 1:length(pt)
             continue
         end
         
+        %{
         if isempty(pt(i).fs) == 1
             pt(i).fs = 512;
             fprintf('Warning, no fs for patient %d, assuming it is 512 Hz\n',i);
         end
-       
+       %}
         
         
         gdf_all = [];
@@ -79,16 +86,18 @@ for i = 1:length(pt)
                 gdf = removeEKGArtifact(gdf,gdf_ekg,prox);
             end
             
-            gdf(:,2) = gdf(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
+            %gdf(:,2) = gdf(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
             
             %{
             bad.noise(:,1) = bad.noise(:,1) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
             bad.empty = bad.empty + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
             %}
             
+            %{
             if isempty(gdf_ekg) == 0
                 gdf_ekg(:,2) = gdf_ekg(:,2) + pt(i).sz(j).runTimes(k,1) - pt(i).sz(j).runTimes(1,1);
             end
+            %}
             
             gdf_all = [gdf_all;gdf];
             gdf_ekg_all = [gdf_ekg_all;gdf_ekg];

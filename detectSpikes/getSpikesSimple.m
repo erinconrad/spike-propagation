@@ -13,7 +13,6 @@ dataName = pt(whichPt).ieeg_name;
 
 % Get the indices I want to look at
 fs = pt(whichPt).fs;
-
 oldtimes = times;
 oldStartEnd = oldtimes*fs;
 
@@ -28,15 +27,12 @@ startAndEndIndices = times*fs;
 indices = startAndEndIndices(1):startAndEndIndices(2);
 tmul = thresh.tmul;
 absthresh = thresh.absthresh;
-%tmul = pt(whichPt).tmul;
-%absthresh = pt(whichPt).absthresh;
 
 %% get the data from those indices and channels (ignoring ignored channels)
 data = getiEEGData(dataName,channels,indices,pwfile);
 olddata = data;
 
-%% Notch filter
-
+%% Notch filter to remove 60 Hz noise
 f = designfilt('bandstopiir','FilterOrder',2, ...
                'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
                'DesignMethod','butter','SampleRate',fs);
@@ -48,6 +44,8 @@ end
 
 %% Run spike detector
 if whichDetector == 1
+    
+    fprintf('Warning, why are you using Detector 1?\n');
 
     % This is the spike detector from Janca et al 2014, edited by me as
     % above
@@ -64,6 +62,8 @@ if whichDetector == 1
     end
 
 elseif whichDetector == 2
+    
+    fprintf('Warning, why are you using Detector 2?\n');
      addpath('./SamCode');
     % This calls the Bermudez detector
     % 
@@ -80,6 +80,8 @@ elseif whichDetector == 2
     end
 
 elseif whichDetector == 3
+    fprintf('Warning, why are you using Detector 3?\n');
+    
     %this is the unedited Janca detector
     [out,~,~,~,~,~] = spike_detector_hilbert_v16_nodownsample(data.values,data.fs,'-h 60');
     % reorder spikes by time
@@ -128,6 +130,11 @@ values = data.values;
 values = values(1:oldStartEnd(2)-oldStartEnd(1),:);
 if isempty(gdf) == 0
     gdf = gdf(gdf(:,2)<oldtimes(2)-oldtimes(1),:);
+end
+
+% Re-align gdf times to be the actual times
+if isempty(gdf) == 0
+    gdf(:,2) = gdf(:,2) + times(1);
 end
 
 extraOutput.values = values;

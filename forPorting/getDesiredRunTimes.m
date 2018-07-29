@@ -65,11 +65,7 @@ for i = 1:length(ptnames)
            finalTime = pt(i).sz(j).onset + totalTime/2;
        end
        
-       % MAKE SURE YOU REMOVE THIS
-       %% REMOVE ME
-      % initialTime = 410216.91; % right before a deliberately chosen noisy
-      % finalTime = initialTime + 1000;
-       
+   
        
        % Initialize run times and file names
        pt(i).sz(j).runTimes = zeros(nchunks,2);

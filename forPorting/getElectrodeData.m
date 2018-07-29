@@ -1,8 +1,10 @@
 %% getElectrodeData
 clear
 
+% 2 means I ignore channels if and only if they don't have a location in 
+% the electrode csv file
+useErinIgnore = 2; 
 
-useErinIgnore = 2; % 2 means I ignore channels if and only if they don't have a location in the electrode csv file
 overwrite =  1;
 
 %% File names
@@ -69,6 +71,8 @@ for i = 1:length(pt)
            chLabelsParsed{ch} = chParser(chLabels{ch}); 
         end
         
+        % Ignore any channels that do not have locations in the electrode
+        % location file. These are the ONLY channels I will ignore.
         if useErinIgnore == 2
             ignoreElectrodes = findChsToIgnore(pt,i,chLabelsParsed);
         end
