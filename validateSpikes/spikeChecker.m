@@ -71,16 +71,20 @@ fs = data.fs;
 for i = 1:length(time)
     [time(i).gdf,extraoutput] = getSpikesSimple(pt,whichPt,time(i).runTimes,whichDetector,thresh);
     
+    
    
     %[time(i).gdf,~,extraoutput] = getSpikeTimes(time(i).runTimes,ptname,dataName,electrodeFile,ptInfo,pwfile,0,0,0,1,0,1,0,tmul,absthresh,whichDetector);
    
     time(i).values = extraoutput.values;
+    
+    
     
     time(i).unignoredChLabels = pt(whichPt).electrodeData.unignoredChs;
     %time(i).unignoredChLabels = extraoutput{2};
     time(i).indicesInCheckTime = 1:check_duration*fs;
     time(i).valuesInCheckTime =  time(i).values(time(i).indicesInCheckTime,:);
     
+   
     if isempty(time(i).gdf)==0
         time(i).gdf(:,2) = time(i).gdf(:,2) - time(i).runTimes(1);
         time(i).spikesInCheckTime = time(i).gdf(time(i).gdf(:,2)<=check_duration,:);
