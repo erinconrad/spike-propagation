@@ -166,8 +166,13 @@ for i = 1:length(pt)
         
         % Add EKG times
         pt(i).sz(j).ekg = gdf_ekg_all;
+        
+        % Make fancy new matrix for sequences
+        pt(i).sz(j).seq_matrix = ...
+            makeSeqMatrix(pt(i).sz(j).data.sequences,length(pt(1).channels));
             
     end
+    
     
     
 end
