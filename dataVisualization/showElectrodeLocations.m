@@ -8,7 +8,7 @@ ptInfo = loadjson(jsonfile);
 % base size of electrodes
 baseSizeElec = 20;
 
-for i = 1:length(P)
+for i = 1%:length(P)
     
     name = P(i).name;
     
@@ -16,7 +16,7 @@ for i = 1:length(P)
     
     if exist([electrodeFolder,filename],'file') ~= 0
         fprintf('File %s already found, skipping\n',filename);
-        continue
+       % continue
     end
 
     
@@ -30,8 +30,9 @@ for i = 1:length(P)
    data = getiEEGData(ieeg_name,0,0,pwfile);  
    dummyRun = 1;
    outputData = 0;
-   [~,electrodeData,~] = getSpikeTimes(0,name,ieeg_name,electrodeFile,ptInfo,pwfile,...
-    dummyRun,0,0,outputData,0,1,0);
+%   [~,electrodeData,~] = getSpikeTimes(0,name,ieeg_name,electrodeFile,ptInfo,pwfile,...
+ %   dummyRun,0,0,outputData,0,1,0);
+ electrodeData = P(i).electrodeData;
    
    chLocs = electrodeData.locs(:,2:4);
    fig = figure;
