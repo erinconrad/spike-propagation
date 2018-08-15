@@ -1,7 +1,8 @@
-function angles = getAngles(sequences,electrodeData)
+function [angles,dist] = getAngles(sequences,electrodeData)
 
 nseq = size(sequences,2);
 angles = zeros(nseq,1);
+dist = zeros(nseq,1);
 
 %% Loop through sequences
 for i = 1:nseq
@@ -14,6 +15,10 @@ for i = 1:nseq
    % get locations of the spikes
    locs = electrodeData.locs(C,2:4);
    
+   % Need to decide what to do with ties!!!!!!
+   % if the ties are both on the early side or both on the late side,
+   % doesn't matter. If one is early and one late, or one early/late and
+   % one the middle value, then it matters.
    
    % if odd number of spikes, ignore the middle spike
    if mod(nspikes,2) == 1
@@ -30,6 +35,7 @@ for i = 1:nseq
    
    % get vector between them 
    vec = late_mean - early_mean;
+   dist(i) = norm(vec);
    
    ref_vector_both = electrodeData.ref_vector;
    ref_vector = ref_vector_both(2,:) - ref_vector_both(1,:);
