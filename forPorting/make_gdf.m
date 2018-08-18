@@ -42,6 +42,8 @@ end
 %% Loop through patients, szs, run times
 for i = 1:length(pt)
     
+    mkdir([resultsFolder,'gdf/',pt(i).name]);
+    
     dataName =  pt(i).ieeg_name;
     if isempty(dataName) == 1
         continue
