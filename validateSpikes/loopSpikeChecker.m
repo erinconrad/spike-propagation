@@ -1,4 +1,4 @@
-function [allSens,allAcc]=loopSpikeChecker(whichPt,whichDetector,trainOrTest,merge,tmuls_to_try,absthresh_to_try)
+function loopSpikeChecker(whichPts,whichDetector,trainOrTest,merge,tmuls_to_try,absthresh_to_try)
 
 if trainOrTest == 2
     error('Are you sure you want to look at the testing data?\n');
@@ -23,7 +23,12 @@ load([resultsFolder,'validation/',validatedFile]);
 
 
 
-for i = whichPt
+for i = whichPts
+    
+    if isempty(validated(i).train) == 1
+        fprintf('Missing training data for patient %s, skipping \n',pt(i).name);
+        continue
+    end
     
     if isempty(pt(i).ieeg_name) == 1
         [pt(i).ieeg_name,pt(i).electrode_name,~,~] =  ieegAndElectodeNames(pt(i).name);
@@ -117,14 +122,18 @@ for i = whichPt
     
 %% Save output file
 if merge == 1 && exist(outputDest,'file') ~= 0
-    allSens = [oldAllSens;allSens];
-    allAcc = [oldAllAcc;allAcc];
+    allSens = unique([oldAllSens;allSens]);
+    allAcc = unique([oldAllAcc;allAcc]);
 end
 save(outputDest,'allSens','allAcc');
-    
+
+validated(i).allSens = allSens;
+validated(i).allAcc = allAcc;
     
     
 end
+
+save([resultsFolder,'validation/'],'validated');
 
 
 end
