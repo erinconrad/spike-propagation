@@ -16,6 +16,9 @@ fs = pt(whichPt).fs;
 oldtimes = times;
 oldStartEnd = oldtimes*fs;
 
+% chLocs
+chLocs = pt(whichPt).electrodeData.locs;
+
 % Force it to look at least 60 seconds if detector 4
 if whichDetector == 4 && times(2)-times(1)<60
     fprintf('Warning, need at least 60 seconds to use detector 4. Running with 60 s of data.');
@@ -139,15 +142,19 @@ extraOutput.values = values;
 if isempty(gdf) == 1
     vanleer = [];
 else
-    vanleer = vMakeSegments(gdf,data.values,fs,vtime);
+    vanleer = vMakeSegments(gdf,data.values,fs,vtime,chLocs);
 end
 
-extraOutput.vanleer = vanleer;
+
 
 % Re-align gdf times to be the actual times
 if isempty(gdf) == 0
     gdf(:,2) = gdf(:,2) + times(1);
+    vanleer.spikeTimes = vanleer.spikeTimes + times(1);
 end
+
+
+extraOutput.vanleer = vanleer;
 
 [~,noisychs] = find(noise == 1);
 extraOutput.noise.noisychs = pt(whichPt).electrodeData.unignoredChs(noisychs);

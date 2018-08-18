@@ -9,7 +9,7 @@ rmType = 'D';
 %electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
 addpath(p1);
-ptWithFs = 'finalPt.mat';
+ptWithFs = 'ptWithSeq.mat';
 gdfFolder = [resultsFolder,'gdf/'];
 chLocationsFolder = 'chLocations/';
 ptVanleer = 'ptVanleer.mat';

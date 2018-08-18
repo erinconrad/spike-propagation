@@ -58,6 +58,9 @@ for i = 1:length(pt)
         gdf_all = [];
         gdf_ekg_all = [];
         noise_all = [];
+        vanleer_all.spike_times = [];
+        vanleer_all.rms = [];
+        vanleer_all.delay = [];
         %{
         empty_all = [];
         
@@ -101,6 +104,11 @@ for i = 1:length(pt)
             
             gdf_all = [gdf_all;gdf];
             gdf_ekg_all = [gdf_ekg_all;gdf_ekg];
+            vanleer_all.spike_times = [vanleer_all.spike_times;vanleer.spikeTimes];
+            vanleer_all.delay = [vanleer_all.delay;vanleer.delay];
+            vanleer_all.rms = [vanleer_all.rms;vanleer.rms];
+            
+            
            % noise_all = [noise_all;noise];
             %{
             empty_all = [empty_all;bad.empty];
@@ -170,7 +178,11 @@ for i = 1:length(pt)
         % Make fancy new matrix for sequences
         pt(i).sz(j).seq_matrix = ...
             makeSeqMatrix(pt(i).sz(j).data.sequences,length(pt(1).channels));
-            
+        
+        
+      
+        % vanleer
+        pt(i).sz(j).vanleer = vanleer;
     end
     
     

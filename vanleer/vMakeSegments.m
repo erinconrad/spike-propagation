@@ -1,4 +1,4 @@
-function gdf = vMakeSegments(gdf,values,fs,vtime)
+function gdf = vMakeSegments(gdf,values,fs,vtime,chLocs)
 
 % This will take a gdf file which contains the time and location of
 % detected spikes and it will output an array called delay, which is an nxm
@@ -81,6 +81,10 @@ for i = 1:length(spikeIdx)
     % get minimum delay amongs the channels and subtract this from each
     % delay to make min 0
     delay(i,:) = delay(i,:) - min(delay(i,:));
+    
+    
+    % Sample plot
+    %scatter3(chLocs(:,2),chLocs(:,3),chLocs(:,4),50,delay(i,:),'filled');
     
     
 end

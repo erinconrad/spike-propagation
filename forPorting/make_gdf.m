@@ -110,6 +110,7 @@ for i = 1:length(pt)
             %noise(:,10)
             
             % check if spike is ictal or not
+            %{
             vanleer = extraOutput.vanleer;
             if isempty(vanleer) == 0
             vanleer.ictal = zeros(length(vanleer.spikeTimes),1);
@@ -120,8 +121,9 @@ for i = 1:length(pt)
                end
             end
             end
+            %}
                 
-            
+            vanleer = extraOutput.vanleer;
             % Save gdf file
             save([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'gdf','vanleer');
             

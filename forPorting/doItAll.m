@@ -27,7 +27,7 @@ fprintf('Calculating stats on sequences\n');
 portGetSpatialOrg
 
 
-ictalInterictal
+%ictalInterictal
 
 % Do vanleer
 %fprintf('Doing vanleer\n');
