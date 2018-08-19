@@ -71,10 +71,12 @@ for i = 1:nchunks
     freqChsInfo.title{i} = sprintf('Sequence frequency by channel at time %d s',meantimes(i));
     
     % need to check this
+    %{
     angles{i} = getAngles(correctSequences,P(pt).electrodeData);
     if isempty(angles{i}) == 0
         [mu(i) ul(i) ll(i)] = circ_mean(angles{i}*pi/180);
     end
+    %}
     
 end
 
@@ -89,9 +91,12 @@ for i = 1:nchunks
     
 end
 
-allAngles = getAngles(sequences,P(pt).electrodeData);
+%allAngles = getAngles(sequences,P(pt).electrodeData);
 
 %% Plots
+
+%{
+brainImageOfAnything(mean(seqFreqChs,2),chLocs,0);
 
 scatter(1:length(mu),mu,'k','filled')
 hold on
@@ -99,6 +104,7 @@ scatter(1:length(mu),ul,'k')
 scatter(1:length(mu),ll,'k')
 
 [pval table] = circ_wwtest(allAngles*pi/180,bins)
+%}
 
 brainMovieOfAnything(seqFreqChs',chLocs,freqChsInfo)
 

@@ -55,11 +55,11 @@ elseif strcmp(name,'HUP083') == 1
     electrode_name = 'HUP083_T1_19991217_1_electrode_labels.csv';
     ignore = {"EKG1","EKG2"};
 elseif strcmp(name,'HUP086') == 1
-    ieeg_name = [];
+    ieeg_name = 'HUP86_phaseII-Anotations';
     electrode_name = 'HUP086_T1_19990728_electrode_labels.csv';
     ignore = {"EKG1","EKG2"};
 elseif strcmp(name,'HUP087') == 1
-    ieeg_name = [];
+    ieeg_name = 'HUP87_phaseII-Anotations';
     electrode_name = 'HUP087_T1_19991226_electrode_labels.csv';
     ignore = {"EKG1","EKG2"};
 elseif strcmp(name,'HUP088') == 1

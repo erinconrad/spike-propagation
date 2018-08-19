@@ -182,7 +182,7 @@ for i = 1:length(pt)
         
       
         % vanleer
-        pt(i).sz(j).vanleer = vanleer;
+        pt(i).sz(j).vanleer = vanleer_all;
     end
     
     
