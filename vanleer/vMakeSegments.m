@@ -84,6 +84,10 @@ for i = 1:length(spikeIdx)
     
     
     % Sample plot
+    test_chs = 1:20;
+    test_values = values(spikeIdx(i)+nIdx(1):spikeIdx(i)+nIdx(2),test_chs);
+    plot(test_values,'k');
+    
     %scatter3(chLocs(:,2),chLocs(:,3),chLocs(:,4),50,delay(i,:),'filled');
     
     
