@@ -4,7 +4,7 @@
 % the corresponding ieeg.org data name and the electrode file location
 
 
-function [ieeg_name,electrode_name,tmul,absthresh,ignore] =  ieegAndElectodeNames(name)
+function [ieeg_name,electrode_name] =  ieegAndElectodeNames(name)
 
 
 
