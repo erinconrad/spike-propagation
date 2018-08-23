@@ -95,7 +95,7 @@ for i = whichPts
             if merge == 1 && exist(outputDest,'file') ~= 0
                if sum(ismember([k,m],oldAllSens)) == 2
                   fprintf('Already did tmul %d and absthresh %d, skipping...\n',k,m);
-                  continue; 
+                 % continue; 
                    
                end
                 
@@ -122,8 +122,8 @@ for i = whichPts
     
 %% Save output file
 if merge == 1 && exist(outputDest,'file') ~= 0
-    allSens = unique([oldAllSens;allSens]);
-    allAcc = unique([oldAllAcc;allAcc]);
+    allSens = unique([oldAllSens;allSens],'rows');
+    allAcc = unique([oldAllAcc;allAcc],'rows');
 end
 save(outputDest,'allSens','allAcc');
 
@@ -133,7 +133,7 @@ validated(i).allAcc = allAcc;
     
 end
 
-save([resultsFolder,'validation/'],'validated');
+save([resultsFolder,'validation/validated.mat'],'validated');
 
 
 end

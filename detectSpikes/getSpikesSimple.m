@@ -117,8 +117,37 @@ elseif whichDetector == 4
 
 end
 
-%% Toss spikes that occur across too high a percentage of channels at the same time
 
+%% Re-align the spike to be the peak
+values = data.values;
+timeToPeak = [-.02,.15]; % Where to look for the peak
+idxToPeak = timeToPeak*fs;
+
+new_gdf = gdf;
+
+% Loop through spikes
+for i = 1:size(gdf,1)
+    snapshot = values(gdf(i,2)*fs+idxToPeak(1):gdf(i,2)*fs+idxToPeak(2),gdf(i,1));
+    [~,I] = max(snapshot);
+    new_gdf(i,2) = gdf(i,2) + timeToPeak(1) + I/fs;
+end
+
+gdf = new_gdf;
+
+% test plot for re-aligned spikes
+%{
+for whichSp = 50:150
+toplot = values((gdf(whichSp,2)*fs-2*fs:gdf(whichSp,2)*fs+13*fs),gdf(whichSp,1));
+plot(linspace(-2,13,length(toplot)),toplot);
+hold on
+scatter(0,values(gdf(whichSp,2)*fs,gdf(whichSp,1)));
+scatter(new_gdf(whichSp,2)-gdf(whichSp,2),values(round(new_gdf(whichSp,2)*fs),new_gdf(whichSp,1)))
+hold off
+pause
+end
+%}
+
+%% Toss spikes that occur across too high a percentage of channels at the same time
 if setChLimits == 1 && isempty(gdf) == 0
    maxChannels = multiChLimit * length(channels);
    newgdf = tooManyElectrodes(gdf,maxChannels,multiChTime);
@@ -129,7 +158,6 @@ if setChLimits == 1 && isempty(gdf) == 0
 end
 
 % limit spikes and values to those in the desired times
-values = data.values;
 values = values(1:oldStartEnd(2)-oldStartEnd(1),:);
 if isempty(gdf) == 0
     gdf = gdf(gdf(:,2)<oldtimes(2)-oldtimes(1),:);

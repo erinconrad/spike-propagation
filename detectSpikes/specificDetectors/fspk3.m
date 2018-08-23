@@ -2,18 +2,13 @@
 
 function [gdf,noise] = fspk3(eeg,tmul,absthresh,n_chans,srate,window)
 %{
-
 This program is the non-GUI version of the spike detection algorithm fspk.
 It was broken down to run over the CHOP network remotely, not over Matlab.
-
 USAGE:  out = fspk2('patient_num',tmul,absthresh)
-
 INPUT:  'patient_num' <string>  -- Number of Patient to be analyzed
         tmul                       -- Threshold Multiplier
         absthresh                  -- Absolute Threshold
-
 Outputs: .gdf files in same file as EEG -- array of [channel | tick ]
-
 %}
 
 % Check function input
@@ -95,6 +90,11 @@ for dd = 1:n_chans
             continue
         end
         
+        
+        
+        %% re-adjust the mean of the data to be zero (if there is a weird dc shift)
+        data = data - mean(data);
+        
         %% Run the spike detector
         
 
@@ -126,7 +126,7 @@ for dd = 1:n_chans
 
         end
 
-
+      
         % now have a list of spikes that have passed the 'spike' criterion.
 
 
@@ -218,7 +218,7 @@ for dd = 1:n_chans
         end
         
         all_spikes = [all_spikes;allout];
-        
+       
         
         
     end
@@ -280,4 +280,3 @@ if size(eeg,2) > 5
 end
 
 %}
-

@@ -50,11 +50,16 @@ spikeTimes(idxToKeep==0) = [];
 % get the indices of the new spikes
 spikeIdx = round(spikeTimes*fs);
 
+chs = gdf(:,1);
+chs(idxToKeep == 0) = [];
+
+
 %% Calculate delay and rms, the output variables
 
 % Initialize the output variable delay, which for each spike segment gives
 % the time relative to the initial index of each channel's maximum. 
 delay = zeros(length(spikeIdx),n_channels);
+abstime = delay;
 
 % Initialize the output variable rms
 rms = zeros(length(spikeIdx),n_channels);
@@ -73,6 +78,7 @@ for i = 1:length(spikeIdx)
         % segment
         [~,I] = max(temp_signal);
         delay(i,j) = I;
+        abstime(i,j) = I + nIdx(1) + spikeIdx(i);
         
         % calculate root mean square for the channel
         rms(i,j) = sqrt(mean((temp_signal-mean(temp_signal)).^2));
@@ -80,18 +86,55 @@ for i = 1:length(spikeIdx)
     
     % get minimum delay amongs the channels and subtract this from each
     % delay to make min 0
+    
     delay(i,:) = delay(i,:) - min(delay(i,:));
+    delay(i,:) = delay(i,:)/fs;
     
-    
-    % Sample plot
-    test_chs = 1:20;
-    test_values = values(spikeIdx(i)+nIdx(1):spikeIdx(i)+nIdx(2),test_chs);
-    plot(test_values,'k');
-    
-    %scatter3(chLocs(:,2),chLocs(:,3),chLocs(:,4),50,delay(i,:),'filled');
+   
     
     
 end
+
+%{
+% Plot spike for a specific channel
+test_i = 30;
+toplot = values(spikeIdx(test_i)-2*fs:spikeIdx(test_i)+13*fs,chs(test_i));
+plot(linspace(-2,13,length(toplot)),toplot(:,1))
+hold on
+scatter(0,values(spikeIdx(test_i),chs(test_i)))
+%}
+
+% Plot snapshot for a bunch of channels for a specific spike
+%{
+for test_i =50:70
+test_time = [-1 5];
+plot_values = values(spikeIdx(test_i)+test_time(1)*fs:spikeIdx(test_i)+test_time(2)*fs,[chs(test_i),21:30])+...
+    linspace(0,300*10,11);
+plot(linspace(test_time(1),test_time(2),size(plot_values,1)),plot_values,'k')
+hold on
+count = 0;
+for j = [chs(test_i),21:30]
+    count = count+1;
+    scatter(abstime(test_i,j)/fs-spikeIdx(test_i)/fs,...
+   values(abstime(test_i,j),j)+(count-1)*300);
+end
+
+hold off
+pause
+end
+%}
+
+ % Sample plot
+%{
+test_chs = 1:20;
+test_values = values(spikeIdx(i)+nIdx(1):spikeIdx(i)+nIdx(2),test_chs);
+plot(test_values,'k');
+
+for i = 20:50
+    scatter3(chLocs(:,2),chLocs(:,3),chLocs(:,4),50,delay(i,:),'filled');
+    pause
+end
+ %}
 
 gdf = struct;
 gdf.delay = delay;
