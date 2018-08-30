@@ -100,6 +100,16 @@ for i = whichPts
                end
                 
             end
+            
+            % Add a button push to the desmond file (for the purpose of
+            % restarting the program if it crashes due to random server
+            % error)
+            buttonpush = datestr(now,'yyyy-mm-dd HH:MM:SS');
+            allwrite = [buttonpush,'\n',sprintf('Patient %s tmul %d absthresh %d\n',...
+                i,k,m)];
+            fid = fopen('/tmp/desmond_valid.txt','wt');
+            fprintf(fid,allwrite);
+            fclose(fid);
 
             [sensitivity,accuracy] = spikeChecker(pt,i,chIds,...
    spikeTimes,notSpikeTimes,k,m,whichDetector,trainOrTest,whichSpikes);
