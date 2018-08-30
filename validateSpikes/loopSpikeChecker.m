@@ -69,7 +69,7 @@ for i = whichPts
     end
     
     if isempty(spikeTimes) || isempty(chnames)
-        fprintf('Missing start times or channel names for patient %s\n',P(i).name);
+        fprintf('Missing start times or channel names for patient %s\n',pt(i).name);
         continue
     end
     
@@ -90,7 +90,7 @@ for i = whichPts
 
         for m = absthresh_to_try
             
-            fprintf('Doing tmul %d and absthresh %d\n',k,m);
+            fprintf('Doing tmul %d and absthresh %d for patient %s\n',k,m,pt(i).name);
             
             if merge == 1 && exist(outputDest,'file') ~= 0
                if sum(ismember([k,m],oldAllSens)) == 2
