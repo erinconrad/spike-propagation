@@ -14,7 +14,7 @@ while 1
     scount = 1;
 
     % if i is the last spike, break
-    if i == size(gdf,1)
+    if i >= size(gdf,1)
         break
     end
     
