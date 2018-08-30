@@ -62,11 +62,7 @@ for i = whichPts
      end
      
      
-     %% Try to load struct with accuracies if it exists
-    if merge == 1 && exist(outputDest,'file') ~= 0
-        a = load(outputDest);
-        oldAllSens = a.allSens; oldAllAcc = a.allAcc;
-    end
+    
     
     if isempty(spikeTimes) || isempty(chnames)
         fprintf('Missing start times or channel names for patient %s\n',pt(i).name);
@@ -83,14 +79,21 @@ for i = whichPts
         end
     end
        
-    allSens = [];
-    allAcc = [];
+    
     
     for k = tmuls_to_try
 
         for m = absthresh_to_try
             
+            
+            
             fprintf('Doing tmul %d and absthresh %d for patient %s\n',k,m,pt(i).name);
+            
+             %% Try to load struct with accuracies if it exists
+            if merge == 1 && exist(outputDest,'file') ~= 0
+                a = load(outputDest);
+                oldAllSens = a.allSens; oldAllAcc = a.allAcc;
+            end
             
             if merge == 1 && exist(outputDest,'file') ~= 0
                if sum(ismember([k,m],oldAllSens)) == 2
@@ -117,9 +120,20 @@ for i = whichPts
             
            
             
-            allSens = [allSens;k m sensitivity];
-            allAcc = [allAcc;k m accuracy];
+            allSens = [k m sensitivity];
+            allAcc = [k m accuracy];
             
+            %% Save output file
+            if merge == 1 && exist(outputDest,'file') ~= 0
+                allSens = unique([oldAllSens;allSens],'rows');
+                allAcc = unique([oldAllAcc;allAcc],'rows');
+            end
+            save(outputDest,'allSens','allAcc');
+
+            validated(i).allSens = allSens;
+            validated(i).allAcc = allAcc;
+            
+            save([resultsFolder,'validation/validated.mat'],'validated');
             
 
         end
@@ -130,20 +144,12 @@ for i = whichPts
         
     
     
-%% Save output file
-if merge == 1 && exist(outputDest,'file') ~= 0
-    allSens = unique([oldAllSens;allSens],'rows');
-    allAcc = unique([oldAllAcc;allAcc],'rows');
-end
-save(outputDest,'allSens','allAcc');
 
-validated(i).allSens = allSens;
-validated(i).allAcc = allAcc;
     
     
 end
 
-save([resultsFolder,'validation/validated.mat'],'validated');
+
 
 
 end
