@@ -5,7 +5,7 @@ clear
 % the electrode csv file
 useErinIgnore = 2; 
 
-overwrite =  1;
+overwrite =  0;
 
 %% File names
 newptfile = 'ptWithElectrodeData.mat';
@@ -37,6 +37,11 @@ for i = 1:length(pt)
     electrodeFile = pt(i).electrode_labels;
     if isempty(electrodeFile) ==1
         continue
+    end
+    
+    if overwrite == 0 && isfield(pt(i),'electrodeData') == 1
+        fprintf('Got electrode data for patient %s, skipping...\n',pt(i).name);
+        continue 
     end
     
     if useErinIgnore == 0
