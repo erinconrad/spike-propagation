@@ -1,15 +1,24 @@
 function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thresh)
 
+% This is my basic spike detector file which can call one of a number of
+% specific detectors
+
 %% Parameters
 setChLimits = 1; % Should I toss out spikes that occur across too many channels at the same time
 multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
 multiChTime = .025;
-vtime = [-0.002,0.048];
+vtime = [-0.002,0.048]; % Do I use this?
 
 %% Load file paths, etc.
 [~,~,~,~,pwfile] = fileLocations;
 dataName = pt(whichPt).ieeg_name;
 
+% If no thresh, use a default
+if exist('thresh','var') == 0
+    error('Warning, no thresholds entered, using tmul 13 and absthresh 300\n');
+    thresh.tmul = 13;
+    thresh.absthresh = 300;
+end
 
 % Get the indices I want to look at
 fs = pt(whichPt).fs;
@@ -33,7 +42,7 @@ absthresh = thresh.absthresh;
 
 %% get the data from those indices and channels (ignoring ignored channels)
 data = getiEEGData(dataName,channels,indices,pwfile);
-olddata = data;
+%olddata = data;
 
 %% Notch filter to remove 60 Hz noise
 f = designfilt('bandstopiir','FilterOrder',2, ...
@@ -157,12 +166,13 @@ if setChLimits == 1 && isempty(gdf) == 0
     
 end
 
-% limit spikes and values to those in the desired times
+%% limit spikes and values to those in the desired times
+% This is useful if I had to force lengthen the search time for detector 4
+% if I asked to look at less than 60 seconds of data
 values = values(1:oldStartEnd(2)-oldStartEnd(1),:);
 if isempty(gdf) == 0
     gdf = gdf(gdf(:,2)<oldtimes(2)-oldtimes(1),:);
 end
-
 
 
 extraOutput.values = values;

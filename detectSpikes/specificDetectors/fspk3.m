@@ -13,10 +13,12 @@ Outputs: .gdf files in same file as EEG -- array of [channel | tick ]
 
 % Check function input
 if ~exist('tmul')
+    fprintf('warning, no tmul entered, using 13\n');
     tmul=13;
 end
 
 if ~exist('absthresh')
+    fprintf('warning, no absthresh entered, using 13\n');
     absthresh=300;
 end
 
@@ -219,6 +221,14 @@ for dd = 1:n_chans
         
         all_spikes = [all_spikes;allout];
        
+      %{
+    if dd == 69
+        plot_times = 1:2*srate;
+        plot(linspace(0,2,length(plot_times)),data(plot_times))
+        error('look\n');
+    end
+        %}
+        
         
         
     end

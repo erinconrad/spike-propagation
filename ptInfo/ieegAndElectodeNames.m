@@ -4,15 +4,16 @@
 % the corresponding ieeg.org data name and the electrode file location
 
 
-function [ieeg_name,electrode_name] =  ieegAndElectodeNames(name)
+function [ieeg_name,electrode_name,thresh] =  ieegAndElectodeNames(name)
 
-
+tmul = [];
+absthresh = [];
 
 if strcmp(name,'HUP064') == 1
     ieeg_name = 'HUP64_phaseII-Annotations';
     electrode_name = 'HUP064_T1_19991230_electrode_labels.csv';
     ignore = {"EKG1","EKG2","RR","Rate","X1","X2","X3","X4"};
-    tmul = 15;
+    tmul = 13;
     absthresh = 300;
 elseif strcmp(name, 'HUP065') == 1
     ieeg_name = 'HUP65_phaseII-Annotations';
@@ -22,10 +23,14 @@ elseif strcmp(name,'HUP068') ==1
     ieeg_name = 'HUP68_phaseII-Annotations';
     electrode_name = 'HUP068_T1_19991230_electrode_labels.csv';
     ignore = {"EKG1","EKG2","X1","X2"};
+    tmul = 13;
+    absthresh = 300;
 elseif strcmp(name,'HUP070') ==1
     ieeg_name = 'HUP70_phaseII-Annotations';
     electrode_name = 'HUP070_T1_19980321_electrode_labels.csv';
     ignore = {"EKG1","EKG2","Rate","RR"};
+    tmul = 12;
+    absthresh = 300;
 elseif strcmp(name,'HUP073') == 1
     ieeg_name = 'HUP73_phaseII-Annotations';
     electrode_name = 'HUP073_T1_19990708_electrode_labels.csv';
@@ -38,14 +43,20 @@ elseif strcmp(name,'HUP075')==1
     ieeg_name = 'HUP75_phaseII';
     electrode_name = 'HUP075_T1_19990604_electrode_labels.csv';
     ignore = {"EKG1","EKG2","RR","Rate"};
+    tmul = 16;
+    absthresh = 300;
 elseif strcmp(name,'HUP078') == 1
     ieeg_name = 'HUP78_phaseII-Annotations';
     electrode_name = 'HUP078_T1_19971218_electrode_labels.csv';
     ignore = {"EKG1","EKG2"};
+    tmul = 16;
+    absthresh = 300;
 elseif strcmp(name,'HUP080') == 1
     ieeg_name = 'HUP80_phaseII';
     electrode_name = 'HUP080_T1_19991213_electrode_labels.csv';
     ignore = {"EKG1","EKG2"};
+    tmul = 14;
+    absthresh = 300;
 elseif strcmp(name,'HUP082') == 1
     ieeg_name = 'HUP82_phaseII';
     electrode_name = 'HUP082_T1_19991212_electrode_labels.csv';
@@ -54,10 +65,14 @@ elseif strcmp(name,'HUP083') == 1
     ieeg_name = 'HUP83_phaseII';
     electrode_name = 'HUP083_T1_19991217_1_electrode_labels.csv';
     ignore = {"EKG1","EKG2"};
+    tmul = 13;
+    absthresh = 300;
 elseif strcmp(name,'HUP086') == 1
     ieeg_name = 'HUP86_phaseII-Annotations';
     electrode_name = 'HUP086_T1_19990728_electrode_labels.csv';
     ignore = {"EKG1","EKG2"};
+    tmul = 18;
+    absthresh = 300;
 elseif strcmp(name,'HUP087') == 1
     ieeg_name = 'HUP87_phaseII-Annotations';
     electrode_name = 'HUP087_T1_19991226_electrode_labels.csv';
@@ -82,10 +97,14 @@ elseif strcmp(name,'HUP107') == 1
     ieeg_name = 'HUP107_phaseII';
     electrode_name = 'HUP107_T1_19991219_electrode_labels.csv';
     ignore = {"ECG1","ECG2"};
+    tmul = 13;
+    absthresh = 300;
 elseif strcmp(name,'HUP111') == 1
     ieeg_name = 'HUP111_phaseII_D01';
     electrode_name = 'HUP111_T1_19990822_electrode_labels.csv';
     ignore = {"EKG1","EKG2"};
+    tmul = 10;
+    absthresh = 300;
 elseif strcmp(name,'Study004') == 1
     ieeg_name = 'Study 004-2';
     electrode_name = 'Study004_electrode_labels.csv';
@@ -114,10 +133,14 @@ elseif strcmp(name,'Study021') == 1
     ieeg_name = 'Study 021';
     electrode_name = 'Study021_electrode_labels.csv';
     ignore = {};
+    tmul = 13;
+    absthresh = 300;
 elseif strcmp(name,'Study022') == 1
     ieeg_name = 'Study 022';
     electrode_name = 'Study022_T1_19990129_electrode_labels.csv';
     ignore = {};
+    tmul = 10;
+    absthresh = 300;
 elseif strcmp(name,'Study023') == 1
     ieeg_name = 'Study 023';
     electrode_name = 'Study023_electrode_labels.csv';
@@ -188,6 +211,9 @@ elseif strcmp(name,'CHOP47') == 1
     ignore = {};
 end
     
+
+thresh.tmul = tmul;
+thresh.absthresh = absthresh;
     
     
 end

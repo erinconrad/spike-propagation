@@ -54,6 +54,11 @@ for i = 1:length(pt)
         continue
     end
     
+    % Skip it if I haven't entered a desired tmul
+    if isempty(pt(i).thresh.tmul) == 1
+        continue
+    end
+    
     
     for j = 1:length(pt(i).sz)
         
@@ -105,8 +110,7 @@ for i = 1:length(pt)
             %}
             
             % Run the spike detector
-            thresh.tmul =  pt(i).tmul;
-            thresh.absthresh = pt(i).absthresh;
+            thresh =  pt(i).thresh;
             [gdf,extraOutput] = getSpikesSimple(pt,i,desiredTimes,whichDetector,thresh);
             
             %noise(:,10)

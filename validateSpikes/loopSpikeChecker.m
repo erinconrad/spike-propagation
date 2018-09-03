@@ -127,13 +127,19 @@ for i = whichPts
             if merge == 1 && exist(outputDest,'file') ~= 0
                 allSens = unique([oldAllSens;allSens],'rows');
                 allAcc = unique([oldAllAcc;allAcc],'rows');
+                
+                
             end
-            save(outputDest,'allSens','allAcc');
-
-            validated(i).allSens = allSens;
-            validated(i).allAcc = allAcc;
             
-            save([resultsFolder,'validation/validated.mat'],'validated');
+            if merge == 1
+                save(outputDest,'allSens','allAcc');
+
+                validated(i).allSens = allSens;
+                validated(i).allAcc = allAcc;
+
+                save([resultsFolder,'validation/validated.mat'],'validated');
+            end
+            
             
 
         end

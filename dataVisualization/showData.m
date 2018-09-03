@@ -1,6 +1,6 @@
 % This function plots the EEG voltages for a desired time and channels
 
-function showData(Patient,pt,startTime,duration,chIds)
+function showData(Patient,pt,startTime,duration,chnames,thresh)
 
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -14,10 +14,30 @@ ptInfo = loadjson(jsonfile);
 
 %% Load EEG data info
 times = [startTime,startTime+duration];
-[gdf,extraOutput] = getSpikesSimple(Patient,pt,times,4);
+%thresh.tmul = 14;
+%thresh.absthresh = 300;
+[gdf,extraOutput] = getSpikesSimple(Patient,pt,times,4,thresh);
 values = extraOutput.values;
 unignoredChLabels = Patient(pt).electrodeData.unignoredChs;
 
+%% Get channel ids
+chIds = zeros(size(chnames));
+for ich = 1:length(chnames)
+    [Lia,chIds(ich)] = ismember(chnames{ich},Patient(pt).electrodeData.unignoredChs);
+    if Lia == 0
+        fprintf('Warning, could not find channel %s in the list of unignored channels for patient %s\n',...
+            chnames{ich},Patient(pt).name);
+        error('');
+    end
+end
+
+if isempty(gdf) == 0
+    gdf(:,2) = gdf(:,2) - startTime;
+    gdf = gdf(gdf(:,2) <= duration,:);
+else
+    gdf = [];
+end
+    
 
 %{
 data = getiEEGData(dataName,0,0,pwfile);  
@@ -58,8 +78,12 @@ for i = 1:length(whichCh)
     
     
     
-    scatter(linspace(plottimes(1),plottimes(end),nbins),noise_bin*0.5,100,col,'filled');
-    
+    %scatter(linspace(plottimes(1),plottimes(end),nbins),noise_bin*0.5,100,col,'filled');
+    if isempty(gdf) == 0
+    spike_times = gdf(gdf(:,1)==ch,2);
+    spikeamp = ones(size(spike_times,1),1)*max(amps);
+    scatter(spike_times,spikeamp,colors{i});
+    end
     
     
 end
