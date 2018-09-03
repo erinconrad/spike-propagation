@@ -84,8 +84,10 @@ for i = 1:length(pt)
             
             if overwrite == 1 || exist([gdfFolder,pt(i).name,'/',pt(i).sz(j).EKGchunkFiles{k}],'file') == 0
             
+                thresh =  pt(i).thresh;
+                
                 % get ekg spikes
-                gdf_ekg = portEKG(desiredTimes,dataName,pwfile,pt(i).tmul,pt(i).absthresh,...
+                gdf_ekg = portEKG(desiredTimes,dataName,pwfile,thresh.tmul,thresh.absthresh,...
                     whichDetector,pt(i).fs,pt(i).electrodeData.allLabels);
 
                 % save ekg gdf file
@@ -110,7 +112,7 @@ for i = 1:length(pt)
             %}
             
             % Run the spike detector
-            thresh =  pt(i).thresh;
+            
             [gdf,extraOutput] = getSpikesSimple(pt,i,desiredTimes,whichDetector,thresh);
             
             %noise(:,10)
