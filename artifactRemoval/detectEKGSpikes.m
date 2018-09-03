@@ -8,10 +8,9 @@ function spikes = detectEKGSpikes(eeg,fs)
 
 %% Parameters
 window = 60 * fs; % window over which to assess baseline
-tmul = 10; % threshold multiplier
+tmul = 7; % threshold multiplier
 spkdur = 220;
 fr     = 20; 
-lfr    = 7;  
 
 %% Initialize stuff
 n_chans = size(eeg,2);
@@ -53,7 +52,7 @@ for dd = 1:n_chans
 
             if HFdata(startdx1(i)) - HFdata(spkmintic) > sthresh & HFdata(startdx(i)) - HFdata(spkmintic) > lthresh 
                 if HFdata(startdx1(i)) - HFdata(spkmintic) > thresh
-                 spikes(end+1) = spkmintic+time_points(1); 
+                 spikes(end+1) = [spkmintic+time_points(1)]; 
                 end % add timestamp to the spike list
             end
 
@@ -63,8 +62,16 @@ for dd = 1:n_chans
    end 
 end
 
-
-
+% Example plot
+range  = 0;
+for dd = 1:n_chans
+    plot(eeg(:,dd)+range)
+    range = range + max(eeg(:,dd)) - min(eeg(:,dd));
+    hold on
+    spike_times = spikes;
+    spike_amps = ones(length(spike_times),1)*max(eeg(:,dd)+range);
+    scatter(spike_times,spike_amps);
+end
 
 
 end

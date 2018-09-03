@@ -42,6 +42,8 @@ end
 %% Loop through patients, szs, run times
 for i = 1:length(pt)
     
+    thresh =  pt(i).thresh;
+    
     mkdir([resultsFolder,'gdf/',pt(i).name]);
     
     dataName =  pt(i).ieeg_name;
@@ -82,9 +84,10 @@ for i = 1:length(pt)
             
             desiredTimes = [pt(i).sz(j).runTimes(k,:)];
             
+            
             if overwrite == 1 || exist([gdfFolder,pt(i).name,'/',pt(i).sz(j).EKGchunkFiles{k}],'file') == 0
             
-                thresh =  pt(i).thresh;
+                
                 
                 % get ekg spikes
                 gdf_ekg = portEKG(desiredTimes,dataName,pwfile,thresh.tmul,thresh.absthresh,...

@@ -9,7 +9,7 @@ rmType = 'D';
 %electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
 addpath(p1);
-ptWithFs = 'ptWithSeq.mat';
+ptWithFs = 'ptPostGDF.mat';
 gdfFolder = [resultsFolder,'gdf/'];
 chLocationsFolder = 'chLocations/';
 ptVanleer = 'ptVanleer.mat';
@@ -23,7 +23,7 @@ load([resultsFolder,'ptStructs/',ptWithFs]);
 
 
 %% Loop through patients and seizures
-for i = 1:length(pt)
+for i = 1%:length(pt)
     
     % Get electrode data
     electrodeData =  pt(i).electrodeData;
