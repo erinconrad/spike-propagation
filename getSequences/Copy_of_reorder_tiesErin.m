@@ -71,7 +71,16 @@ for c = 2:2:size(overall,2)
                 % Reorder the tied channels according to the sort
                 chanCol(ind,1) = chanCol(I,1);
                 
-
+                % Add the dummy zeros back
+                z = size(overall,1)-size(chanCol,1);
+                chanCol = vertcat(chanCol, zeros(z,1));
+                ticksCol = vertcat(ticksCol, zeros(z,1));
+                
+                % Put the reordered channels back. Note ticksCol isn't
+                % changing because we're only changing the order of the
+                % tied channels, and so all their times are identical.
+                overall(:,c)   = ticksCol;
+                overall(:,c-1) = chanCol;
                 
             % If tie is first step- go by proximity to first untied entry.
             % This obviously only works if the whole thing isn't ties.
@@ -109,20 +118,18 @@ for c = 2:2:size(overall,2)
                 % update the channel column
                 chanCol(ind,1) = chanCol(I,1);
                 
-               
+                % Add the dummy zeros back
+                z = size(overall,1)-size(chanCol,1);
+                chanCol = vertcat(chanCol, zeros(z,1));
+                ticksCol = vertcat(ticksCol, zeros(z,1));
+                
+                % update overall
+                overall(:,c)   = ticksCol;
+                overall(:,c-1) = chanCol;
                 
             end
         end
     end
-    
-     % Add the dummy zeros back
-    z = size(overall,1)-size(chanCol,1);
-    chanCol = vertcat(chanCol, zeros(z,1));
-    ticksCol = vertcat(ticksCol, zeros(z,1));
-
-    % update overall
-    overall(:,c)   = ticksCol;
-    overall(:,c-1) = chanCol;
     
 end
 

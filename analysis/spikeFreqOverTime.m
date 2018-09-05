@@ -1,4 +1,4 @@
-function spikeFreqOverTime(pt,whichPt,window)
+function [chunk_spikes,times_plot] = spikeFreqOverTime(pt,whichPt,window)
 
 % Get spike frequency overall and by channel
 
@@ -139,6 +139,7 @@ for i = 1:size(gdf_all,2)
     
 end
 
+%{
 %% Plot
 figure
 for i = 1:size(chunk_spikes,2)
@@ -159,5 +160,6 @@ xlabel('Hour');
 ylabel('Spikes per hour');
 title('Spike frequency over time');
 set(gca,'FontSize',15)
+%}
 
 end
