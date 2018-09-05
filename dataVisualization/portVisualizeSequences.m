@@ -109,8 +109,8 @@ for i = 1:length(whichSeq)
 
     %% Get the data for these times
     fprintf('Detecting spikes\n');
-    thresh.tmul = P(pt).tmul;
-    thresh.absthresh = P(pt).absthresh;
+    thresh.tmul = P(pt).thresh.tmul;
+    thresh.absthresh = P(pt).thresh.absthresh;
     [gdf,extraoutput] = getSpikesSimple(P,pt,times,4,thresh);
     %[gdf,~,extraoutput] = getSpikeTimes(times,ptname,dataName,1,ptInfo,pwfile,...
     %    dummyRun,vanleer,vtime,outputData,keepEKG,ignore,funnyname,8,300);%P(pt).tmul,P(pt).absthresh);

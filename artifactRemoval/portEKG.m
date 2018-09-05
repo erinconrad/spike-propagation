@@ -23,7 +23,7 @@ ekg_electrode_labels = {};
     % get the name
     origStr = allLabels{i};
 
-    if contains(origStr,'EKG') == 1
+    if contains(origStr,'EKG') == 1 || contains(origStr,'ECG') == 1
         ekg_electrode_nums = [ekg_electrode_nums,i];
         ekg_electrode_labels = [ekg_electrode_labels,origStr];
     end
