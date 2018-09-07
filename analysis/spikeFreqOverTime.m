@@ -4,7 +4,9 @@ function [chunk_spikes,times_plot] = spikeFreqOverTime(pt,whichPt,window)
 
 %% Remove EKG artifact and depth electrodes
 rmEKG = 1;
+prox = 0.02; %20 ms
 rmDepth = 1;
+rmType = 'D';
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 gdfFolder = [resultsFolder,'gdf/'];

@@ -45,8 +45,11 @@ data = getiEEGData(dataName,channels,indices,pwfile);
 
 
 %% Run spike detector
-gdf = detectEKGSpikes(data.values,data.fs);
-gdf = [zeros(length(gdf),1),gdf'];
+gdf = [];
+if isfield(data,'values') == 1
+    gdf = detectEKGSpikes(data.values,data.fs);
+    gdf = [zeros(length(gdf),1),gdf'];
+end
 
 
 if isempty(gdf) == 1
