@@ -42,7 +42,9 @@ absthresh = thresh.absthresh;
 
 %% get the data from those indices and channels (ignoring ignored channels)
 data = getiEEGData(dataName,channels,indices,pwfile);
-%olddata = data;
+
+% remove nans
+data.values(isnan(data.values)) = 0;
 
 %% Notch filter to remove 60 Hz noise
 f = designfilt('bandstopiir','FilterOrder',2, ...

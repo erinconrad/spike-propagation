@@ -116,7 +116,9 @@ for i = 1:length(pt)
             
             % Run the spike detector
             
+            tic
             [gdf,extraOutput] = getSpikesSimple(pt,i,desiredTimes,whichDetector,thresh);
+            toc
             
             %noise(:,10)
             
