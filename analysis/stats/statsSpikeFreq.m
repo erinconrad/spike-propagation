@@ -1,9 +1,6 @@
 function statsSpikeFreq(pt,whichPts)
 
 %% Stats plan
-% First I will try an n-way ANOVA, where the dependent variable is spike
-% frequency and the independent variables are 1) which patient, 2) which
-% seizure, and 3) which time chunk preceding the seizure
 
 % I will only look at seizures that are at least 6 hours after the last
 % seizure and have at least 6 hours of spike data preceding them 
@@ -27,11 +24,7 @@ gdfFolder = [resultsFolder,'gdf/'];
 
 
 %% Initialize stats variables
-whichPt = [];
-whichSz = [];
-whichChunk = [];
-spikeNum = [];
-szNum = 0;
+gdf_diff_sz = {};
 
 
 for i = whichPts
@@ -91,7 +84,6 @@ for i = whichPts
             
         end
         
-        %% Divide the spikes into the appropriate chunks
         
         % Skip this seizure if the first spike is within 5 hours of the
         % seizure (happens when there are periods of disconnection, e.g.
@@ -100,8 +92,6 @@ for i = whichPts
             continue
         end
         
-        % Increment the seizure number
-        szNum = szNum + 1;
         
         % Remove spikes more than 6 hours
         gdf_all(pt(i).sz(j).onset - gdf_all(:,2) > window*nwindows ,:) = [];
@@ -109,31 +99,64 @@ for i = whichPts
         % Remove spikes occuring after the seizure onset
         gdf_all(gdf_all(:,2) > pt(i).sz(j).onset,:) = [];
         
-        % Loop through the windows
-        for tt = 1:nwindows
-           times = [pt(i).sz(j).onset - window*nwindows + (tt-1)*window,...
-               pt(i).sz(j).onset - window*nwindows + (tt)*window];
-           
-           % Get the appropriate spikes in that window
-           gdf_chunk = gdf_all(gdf_all(:,2) >= times(1) & gdf_all(:,2) <= ...
-               times(2),:);
-           
-           % Add this data to the spike frequency array and the arrays
-           % containing info on the independent variables for the anova
-           spikeNum = [spikeNum,size(gdf_chunk,1)];
-           whichPt = [whichPt,i];
-           whichSz = [whichSz,szNum];
-           whichChunk = [whichChunk,tt];
-            
-        end
-
+        gdf_diff_sz{end+1} = gdf_all;
+        
 
     end
 
 end
 
+
+for i = 1:length(gdf_diff_sz)
+    gdf = gdf_diff_sz{i};
+    spike_times = gdf(:,2);
+    spike_times = spike_times - spike_times(1)+0.5;
+    n = length(spike_times);
+    cum_spike_num = cumsum(ones(size(spike_times)));
+    
+    %% Graph compared to exponential
+    %plot(spike_times,cum_spike_num);
+    %plot(
+    %hold on
+    
+    %% Laplace test
+    % https://www.itl.nist.gov/div898/handbook/apr/section2/apr234.htm#The%20Laplace
+    z = sqrt(12*n)*sum(spike_times - spike_times(end)/2)/...
+        (n*spike_times(end));
+    p_L = 1-normcdf(z)
+    
+    
+    %% Kolmogorov-Smirnov test
+    f_data = linspace(min(spike_times),max(spike_times),...
+        length(spike_times));
+    %f_data = f_data + 5000*rand(1,length(f_data));
+    figure
+    plot(f_data)
+    hold on
+    plot(spike_times,'r')
+    fake_uniform  = makedist('uniform','lower',...
+        min(spike_times),'upper',max(spike_times));
+    [h,p_KS,ksstat,cv] = kstest(spike_times,'cdf',fake_uniform)
+
+     
+    %% Military handbook test
+    %{
+    sum_logs = 0;
+    for tt = 1:length(spike_times)
+    	sum_logs = sum_logs +log(spike_times(end)/spike_times(tt));
+    end
+    chi2 = 2*sum_logs;
+    %}
+    chi2 = 2*sum(log(spike_times(end)./spike_times));
+    p_MH = chi2cdf(chi2,2*n)
+end
+
+
+
+
+
 %% Poisson regression
-[b,dev,stats] = glmfit([whichChunk;whichSz]',spikeNum,'poisson','link','log');
+%[b,dev,stats] = glmfit([whichChunk;whichSz]',spikeNum,'poisson','link','log');
 
 %% Run the ANOVA
 %{

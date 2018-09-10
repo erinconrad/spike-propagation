@@ -1,15 +1,19 @@
-function [chunk_seqs,times_plot] = seqFreqOverTime(pt,whichPt,window)
+function [chunk_seqs,times_plot,MI,rl] = seqFreqOverTime(pt,whichPt,window)
 
-
-chLocs = pt(whichPt).electrodeData.locs(:,2:4);
+%% Parameters
+dmin = 31;
 nchs = length(pt(whichPt).channels);
 
 % output file name
 [~,~,~,resultsFolder,~] = fileLocations;
 
+%% Get wij
+xyChan = pt(whichPt).electrodeData.locs;
+wij = getwij(xyChan,dmin);
+
 %% First need to divide it up into multiple seizure chunks for plotting
 
-% just look at first spike
+% just look at first seizure
 sequences = pt(whichPt).sz(1).seq_matrix;
 sequences(sequences==0) = nan; % WHY ARE THERE ANY ZEROS?????
 
@@ -46,6 +50,8 @@ end
 chunk_seqs = cell(size(seq_all));
 chunk_seqs_chs = cell(size(seq_all));
 times_plot = cell(size(seq_all));
+rl = cell(size(seq_all));
+MI = cell(size(seq_all));
 
 %% Now divide the sequences into windows
 for i = 1:length(seq_all)
@@ -57,6 +63,9 @@ for i = 1:length(seq_all)
    chunk_seqs{i} = zeros(nchunks,1);
    chunk_seqs_chs{i} = zeros(nchunks,nchs);
    times_plot{i} = zeros(nchunks,1);
+   rl{i} = zeros(nchunks,nchs);
+   MI{i} = zeros(nchunks,1);
+   
    
    for tt = 1:nchunks
       times =  [(tt-1)*window + firstSpikes(1),tt*window + firstSpikes(1)];
@@ -72,7 +81,25 @@ for i = 1:length(seq_all)
          chunk_seqs_chs{i}(tt,ch) = chunk_seqs_chs{i}(tt,ch) + 1;
           
       end
-       
+      
+      %% Get recruitment latency for these sequences
+      
+      % for each sequence, the latency with which each channel is activated
+      % in the sequence is the spike time in that channel minus the spike
+      % time in the channel activated the earliest in that sequence
+      latency_all_seq = correct_seqs - min(correct_seqs,[],1);
+      
+      % Take the average latency for the channel over all sequences
+      mean_latency = nanmean(latency_all_seq,2);
+      rl{i}(tt,:) = mean_latency';
+      
+      % Get the moran index
+      MIstruct= moranStats(mean_latency',wij,nchs);
+      if MIstruct.I > 1
+          error('look\n');
+      end
+      MI{i}(tt) = MIstruct.I;
+      
    end
    
    chunk_seqs{i} = chunk_seqs{i}/window;
@@ -80,6 +107,9 @@ for i = 1:length(seq_all)
    
     
 end
+
+
+
 
 
 %{

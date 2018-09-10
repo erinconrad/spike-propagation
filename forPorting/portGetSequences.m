@@ -29,7 +29,7 @@ ptWithSeq = 'ptWithSeq.mat';
 load([resultsFolder,'ptStructs/',ptWithFs]);
 
 %% Loop through patients and seizures
-for i = 4%1:length(pt)
+for i = [1,4]%1:length(pt)
     
     % Get electrode data
     electrodeData =  pt(i).electrodeData;
@@ -177,7 +177,7 @@ for i = 4%1:length(pt)
         
         % Make fancy new matrix for sequences
         pt(i).sz(j).seq_matrix = ...
-            makeSeqMatrix(pt(i).sz(j).data.sequences,length(pt(1).channels));
+            makeSeqMatrix(pt(i).sz(j).data.sequences,length(pt(i).channels));
         
         
       

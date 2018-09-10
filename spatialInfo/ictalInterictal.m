@@ -19,7 +19,7 @@ clear
 
 %% Bonus parameter
 dmin = 15;
-nperm = 1e4;
+nperm = 1e3;
 minSeq = 10;
 
 %% File names
@@ -34,7 +34,7 @@ newPt = 'icIntericAngle.mat';
 load([resultsFolder,'ptStructs/',ptWithSeq]);
 
 % Loop through patients
-for i = 1:length(pt)
+for i = 4%1:length(pt)
     
     % Loop through seizures
    for j = 1:length(pt(i).sz)
@@ -47,8 +47,8 @@ for i = 1:length(pt)
        end
        
        % Get the seizure times
-       szTimes = [pt(i).sz(j).onset-pt(i).sz(j).runTimes(1,1),...
-           pt(i).sz(j).offset-pt(i).sz(j).runTimes(1,1)];
+       szTimes = [pt(i).sz(j).onset,...
+           pt(i).sz(j).offset];
        
        nseq = pt(i).sz(j).stats.nseqs;
        chandata = pt(i).sz(j).data.xyChan;
