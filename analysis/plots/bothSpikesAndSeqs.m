@@ -5,8 +5,6 @@ function bothSpikesAndSeqs(pt,whichPt,window)
 
 
 
-
-
 [chunk_seqs,times_plot_seq,MI,rl] = seqFreqOverTime(pt,whichPt,window);
 [chunk_spikes,times_plot_spike] = spikeFreqOverTime(pt,whichPt,window);
 
@@ -43,7 +41,7 @@ end
 
 xlabel('Hour');
 ylabel('Spike and sequence frequency');
-legend([p_spike_all,p_seq_all,sz],{'Spikes per second','Sequences per minute','Seizure times'})
+legend([p_spike_all(1),p_seq_all(1),sz],{'Spikes per second','Sequences per minute','Seizure times'})
 title(sprintf('Spike and sequence frequency over time for %s',pt(whichPt).name));
 set(gca,'FontSize',15)
 
@@ -66,7 +64,7 @@ saveas(gcf,[saveFolder,pt(whichPt).name,'SpikeAndSeqFreq.png']);
 figure
 for i = 1:size(chunk_seqs,2)
     times = times_plot_seq{i};
-    plot(times/3600,MI{i},'k','LineWidth',2);
+    so = plot(times/3600,MI{i},'k','LineWidth',2);
     hold on  
 end
 
@@ -81,6 +79,7 @@ end
 
 xlabel('Hour');
 ylabel('Spatial autocorrelation of spike sequences');
+legend([so,sz],{'Spatial autocorrelation','Seizure times'});
 title(sprintf('Spatial autocorrelation of spike sequences over time for %s',pt(whichPt).name));
 set(gca,'FontSize',15)
 
