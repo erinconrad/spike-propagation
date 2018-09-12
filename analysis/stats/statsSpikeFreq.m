@@ -1,4 +1,4 @@
-function statsSpikeFreq(pt,whichPts)
+function glme = statsSpikeFreq(pt,whichPts,window)
 
 %% Stats plan
 
@@ -15,28 +15,45 @@ rmDepth = 1;
 rmType = 'D';
 
 %% Parameters
-window = 60;
 nwindows = 6*3600/window;
-
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 gdfFolder = [resultsFolder,'gdf/'];
 
 
 %% Initialize stats variables
+
+% A cell that is of size 1xn, where n is the number of retained seizures.
+% Each element in the cell is the gdf_all for that seizure
 gdf_diff_sz = {};
+
+% Array of all spike times
 spikes = [];
+
+% The number of the seizure index
 szIndex = 0;
+
+% An mx1 array of all spike counts where m is the number of windows
 all_num_spikes = [];
+
+% An mx1 array of all patient numbers for each window where m is the number
+% of windows
 pat = [];
+
+% mx1 array of all seizure index numbers
 sz = [];
+
+% mx1 array of all window numbers
 chunk = [];
 
 
+% Loop through the patients
 for i = whichPts
     
+    % Loop through all the seizures for each patient
     for j = 1:length(pt(i).sz)
         
+        % initialize the gdf for that seizure
         gdf_all = [];
         
         %% Get all the spikes for the seizure
@@ -46,13 +63,14 @@ for i = whichPts
             continue
         end
         
-        % Skip if too close to the last seizure
+        % Skip if too close to the previous seizure
         if j > 2 && pt(i).sz(j).onset - pt(i).sz(j-1).onset < window*nwindows
             continue
         end
         
-        szIndex = szIndex + 1;
         
+        
+        % Loop through all the gdf files for the seizure
         for k = 1:length(pt(i).sz(j).chunkFiles)
             
             if exist([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'file') == 0
@@ -89,6 +107,7 @@ for i = whichPts
                 gdf = removeChs(gdf,pt(i).electrodeData,rmType);
             end
             
+            % Add the gdf to the full gdf for the seizure
             gdf_all = [gdf_all;gdf];
             
         end
@@ -101,6 +120,9 @@ for i = whichPts
             continue
         end
         
+        % We are going to use this seizure, so increase the seizure index
+        % by 1
+        szIndex = szIndex + 1;
         
         % Remove spikes more than 6 hours
         gdf_all(pt(i).sz(j).onset - gdf_all(:,2) > window*nwindows ,:) = [];
@@ -108,19 +130,37 @@ for i = whichPts
         % Remove spikes occuring after the seizure onset
         gdf_all(gdf_all(:,2) > pt(i).sz(j).onset,:) = [];
         
+        % Add the gdf_all for this seizure to the cell array
         gdf_diff_sz{end+1} = gdf_all;
+        
+        % Get spike times and add it to the array of all spike times
         temp_spikes = gdf_all(:,2);
         spikes = [spikes;temp_spikes];
+        
+        %% Now get window data
         startTime = pt(i).sz(j).onset - window*nwindows;
         new_chunks = zeros(size(gdf_all(:,2)));
         
+        % Loop through all the windows
         for tt = 1:nwindows
+            
+            % Get the times for the windows
             times = [(tt-1)*window + startTime,tt*window + startTime];
+            
+            
             new_chunks(temp_spikes>=times(1) & temp_spikes <=times(2)) = tt;
+            
+            % Get the number of spikes in the window
             all_num_spikes = [all_num_spikes;...
                 sum(temp_spikes>=times(1) & temp_spikes <=times(2))];
+            
+            % Get the patient id for that window
             pat = [pat;i];
+            
+            % get the seizure id for that window
             sz = [sz;szIndex];
+            
+            % get the chunk (or window) id for that window
             chunk = [chunk;tt];
             
         end
@@ -139,7 +179,43 @@ for i = whichPts
 
 end
 
-%% I am first testing to see if this is just a homogeneous poisson process
+
+
+
+%% Poisson regression to combine data for all spikes and all seizures
+% http://math.bu.edu/people/mak/samsi/SAMSI_GLM_Example.pdf
+
+% This method assumes that spikes from all
+% patients and all seizures come from a population with the same mean. This
+% is incorrect and will likely cause problems as I include more patients
+% and more seizures. However, for small numbers of seizures it appears to
+% produce the same result as a generalized linear mixed model.
+[b,dev,stats] = glmfit([chunk],all_num_spikes,'poisson');
+
+%% Plot the data against the model
+%{
+lambda = exp(b(1) + b(2)*chunk);
+figure
+scatter(chunk,all_num_spikes,'b')
+hold on
+scatter(chunk,lambda,'r')
+xlabel('which window')
+ylabel('spike count')
+legend('Data','GLM');
+%}
+
+
+
+%% Make a table for the purpose of doing a generalized linear mixed model
+T = table(all_num_spikes,chunk,sz,pat,'VariableNames',{'all_num_spikes','chunk','sz','pat'});
+glme = fitglme(T,'all_num_spikes ~ 1 + chunk + (1|sz) + (1|pat)',...
+    'Distribution','Poisson','Link','log','FitMethod','Laplace',...
+    'DummyVarCoding','effects');
+
+%% Old statistics
+%{
+
+% test for each seizure if it is a homogeneous poisson process
 for i = 1:length(gdf_diff_sz)
     gdf = gdf_diff_sz{i};
     spike_times = gdf(:,2);
@@ -252,42 +328,9 @@ for i = 1:length(gdf_diff_sz)
         length(tornado_days))),'g');
     %}
     
-end
-
-
-%% Poisson regression to combine data for all spikes and all seizures
-% http://math.bu.edu/people/mak/samsi/SAMSI_GLM_Example.pdf
-%{
-spike_diff = diff(spikes);
-chunk = chunk(2:end);
-[b,dev,stats] = glmfit(chunk,spike_diff,'poisson');
-%}
-
-% This method is problematic because it assumes that spikes from all
-% patients and all seizures come from a population with the same mean
-[b,dev,stats] = glmfit([chunk],all_num_spikes,'poisson');
-%{
-lambda = exp(b(1) + b(2)*1:6);
-%}
-
-%b
-%stats.p
-lambda = exp(b(1) + b(2)*chunk);
-figure
-scatter(chunk,all_num_spikes,'b')
-hold on
-scatter(chunk,lambda,'r')
-
-
-
-%% Make a table for the purpose of doing a generalized linear mixed model
-T = table(all_num_spikes,chunk,sz,pat,'VariableNames',{'all_num_spikes','chunk','sz','pat'});
-glme = fitglme(T,'all_num_spikes ~ 1 + chunk + (1|sz) + (1|pat)',...
-    'Distribution','Poisson','Link','log','FitMethod','Laplace',...
-    'DummyVarCoding','effects');
-
-%% Run the ANOVA
-%{
+end    
+    
+% Attempt at ANOVA
 [p,tbl,stats] = anovan(spikeFreq,{whichPt, whichSz, whichChunk},'model',...
     'interaction','varnames',{'whichPt','whichSz','whichChunk'});
 
@@ -295,6 +338,7 @@ glme = fitglme(T,'all_num_spikes ~ 1 + chunk + (1|sz) + (1|pat)',...
     'interaction','varnames',{'whichSz','whichChunk'});
 
 [p,tbl,stats] = anova(spikeFreq,whichChunk)
+
 %}
 
 end
