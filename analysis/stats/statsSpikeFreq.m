@@ -1,11 +1,8 @@
 function glme = statsSpikeFreq(pt,whichPts,window)
 
-%% Stats plan
-
-% I will only look at seizures that are at least 6 hours after the last
-% seizure and have at least 6 hours of spike data preceding them 
-
-% Consider removing the last 30 minutes or so before the seizure
+%% Remaining problems
+% I have no way to remove seizures from the analysis if there are large
+% chunks of time in the 6 hours prior to the seizure where data is missing
 
 
 %% Remove EKG artifact and depth electrodes
