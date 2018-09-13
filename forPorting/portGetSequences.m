@@ -34,6 +34,10 @@ for i = 1:length(pt)
     % Get electrode data
     electrodeData =  pt(i).electrodeData;
     
+    if isempty(pt(i).thresh.tmul) == 1
+        continue
+    end
+    
     for j = 1:length(pt(i).sz)
         if isfield(pt(i).sz,'runTimes') == 0
             continue
