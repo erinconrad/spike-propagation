@@ -60,8 +60,15 @@ if isempty(whichSeq) == 1
         firstSpikes <= szTimes(:,2),1));
     
     % Pick random set of non-ictal sequences
+
     y = randsample(size(nonIctalSeq,2),nseq);
     seqs = nonIctalSeq(:,y);
+    
+    
+    %{
+    y = randsample(size(ictalSeq,2),nseq);
+    seqs = ictalSeq(:,y);
+    %}
     
 end
 
