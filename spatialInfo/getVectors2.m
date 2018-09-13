@@ -1,9 +1,9 @@
-function [angles,dist,vec] = getAngles(sequences,electrodeData)
+function vec = getVectors2(sequences,electrodeData)
 
 nseq = size(sequences,2);
 angles = zeros(nseq,1);
 dist = zeros(nseq,1);
-return_vector = zeros(nseq,3);
+vec = zeros(nseq,3);
 
 %% Loop through sequences
 for i = 1:nseq
@@ -35,10 +35,9 @@ for i = 1:nseq
    late_mean = mean(locs(late_idx,:),1);
    
    % get vector between them 
-   vec = late_mean - early_mean;
-   dist(i) = norm(vec);
-   return_vector(i,:) = vec;
+   vec(i,:) = late_mean - early_mean;
    
+   %{
    ref_vector_both = electrodeData.ref_vector;
    ref_vector = ref_vector_both(2,:) - ref_vector_both(1,:);
    
@@ -46,7 +45,7 @@ for i = 1:nseq
    angle = acosd(dot(vec,ref_vector)/norm(vec)/norm(ref_vector));
    
    angles(i) = angle;
-   
+   %}
    
    % sample plot
    %{

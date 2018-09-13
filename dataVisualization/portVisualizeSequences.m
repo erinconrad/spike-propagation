@@ -1,6 +1,8 @@
-function portVisualizeSequences(P,pt,whichSz,whichSeq,allSpikes)
+function portVisualizeSequences(P,pts,whichSz,whichSeq,allSpikes)
 % This is another function to plot sequences, using the spike times from
 % the inputted structure
+
+for pt = pts
 
 %% Parameters to change every time
 prows = 2;
@@ -204,7 +206,7 @@ outputFile = [ptname,'_sz_',sprintf('%d',whichSz),'_',asText,'_tmul8_.png'];
 saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/',outputFile])
 
 
-fprintf('no\n');
+end
 
 
 end

@@ -1,4 +1,4 @@
-function [chunk_seqs,times_plot,MI,rl] = seqFreqOverTime(pt,whichPt,window)
+function [chunk_seqs,times_plot,MI,rl,dot_prod] = seqFreqOverTime(pt,whichPt,window)
 
 %% Parameters
 dmin = 31;
@@ -52,6 +52,19 @@ chunk_seqs_chs = cell(size(seq_all));
 times_plot = cell(size(seq_all));
 rl = cell(size(seq_all));
 MI = cell(size(seq_all));
+vec = cell(size(seq_all));
+dot_prod = cell(size(seq_all));
+
+%% Get a reference vector
+% Define this to be the average vector for the sequences in the first
+% seizure
+seq = seq_all{1};
+firstSpikes = min(seq,[],1);
+first_sz_seq = seq(:,firstSpikes >= pt(whichPt).sz(1).onset...
+    & firstSpikes <= pt(whichPt).sz(1).offset);
+ref_vec = mean(getVectors2(first_sz_seq,pt(whichPt).electrodeData));
+
+
 
 %% Now divide the sequences into windows
 for i = 1:length(seq_all)
@@ -65,7 +78,8 @@ for i = 1:length(seq_all)
    times_plot{i} = zeros(nchunks,1);
    rl{i} = zeros(nchunks,nchs);
    MI{i} = zeros(nchunks,1);
-   
+   vec{i} = zeros(nchunks,3);
+   dot_prod{i} = zeros(nchunks,1);
    
    for tt = 1:nchunks
       times =  [(tt-1)*window + firstSpikes(1),tt*window + firstSpikes(1)];
@@ -100,6 +114,13 @@ for i = 1:length(seq_all)
       end
       MI{i}(tt) = MIstruct.I;
       
+      %% Get a vector representing the direction of each sequence
+      % Confirm that this function is correct!!!!!
+      vec_temp = getVectors2(correct_seqs,pt(whichPt).electrodeData);
+      vec{i}(tt,:) = mean(vec_temp,1);
+      dot_prod{i}(tt) = dot(mean(vec_temp,1)/norm(mean(vec_temp,1)),...
+          ref_vec/norm(ref_vec));
+      
    end
    
    chunk_seqs{i} = chunk_seqs{i}/window;
@@ -107,7 +128,6 @@ for i = 1:length(seq_all)
    
     
 end
-
 
 
 
