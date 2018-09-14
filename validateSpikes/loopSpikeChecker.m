@@ -35,13 +35,13 @@ for i = whichPts
     if isempty(pt(i).ieeg_name) == 1
         
         
-            fprintf('Missing ieeg_name for patient %s, skipping\n',pt(i).name);
-            continue
+        fprintf('Missing ieeg_name for patient %s, skipping\n',pt(i).name);
+        continue
         
     end
     
     if isempty(tmuls_to_try) == 1
-        if i
+        
         tmuls_to_try =  thresh.tmul;
     end
     
