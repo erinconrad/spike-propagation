@@ -30,15 +30,18 @@ for i = whichPts
         continue
     end
     
+    [pt(i).ieeg_name,pt(i).electrode_name,thresh] =  ieegAndElectodeNames(pt(i).name);
+    
     if isempty(pt(i).ieeg_name) == 1
-        [pt(i).ieeg_name,pt(i).electrode_name,thresh] =  ieegAndElectodeNames(pt(i).name);
-        if isempty(pt(i).ieeg_name) == 1
+        
+        
             fprintf('Missing ieeg_name for patient %s, skipping\n',pt(i).name);
             continue
-        end
+        
     end
     
     if isempty(tmuls_to_try) == 1
+        if i
         tmuls_to_try =  thresh.tmul;
     end
     
