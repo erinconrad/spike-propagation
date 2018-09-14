@@ -1,6 +1,6 @@
 %% fspk2 By: Camilo Bermudez 7/31/13. Edited by Erin Conrad 6/10/18 to using a moving window to get the baseline.
 
-function [gdf,noise] = fspk3(eeg,tmul,absthresh,n_chans,srate,window)
+function [gdf,noise,removed] = fspk3(eeg,tmul,absthresh,n_chans,srate,window)
 %{
 This program is the non-GUI version of the spike detection algorithm fspk.
 It was broken down to run over the CHOP network remotely, not over Matlab.
@@ -43,6 +43,7 @@ allout      = [];
 overlap     = rate;
 totalspikes = zeros(1, length(chan));
 inc         = 0;
+removed     = [];
 
 % Read in eeg data
 alldata     = eeg;            % timepnts x chans
@@ -75,8 +76,14 @@ for dd = 1:n_chans
         out     = [];
         data    = alldata(time_points(1):time_points(2),dd);
         
-        %% Skip spike detection if the amplitude is zero during the time period for that channel
-        if sum(abs(data)) == 0
+        
+        %% Skip spike detection if the amplitude is very low during the time period for that channel
+        if sum(abs(data)) <= 1
+            if isempty(removed) == 0 && removed(end,4) == 0 && removed(end,1) == dd
+                removed(end,3) = time_points(2);
+            else
+                removed = [removed;dd time_points(1) time_points(2) 0];
+            end
             continue
         end
         
@@ -89,6 +96,11 @@ for dd = 1:n_chans
         noise(tt,dd) = noise_bin;
 
         if noise_bin == 1
+            if isempty(removed) == 0 && removed(end,4) == 1 && removed(end,1) == dd
+                removed(end,3) = time_points(2);
+            else
+                removed = [removed;dd time_points(1) time_points(2) 1];
+            end
             continue
         end
         
@@ -229,6 +241,7 @@ for dd = 1:n_chans
     end
         %}
         
+      
         
         
     end

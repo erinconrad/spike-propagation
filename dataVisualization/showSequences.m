@@ -2,6 +2,11 @@ function showSequences(P,pts,whichSeq,nseq)
 % This is another function to plot sequences, using the spike times from
 % the inputted structure
 
+if isempty(whichSeq) == 0
+    %ignore nseq
+    nseq = length(whichSeq);
+end
+
 %% Parameters
 prows = 2;
 columns =  nseq/prows;
@@ -13,10 +18,7 @@ p1 = genpath(scriptFolder);
 addpath(p1);
 ptInfo = loadjson(jsonfile);
 
-if isempty(whichSeq) == 0
-    %ignore nseq
-    nseq = length(whichSeq);
-end
+
 
 for pt = pts
 
@@ -45,19 +47,21 @@ for j = 1:length(P(pt).sz)
     allSeq = [allSeq,P(pt).sz(j).seq_matrix];
 end
 
+szTimes = [];
+for j = 1:length(P(pt).sz)
+    szTimes = [szTimes;P(pt).sz(j).onset P(pt).sz(j).offset];
+end
+
+firstSpikes = min(allSeq,[],1);
+nonIctalSeq = allSeq(:,~any(firstSpikes >= szTimes(:,1) & ...
+    firstSpikes <= szTimes(:,2),1));
+ictalSeq = allSeq(:,any(firstSpikes >= szTimes(:,1) & ...
+    firstSpikes <= szTimes(:,2),1));
+
 %% If chunk not specified, randomly pick non-ictal sequences to plot
 if isempty(whichSeq) == 1
     fprintf('Picking a random set of non-ictal sequences from all seizures\n');
-    szTimes = [];
-    for j = 1:length(P(pt).sz)
-        szTimes = [szTimes;P(pt).sz(j).onset P(pt).sz(j).offset];
-    end
     
-    firstSpikes = min(allSeq,[],1);
-    nonIctalSeq = allSeq(:,~any(firstSpikes >= szTimes(:,1) & ...
-        firstSpikes <= szTimes(:,2),1));
-    ictalSeq = allSeq(:,any(firstSpikes >= szTimes(:,1) & ...
-        firstSpikes <= szTimes(:,2),1));
     
     % Pick random set of non-ictal sequences
 
@@ -69,6 +73,8 @@ if isempty(whichSeq) == 1
     y = randsample(size(ictalSeq,2),nseq);
     seqs = ictalSeq(:,y);
     %}
+else
+    seqs = nonIctalSeq(:,whichSeq);
     
 end
 
@@ -108,11 +114,10 @@ for i = 1:size(seqs,2)
 
     %% Get the spike times
     
-     spikes = [spike_chs,spike_times];
-    %{
-        spikes = gdf;
-        spikes(:,2) = spikes(:,2) + time_col(1) - surroundtime;
-    %}
+    spikes = [spike_chs,spike_times];
+    
+    %spikes = gdf;
+    
 
     seq(i).seq = s;
     seq(i).spikes = spikes;

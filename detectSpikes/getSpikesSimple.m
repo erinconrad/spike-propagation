@@ -116,7 +116,7 @@ elseif whichDetector == 4
     % entire data, just looks at a minute surrounding the potential spike
     window = 60*data.fs;
 
-    [gdf,noise] = fspk3(data.values,tmul,absthresh,length(channels),data.fs,window);
+    [gdf,noise,removed] = fspk3(data.values,tmul,absthresh,length(channels),data.fs,window);
 
     if isempty(gdf) == 1
         fprintf('No spikes detected\n');
@@ -125,6 +125,9 @@ elseif whichDetector == 4
          % put it in seconds
         gdf(:,2) = gdf(:,2)/data.fs;
     end
+    
+    if isempty(removed) == 0
+        removed(:,2:3) = removed(:,2:3)/data.fs;
 
 end
 
@@ -147,16 +150,17 @@ gdf = new_gdf;
 
 % test plot for re-aligned spikes
 %{
-for whichSp = 50:150
+for whichSp = 10:min(size(gdf,1),30)
 toplot = values((gdf(whichSp,2)*fs-2*fs:gdf(whichSp,2)*fs+13*fs),gdf(whichSp,1));
 plot(linspace(-2,13,length(toplot)),toplot);
 hold on
-scatter(0,values(gdf(whichSp,2)*fs,gdf(whichSp,1)));
+scatter(0,values(round(gdf(whichSp,2)*fs),gdf(whichSp,1)));
 scatter(new_gdf(whichSp,2)-gdf(whichSp,2),values(round(new_gdf(whichSp,2)*fs),new_gdf(whichSp,1)))
 hold off
 pause
 end
 %}
+
 
 %% Toss spikes that occur across too high a percentage of channels at the same time
 if setChLimits == 1 && isempty(gdf) == 0
@@ -193,8 +197,13 @@ if isempty(gdf) == 0
     vanleer.spikeTimes = vanleer.spikeTimes + times(1);
 end
 
+if isempty(removed) == 0
+    removed(:,2:3) = removed(:,2:3) + times(1);
+end
+
 
 extraOutput.vanleer = vanleer;
+extraOutput.removed = removed;
 
 [~,noisychs] = find(noise == 1);
 extraOutput.noise.noisychs = pt(whichPt).electrodeData.unignoredChs(noisychs);

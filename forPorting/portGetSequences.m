@@ -156,6 +156,24 @@ for i = 1:length(pt)
         % seizure, calculate sequences
         pt(i).sz(j).stats.nspikes = size(gdf_all,1);
         pt(i).sz(j).data = mainSequences(gdf_all,electrodeData, pt(i).fs);
+        
+        %% Cleaning
+        %{
+        dirty_seq = pt(i).sz(j).data.sequences;
+        ss_thresh     = 15;              
+        tt_thresh     = 0.015;  
+
+        if size(dirty_seq,2) > 2
+            
+            iclean =  spt_seqclust(pt(i).electrodeData.locs,...
+                dirty_seq,ss_thresh,tt_thresh);
+            y = zeros(length(iclean)*2, 1); y(1:2:end-1)=(iclean-1)*2+1; y(2:2:end)=(iclean-1)*2+2;
+            pt(i).sz(j).data.sequences = dirtysequences(:,y);
+            
+            
+        end
+        %}
+        
         pt(i).sz(j).stats.nseqs = size(pt(i).sz(j).data.sequences,2)/2;
         
         %{

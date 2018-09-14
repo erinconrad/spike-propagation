@@ -34,9 +34,11 @@ xlabel('Sequence number');
 ylabel('Sequence number');
 title('Sequence similarity matrix');
 set(gca,'fontsize',15)
+%{
 filen = '/Users/erinconrad/Desktop/residency stuff/R25/actual work/results/SSM';
 print(filen,'-depsc');
 newPath = [filen,'.eps'];
+%}
 
 %Plot a histogram of degree centrality and save it
 figure
@@ -51,6 +53,8 @@ xlabel('Degree centrality');
 ylabel('Count');
 set(gca,'FontSize',15);
 
+%{
 filen = '/Users/erinconrad/Desktop/residency stuff/R25/actual work/results/histogram';
 print(filen,'-depsc');
 newPath = [filen,'.eps'];
+%}

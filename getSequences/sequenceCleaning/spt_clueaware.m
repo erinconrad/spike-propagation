@@ -9,7 +9,7 @@ function [clueGraph] = ...
 
 clueGraph   = zeros(size(chanlocs,2),size(chanlocs,2));
 for ref_idx = 1:size(xlocs,2)
-    %fprintf('%1.2f percent complete\n',ref_idx/size(xlocs,2)*100);
+    fprintf('%1.2f percent complete\n',ref_idx/size(xlocs,2)*100);
        
     
     % Initialize reference sequence and similarity score to test sequence
