@@ -141,7 +141,7 @@ new_gdf = gdf;
 
 % Loop through spikes
 for i = 1:size(gdf,1)
-    snapshot = values(gdf(i,2)*fs+idxToPeak(1):gdf(i,2)*fs+idxToPeak(2),gdf(i,1));
+    snapshot = values(max(gdf(i,2)*fs+idxToPeak(1),1):gdf(i,2)*fs+idxToPeak(2),gdf(i,1));
     [~,I] = max(snapshot);
     new_gdf(i,2) = gdf(i,2) + timeToPeak(1) + I/fs;
 end
