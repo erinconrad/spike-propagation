@@ -107,7 +107,7 @@ for i = whichPts
             end
             
             if merge == 1 && exist(outputDest,'file') ~= 0
-               if sum(ismember([k,m],oldAllSens)) == 2
+               if any(oldAllSens(:,1) == k & oldAllSens(:,2) == m,1)
                   fprintf('Already did tmul %d and absthresh %d, skipping...\n',k,m);
                   continue; 
                    
