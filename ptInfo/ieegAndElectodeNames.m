@@ -16,8 +16,8 @@ if strcmp(name,'HUP064') == 1
     ieeg_name = 'HUP64_phaseII-Annotations';
     electrode_name = 'HUP064_T1_19991230_electrode_labels.csv';
     ignore = {"EKG1","EKG2","RR","Rate","X1","X2","X3","X4"};
-    tmul = 13;
-    absthresh = 300;
+    tmul = 11;
+    absthresh = 1000;
     dmin = 20;
 elseif strcmp(name, 'HUP065') == 1
     ieeg_name = 'HUP65_phaseII-Annotations';
@@ -28,15 +28,15 @@ elseif strcmp(name,'HUP068') ==1
     ieeg_name = 'HUP68_phaseII-Annotations';
     electrode_name = 'HUP068_T1_19991230_electrode_labels.csv';
     ignore = {"EKG1","EKG2","X1","X2"};
-    tmul = 13;
-    absthresh = 300;
+    tmul = 11;
+    absthresh = 1000;
     dmin = 20;
 elseif strcmp(name,'HUP070') ==1
     ieeg_name = 'HUP70_phaseII-Annotations';
     electrode_name = 'HUP070_T1_19980321_electrode_labels.csv';
     ignore = {"EKG1","EKG2","Rate","RR"};
-    tmul = 12;
-    absthresh = 300;
+    tmul = 8;
+    absthresh = 1000;
     dmin = 31;
 elseif strcmp(name,'HUP073') == 1
     ieeg_name = 'HUP73_phaseII-Annotations';
@@ -52,8 +52,8 @@ elseif strcmp(name,'HUP075')==1
     ieeg_name = 'HUP75_phaseII';
     electrode_name = 'HUP075_T1_19990604_electrode_labels.csv';
     ignore = {"EKG1","EKG2","RR","Rate"};
-    tmul = 16;
-    absthresh = 300;
+    tmul = 14;
+    absthresh = 1000;
     dmin = 31;
 elseif strcmp(name,'HUP078') == 1
     ieeg_name = 'HUP78_phaseII-Annotations';

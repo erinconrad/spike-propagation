@@ -134,7 +134,7 @@ end
 
 %% Re-align the spike to be the peak
 values = data.values;
-timeToPeak = [-.02,.15]; % Where to look for the peak
+timeToPeak = [-.1,.15]; % Where to look for the peak
 idxToPeak = timeToPeak*fs;
 
 new_gdf = gdf;
