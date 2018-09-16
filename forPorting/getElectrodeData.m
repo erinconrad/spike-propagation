@@ -39,7 +39,7 @@ for i = 1:length(pt)
         continue
     end
     
-    if overwrite == 0 && isfield(pt(i),'electrodeData') == 1
+    if overwrite == 0 && isfield(pt(i),'electrodeData') == 1 && isempty(pt(i).electrodeData) == 0
         fprintf('Got electrode data for patient %s, skipping...\n',pt(i).name);
         continue 
     end
