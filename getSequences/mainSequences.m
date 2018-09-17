@@ -130,11 +130,15 @@ Patient.xyChan         = electrodeData.locs;
 
 
 %% Get sequences
+if size(gdf,1) > 0
+
 [sequences,Patient.discarded] = ...
     getSequencesErin(gdf, Patient.xyChan,...
     t1, t2, minSeqLength, uniquenessCheck, minUniqueSeqLength, ...
     maxPercTies, minConcurrentFreqAbs, minConcurrentFreqRel,...
     maxSpeed, fs, minSpikesCloseEnough);
+
+end
 
 %% Do cleaning step
 % Now I do this at the end once all blocks are obtained
