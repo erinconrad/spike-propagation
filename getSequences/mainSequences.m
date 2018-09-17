@@ -138,6 +138,10 @@ if size(gdf,1) > 0
     maxPercTies, minConcurrentFreqAbs, minConcurrentFreqRel,...
     maxSpeed, fs, minSpikesCloseEnough);
 
+
+Patient.discarded.remaining = Patient.discarded.origNum - Patient.discarded.total;
+Patient.sequences = sequences;
+
 end
 
 %% Do cleaning step
@@ -168,8 +172,6 @@ end
 %}
 
 
-Patient.discarded.remaining = Patient.discarded.origNum - Patient.discarded.total;
-Patient.sequences = sequences;
 
 
 
