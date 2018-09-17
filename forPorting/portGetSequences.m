@@ -1,7 +1,7 @@
 clear
 
 %% Remove EKG artifact
-rmEKG = 1;
+rmEKG = 0;
 
 % how close the EKG spike can be from the EEG spike to throw out the EEG
 % spike
