@@ -3,6 +3,8 @@ function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thre
 % This is my basic spike detector file which can call one of a number of
 % specific detectors
 
+% Need to uncomment lines 192 and 200 to get vanleer back
+
 %% Parameters
 setChLimits = 1; % Should I toss out spikes that occur across too many channels at the same time
 multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
@@ -186,7 +188,7 @@ extraOutput.values = values;
 if isempty(gdf) == 1
     vanleer = [];
 else
-    vanleer = vMakeSegments(gdf,data.values,fs,vtime,chLocs);
+    vanleer = [];% vMakeSegments(gdf,data.values,fs,vtime,chLocs);
 end
 
 
@@ -194,7 +196,8 @@ end
 % Re-align gdf times to be the actual times
 if isempty(gdf) == 0
     gdf(:,2) = gdf(:,2) + times(1);
-    vanleer.spikeTimes = vanleer.spikeTimes + times(1);
+    vanleer = [];
+    %vanleer.spikeTimes = vanleer.spikeTimes + times(1);
 end
 
 if isempty(removed) == 0

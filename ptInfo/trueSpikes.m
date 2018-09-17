@@ -4515,7 +4515,13 @@ elseif strcmp(name,'Study029') == 1
         'PIT1','PIT2'};
     validated = [];
 elseif strcmp(name,'Study033') == 1
-    validated = [];
+    validated.name = 'Study033';
+    validated.chs = {'LG26','LG28','LG29','LG36','LG38',...
+        'LG44','LG61','LG62'};
+    validated.spike_times = [...
+        13518.11;13551.79;];
+    validated.not_spike_times = [...
+        13528.09;13556.87;];
 elseif strcmp(name,'Study038') == 1
     validated = [];
 elseif strcmp(name,'CHOP08') == 1
