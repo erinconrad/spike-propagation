@@ -3,6 +3,9 @@ clear
 %% Remove EKG artifact
 rmEKG = 0;
 
+%% Do vanleer
+doVanleer = 0;
+
 % how close the EKG spike can be from the EEG spike to throw out the EEG
 % spike
 prox = 0.02; %20 ms
@@ -108,9 +111,12 @@ for i = 1:length(pt)
             
             gdf_all = [gdf_all;gdf];
             gdf_ekg_all = [gdf_ekg_all;gdf_ekg];
+            
+            if doVanleer == 1
             vanleer_all.spike_times = [vanleer_all.spike_times;vanleer.spikeTimes];
             vanleer_all.delay = [vanleer_all.delay;vanleer.delay];
             vanleer_all.rms = [vanleer_all.rms;vanleer.rms];
+            end
             
             
            % noise_all = [noise_all;noise];
