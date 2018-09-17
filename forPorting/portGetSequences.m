@@ -161,7 +161,17 @@ for i = 1:length(pt)
         % Now that you have all the spikes for the desired patient and
         % seizure, calculate sequences
         pt(i).sz(j).stats.nspikes = size(gdf_all,1);
+        
+       if size(gdf_all,1) > 0
         pt(i).sz(j).data = mainSequences(gdf_all,electrodeData, pt(i).fs);
+        pt(i).sz(j).stats.nseqs = size(pt(i).sz(j).data.sequences,2)/2;
+        % Make fancy new matrix for sequences
+        pt(i).sz(j).seq_matrix = ...
+            makeSeqMatrix(pt(i).sz(j).data.sequences,length(pt(i).channels));
+       else
+           pt(i).sz(j).data.sequences = [];
+           pt(i).sz(j).seq_matrix = [];
+       end
         
         %% Cleaning
         %{
@@ -180,7 +190,7 @@ for i = 1:length(pt)
         end
         %}
         
-        pt(i).sz(j).stats.nseqs = size(pt(i).sz(j).data.sequences,2)/2;
+        
         
         %{
         pt(i).sz(j).stats.empty = empty_all;
@@ -203,9 +213,7 @@ for i = 1:length(pt)
         % Add EKG times
         pt(i).sz(j).ekg = gdf_ekg_all;
         
-        % Make fancy new matrix for sequences
-        pt(i).sz(j).seq_matrix = ...
-            makeSeqMatrix(pt(i).sz(j).data.sequences,length(pt(i).channels));
+        
         
         
       
