@@ -25,14 +25,6 @@ number of steps in the spike sequence.
 % The choice of these is at this point arbitrary and is very important for
 % the final result
 
-% If I don't pass a gdf, use the one written here
-if nargin == 0
-    filename = 'gdfTemp.mat';
-    ptname = 'HUP078';
-    fs =  512;
-
-end
-
 % max time of candidate spike from first spike in sequence (50 ms in paper)
 t1 = .05; 
 
@@ -59,10 +51,6 @@ minUniqueSeqLength = 3;
 % multiple channels at the same time). (Only used if uniquenessCheck = 2).
 maxPercTies = 0.7; 
 
-% some distance between channels for channel weights. In the paper this was
-% 1.5 cm. For me 1 unit is 1 mm. 
-dmin = 15; 
-
 % This is used when two channels are not within an allowable distance of
 % each others, but if the 2 channels spike together this frequently, then
 % I allow the jump regardless. This was 0.05 in the paper.
@@ -87,8 +75,6 @@ maxSpeed = 10000; %10,000 mm/s
 % This was 5 in Sam's code but not explicitly mentioned in the paper.
 minSpikesCloseEnough = 5; %5
 
-% I don't know what this does.
-indexToms = 1;
 
 cleaning = 0;
 
@@ -108,17 +94,6 @@ cleaning = 0;
 % the interelectrode distance should be 10 mm. So 1 unit = 1 mm.
 ss_thresh     = 15;              
 tt_thresh     = 0.015;  
-
-
-%% Load data files if I don't pass a gdf
-if nargin == 0
-    spikePaths
-    load([dataLoc,'gdf/',filename]);
-    load([dataLoc,'electrodeData/',ptname,'_chanLoc.mat']);
-    addpath('/Users/erinconrad/Desktop/residency stuff/R25/actual work/scripts/my scripts/sequenceCleaning/');
-
-
-end
 
 
 %% Initialize patient variables

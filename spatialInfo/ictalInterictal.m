@@ -34,7 +34,7 @@ newPt = 'icIntericAngle.mat';
 load([resultsFolder,'ptStructs/',ptWithSeq]);
 
 % Loop through patients
-for i = 4%1:length(pt)
+for i = 1%1:length(pt)
     
     % Loop through seizures
    for j = 1:length(pt(i).sz)

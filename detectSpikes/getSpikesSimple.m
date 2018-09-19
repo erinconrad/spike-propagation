@@ -150,6 +150,17 @@ end
 
 gdf = new_gdf;
 
+% Re-sort spike times
+if isempty(gdf) == 0
+    times = gdf(:,1);
+    chs = gdf(:,2);
+    [times,I] = sort(times);
+    chs = chs(I);
+    gdf = [chs,times];
+end
+
+
+
 % test plot for re-aligned spikes
 %{
 for whichSp = 10:min(size(gdf,1),30)

@@ -1,4 +1,4 @@
-function showSequences(P,pts,whichSeq,nseq)
+function showSequences(P,pts,whichSeq,nseq,ic)
 % This is another function to plot sequences, using the spike times from
 % the inputted structure
 
@@ -60,19 +60,21 @@ ictalSeq = allSeq(:,any(firstSpikes >= szTimes(:,1) & ...
 
 %% If chunk not specified, randomly pick non-ictal sequences to plot
 if isempty(whichSeq) == 1
-    fprintf('Picking a random set of non-ictal sequences from all seizures\n');
+    
     
     
     % Pick random set of non-ictal sequences
+    if ic == 0
+        fprintf('Picking a random set of non-ictal sequences from all seizures\n');
+        y = randsample(size(nonIctalSeq,2),nseq);
+        seqs = nonIctalSeq(:,y);
 
-    y = randsample(size(nonIctalSeq,2),nseq);
-    seqs = nonIctalSeq(:,y);
     
-    
-    %{
-    y = randsample(size(ictalSeq,2),nseq);
-    seqs = ictalSeq(:,y);
-    %}
+    elseif ic == 1
+        fprintf('Picking a random set of ictal sequences from all seizures\n');
+        y = randsample(size(ictalSeq,2),nseq);
+        seqs = ictalSeq(:,y);
+    end
 else
     seqs = nonIctalSeq(:,whichSeq);
     
@@ -129,6 +131,7 @@ end
 
 %% Plot 
 colors = {'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m',...
+    'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m',...
     'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m'};
 figure
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.95, 0.8]);
@@ -180,10 +183,17 @@ end
 
 
 
+if isempty(whichSeq) == 0
+    outputFile = [ptname,'_sequences'];
+elseif isempty(whichSeq) == 1
+    if ic == 1
+        outputFile = [ptname,'_sequences_ic'];
+    elseif ic == 0
+        outputFile = [ptname,'_sequences_inter'];
+    end
+end
 
-outputFile = [ptname,'_sequences.png'];
-
-saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/exampleSeqs/',outputFile])
+saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/exampleSeqs/',outputFile,'.png'])
 
 
 %% Plot again but make it pretty
@@ -240,9 +250,9 @@ end
 
 
 
-outputFile = [ptname,'_sequences_pretty.png'];
+outputFile = [outputFile,'_pretty'];
 
-saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/exampleSeqs/',outputFile])
+saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/exampleSeqs/',outputFile,'.png'])
 
 end
 
