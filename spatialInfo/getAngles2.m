@@ -1,7 +1,9 @@
-function vec = getVectors2(sequences,xyChan)
+[angles,dist,vec] = getAngles2(sequences,electrodeData)
 
 nseq = size(sequences,2);
-vec = zeros(nseq,3);
+angles = zeros(nseq,1);
+dist = zeros(nseq,1);
+return_vector = zeros(nseq,3);
 
 %% Loop through sequences
 for i = 1:nseq
@@ -12,7 +14,7 @@ for i = 1:nseq
    nspikes = length(C);
    
    % get locations of the spikes
-   locs = xyChan(C,2:4);
+   locs = electrodeData.locs(C,2:4);
    
    % Need to decide what to do with ties!!!!!!
    % if the ties are both on the early side or both on the late side,
@@ -33,9 +35,10 @@ for i = 1:nseq
    late_mean = mean(locs(late_idx,:),1);
    
    % get vector between them 
-   vec(i,:) = (late_mean - early_mean);%/norm(late_mean - early_mean);
+   vec = late_mean - early_mean;
+   dist(i) = norm(vec);
+   return_vector(i,:) = vec;
    
-   %{
    ref_vector_both = electrodeData.ref_vector;
    ref_vector = ref_vector_both(2,:) - ref_vector_both(1,:);
    
@@ -43,7 +46,7 @@ for i = 1:nseq
    angle = acosd(dot(vec,ref_vector)/norm(vec)/norm(ref_vector));
    
    angles(i) = angle;
-   %}
+   
    
    % sample plot
    %{

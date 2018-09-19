@@ -86,6 +86,18 @@ for i = 1%:length(pt)
                 continue
             end
             
+            % Sort by times
+            times = gdf(:,2);
+            chs = gdf(:,1);
+            [times,I] = sort(times);
+            chs = chs(I);
+            gdf_sorted = [chs,times];
+            
+            if isequal(gdf,gdf_sorted) == 0
+                fprintf('warning, gdf is not appropriately sorted\n');
+            end
+            gdf = gdf_sorted;
+            
             % Load gdf ekg file
             load([gdfFolder,pt(i).name,'/',pt(i).sz(j).EKGchunkFiles{k}]);
             
