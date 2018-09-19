@@ -152,8 +152,8 @@ gdf = new_gdf;
 
 % Re-sort spike times
 if isempty(gdf) == 0
-    times = gdf(:,1);
-    chs = gdf(:,2);
+    times = gdf(:,2);
+    chs = gdf(:,1);
     [times,I] = sort(times);
     chs = chs(I);
     gdf = [chs,times];
