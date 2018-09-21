@@ -108,8 +108,8 @@ for i = whichPts
             
             if merge == 1 && exist(outputDest,'file') ~= 0
                if any(oldAllSens(:,1) == k & oldAllSens(:,2) == m,1)
-                  fprintf('Already did tmul %d and absthresh %d, skipping...\n',k,m);
-                  continue; 
+                  fprintf('Already did tmul %d and absthresh %d, will overwrite...\n',k,m);
+                  %continue; 
                    
                end
                 
@@ -129,10 +129,14 @@ for i = whichPts
    spikeTimes,notSpikeTimes,k,m,whichDetector,trainOrTest,whichSpikes);
             
             
-           
+           if ~any(oldAllSens(:,1) == k & oldAllSens(:,2) == m,1)
             
-            allSens = [k m sensitivity];
-            allAcc = [k m accuracy];
+                allSens = [k m sensitivity];
+                allAcc = [k m accuracy];
+           else
+                allSens(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:) = [k m sensitivity];
+                allAcc(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:) = [k m accuracy];
+           end
             
             %% Save output file
             if merge == 1 && exist(outputDest,'file') ~= 0
