@@ -32,7 +32,7 @@ ptWithSeq = 'ptWithSeq.mat';
 load([resultsFolder,'ptStructs/',ptWithFs]);
 
 %% Loop through patients and seizures
-for i = 1:length(pt)
+for i = 1%:length(pt)
     
     % Get electrode data
     electrodeData =  pt(i).electrodeData;
@@ -84,6 +84,12 @@ for i = 1:length(pt)
             
             if isempty(gdf) == 1
                 continue
+            end
+            
+            if thresh.tmul ~= pt(i).thresh.tmul || ...
+                    thresh.absthresh ~= pt(i).thresh.absthresh
+                error('Error, the thresholds in the gdf file are different from those in the pt struct\n');
+               
             end
             
             % Sort by times

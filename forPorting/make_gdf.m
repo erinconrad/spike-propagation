@@ -40,7 +40,7 @@ else
 end
 
 %% Loop through patients, szs, run times
-for i = 7%length(pt)
+for i = 1%length(pt)
     
     thresh =  pt(i).thresh;
     
@@ -139,7 +139,7 @@ for i = 7%length(pt)
             vanleer = extraOutput.vanleer;
             removed = extraOutput.removed;
             % Save gdf file
-            save([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'gdf','vanleer','removed');
+            save([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'gdf','vanleer','removed','thresh');
             
            
             % Resave pt file now that I have fs
