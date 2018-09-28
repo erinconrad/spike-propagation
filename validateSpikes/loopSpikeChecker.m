@@ -109,7 +109,7 @@ for i = whichPts
             if merge == 1 && exist(outputDest,'file') ~= 0
                if any(oldAllSens(:,1) == k & oldAllSens(:,2) == m,1)
                   fprintf('Already did tmul %d and absthresh %d, will overwrite...\n',k,m);
-                  %continue; 
+                  continue; 
                    
                end
                 

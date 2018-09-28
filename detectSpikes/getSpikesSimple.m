@@ -94,6 +94,9 @@ elseif whichDetector == 2
 
         out.pos = gdf(:,2); out.chan = gdf(:,1);
     end
+    
+    noise = [];
+    removed = [];
 
 elseif whichDetector == 3
     fprintf('Warning, why are you using Detector 3?\n');
@@ -130,6 +133,7 @@ elseif whichDetector == 4
     
     if isempty(removed) == 0
         removed(:,2:3) = removed(:,2:3)/data.fs;
+    end
 
 end
 
