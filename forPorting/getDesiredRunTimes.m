@@ -24,7 +24,7 @@ window = 3600; % For spatial organization calculation, calculate SO over a one h
 overlap = 600; % Allow 10 minutes of overlap between the SO windows
 
 %% Loop through the patients in the json file
-for i = 1%:19%length(ptnames)
+for i = 1:length(ptnames)
     info = ptInfo.PATIENTS.(ptnames{i});
     
     % Get basic info

@@ -1,5 +1,7 @@
 function vec = getVectors2(sequences,xyChan)
 
+xyChan = xyChan.locs;
+
 nseq = size(sequences,2);
 vec = zeros(nseq,3);
 
