@@ -121,7 +121,8 @@ elseif whichDetector == 4
     % entire data, just looks at a minute surrounding the potential spike
     window = 60*data.fs;
 
-    [gdf,noise,removed] = fspk3(data.values,tmul,absthresh,length(channels),data.fs,window);
+    [gdf,noise,removed] = fspk3(data.values,tmul,absthresh,...
+        length(channels),data.fs,window,pt(whichPt).electrodeData.electrodes);
 
     if isempty(gdf) == 1
         fprintf('No spikes detected\n');

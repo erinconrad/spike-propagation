@@ -191,9 +191,11 @@ if isempty(whichSeq) == 0
     outputFile = [ptname,'_sequences'];
 elseif isempty(whichSeq) == 1
     if ic == 1
-        outputFile = [ptname,'_sequences_ic'];
+        outputFile = [ptname,sprintf('_sequences_ic_%d_%d',P(pt).thresh.tmul,...
+            P(pt).thresh.absthresh)];
     elseif ic == 0
-        outputFile = [ptname,'_sequences_inter'];
+        outputFile = [ptname,sprintf('_sequences_inter_%d_%d',P(pt).thresh.tmul,...
+            P(pt).thresh.absthresh)];
     end
 end
 

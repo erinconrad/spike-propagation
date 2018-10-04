@@ -11,7 +11,7 @@ doVanleer = 0;
 prox = 0.02; %20 ms
 
 % Remove depth electrodes
-rmDepth = 1;
+rmDepth = 0;
 rmType = 'D';
 
 % remove noisy electrodes? I don't think I need to because I remove noisy

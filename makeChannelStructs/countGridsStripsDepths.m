@@ -18,7 +18,7 @@ for i = 1:length(P)
    n_other = 0;
    other_idx = [];
    
-   if isempty(P(i).electrodeData) == 0
+   if isempty(P(i).electrodeData) == 0 && isfield(P(i).electrodeData,'electrodes') == 1
      
    
    for j = 1:length(P(i).electrodeData.electrodes)
@@ -31,6 +31,8 @@ for i = 1:length(P)
        elseif strcmp(P(i).electrodeData.electrodes(j).type,'D') == 1
            n_depths = n_depths + 1;
            depth_idx = [depth_idx,j];
+           
+           fprintf('%s has depth electrode %s\n',P(i).name,P(i).electrodeData.electrodes(j).name);
        else
            n_other = n_other + 1;
            other_idx = [other_idx,j];
