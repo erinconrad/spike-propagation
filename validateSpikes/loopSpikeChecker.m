@@ -104,6 +104,8 @@ for i = whichPts
             if merge == 1 && exist(outputDest,'file') ~= 0
                 a = load(outputDest);
                 oldAllSens = a.allSens; oldAllAcc = a.allAcc;
+            elseif exist(outputDest,'file') == 0
+                oldAllSens = []; oldAllAcc = [];
             end
             
             if merge == 1 && exist(outputDest,'file') ~= 0
@@ -128,7 +130,7 @@ for i = whichPts
             [sensitivity,accuracy] = spikeChecker(pt,i,chIds,...
    spikeTimes,notSpikeTimes,k,m,whichDetector,trainOrTest,whichSpikes);
             
-            
+           
            if ~any(oldAllSens(:,1) == k & oldAllSens(:,2) == m,1)
             
                 allSens = [k m sensitivity];
