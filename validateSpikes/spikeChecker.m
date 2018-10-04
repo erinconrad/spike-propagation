@@ -242,7 +242,7 @@ for ichunk = 1:nchunks
         set(sp(sidx),'Position',[(whichcol-1)*1/pcolumns (prows-whichrow)*1/prows 1/pcolumns 1/prows])
     end
 
-    %saveas(gcf,[outputFolder,outputFile])
+    saveas(gcf,[outputFolder,outputFile])
 
 end
 end
