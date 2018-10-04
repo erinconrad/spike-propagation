@@ -130,8 +130,11 @@ for i = whichPts
             [sensitivity,accuracy] = spikeChecker(pt,i,chIds,...
    spikeTimes,notSpikeTimes,k,m,whichDetector,trainOrTest,whichSpikes);
             
-           
-           if ~any(oldAllSens(:,1) == k & oldAllSens(:,2) == m,1)
+           if isempty(oldAllSens) == 1
+                allSens = [k m sensitivity];
+                allAcc = [k m accuracy];
+             
+           elseif ~any(oldAllSens(:,1) == k & oldAllSens(:,2) == m,1)
             
                 allSens = [k m sensitivity];
                 allAcc = [k m accuracy];
