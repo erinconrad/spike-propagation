@@ -122,6 +122,27 @@ elseif whichDetector == 4
     window = 60*data.fs;
 
     [gdf,noise,removed] = fspk3(data.values,tmul,absthresh,...
+        length(channels),data.fs,window);
+
+    if isempty(gdf) == 1
+        fprintf('No spikes detected\n');
+    else
+        fprintf('Detected %d spikes\n',size(gdf,1));
+         % put it in seconds
+        gdf(:,2) = gdf(:,2)/data.fs;
+    end
+    
+    if isempty(removed) == 0
+        removed(:,2:3) = removed(:,2:3)/data.fs;
+    end
+    
+    
+elseif whichDetector == 5
+    % just like fspk3 (detector 4) except I am changing fr and I have the ability to
+    % change parameters based on if depth
+    window = 60*data.fs;
+
+    [gdf,noise,removed] = fspk4(data.values,tmul,absthresh,...
         length(channels),data.fs,window,pt(whichPt).electrodeData.electrodes);
 
     if isempty(gdf) == 1

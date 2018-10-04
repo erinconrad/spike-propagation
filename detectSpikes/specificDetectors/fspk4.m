@@ -1,7 +1,7 @@
-%% fspk2 By: Camilo Bermudez 7/31/13. Edited by Erin Conrad 6/10/18 to using a moving window to get the baseline.
+%% Like fspk3 except I am changing the fr
 
-function [gdf,noise,removed] = fspk3(eeg,tmul,absthresh,n_chans,...
-    srate,window)
+function [gdf,noise,removed] = fspk4(eeg,tmul,absthresh,n_chans,...
+    srate,window,electrodes)
 %{
 This program is the non-GUI version of the spike detection algorithm fspk.
 It was broken down to run over the CHOP network remotely, not over Matlab.
@@ -28,8 +28,8 @@ rate   = srate;
 chan   = 1:n_chans;
 
 %% Depth electrodes are spikier
-fr     = 20;                 % high pass freq: probably don't have to change
-lfr    = 7;                  % low pass freq: probably don't have to change
+%fr     = 20;                 % high pass freq: probably don't have to change
+%lfr    = 7;                  % low pass freq: probably don't have to change
 
 
 spkdur = 220;                % spike duration must be less than this
@@ -64,6 +64,14 @@ noise = zeros(num_segs-1,n_chans);
 % Iterate channels and detect spikes
 for dd = 1:n_chans
     
+    ch_type = electrodes(dd).type;
+    if strcmp(ch_type,'D') == 1
+        fr     = 30;  % high pass freq, used to be 20
+        lfr    = 7;   % low pass freq
+    else
+        fr     = 30;  % high pass freq, used to be 20
+        lfr    = 7;   % low pass freq
+    end
     
     % Break the data into time segments, 1 minute each, so that the
     % threshold we are using to see if the spike rises above the background
@@ -247,7 +255,10 @@ for dd = 1:n_chans
     end
         %}
         
-    
+      
+    if dd == 2
+        error('look');
+    end
         
     end
     %fprintf('no');
