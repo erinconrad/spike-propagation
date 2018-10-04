@@ -255,10 +255,6 @@ for dd = 1:n_chans
     end
         %}
         
-      
-    if dd == 2
-        error('look');
-    end
         
     end
     %fprintf('no');
