@@ -66,10 +66,10 @@ for dd = 1:n_chans
     
     ch_type = electrodes(dd).type;
     if strcmp(ch_type,'D') == 1
-        fr     = 30;  % high pass freq, used to be 20
+        fr     = 40;  % high pass freq, used to be 20
         lfr    = 7;   % low pass freq
     else
-        fr     = 30;  % high pass freq, used to be 20
+        fr     = 40;  % high pass freq, used to be 20
         lfr    = 7;   % low pass freq
     end
     
@@ -135,7 +135,8 @@ for dd = 1:n_chans
         fndata   = eegfilt(data, 1, 'hp',srate);
 
         % first look at the high frequency data for the 'spike' component
-        HFdata    = eegfilt(fndata, fr, 'lp',srate);
+        %HFdata    = eegfilt(fndata, fr, 'lp',srate);
+        HFdata = data;
         [spp,spv] = FindPeaks(HFdata);
 
         idx      = find(diff(spp) <= spkdur);       % find the durations less than or equal to that of a spike
@@ -255,6 +256,10 @@ for dd = 1:n_chans
     end
         %}
         
+        
+        if dd ==2
+            error('look');
+        end
         
     end
     %fprintf('no');
