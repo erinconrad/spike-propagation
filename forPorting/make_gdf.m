@@ -40,7 +40,7 @@ else
 end
 
 %% Loop through patients, szs, run times
-for i = 3%1:length(pt)
+for i = 11%1:length(pt)
     
     thresh =  pt(i).thresh;
     
