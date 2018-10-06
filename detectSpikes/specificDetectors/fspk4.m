@@ -2,6 +2,9 @@
 
 function [gdf,noise,removed] = fspk4(eeg,tmul,absthresh,n_chans,...
     srate,window,electrodes)
+
+% search CHANGE FOR D to find the things I need to change for depths
+
 %{
 This program is the non-GUI version of the spike detection algorithm fspk.
 It was broken down to run over the CHOP network remotely, not over Matlab.
@@ -38,8 +41,7 @@ spkdur = spkdur*rate/1000;   % convert to points;
 %sharpdur = 200;  % duration of sharp wave
 %sharpdur = sharpdur*rate/1000; % convert to points;
 
-aftdur   = 150;                % afterhyperpolarization wave must be longer than this
-aftdur   = aftdur*rate/1000;   % convert to points;
+
 num_segs = ceil(size(eeg,1)/window);
 
 % Initialize things
@@ -65,13 +67,21 @@ noise = zeros(num_segs-1,n_chans);
 for dd = 1:n_chans
     
     ch_type = electrodes(dd).type;
+    
     if strcmp(ch_type,'D') == 1
         fr     = 40;  % high pass freq, used to be 20
         lfr    = 7;   % low pass freq
+        aftdur   = 70;   % afterhyperpolarization wave must be longer than this
+        spikedur = 10;
+
     else
         fr     = 40;  % high pass freq, used to be 20
         lfr    = 7;   % low pass freq
+        aftdur = 150;
+        spikedur = 20;
     end
+    
+    aftdur   = aftdur*rate/1000;   % convert to points;
     
     % Break the data into time segments, 1 minute each, so that the
     % threshold we are using to see if the spike rises above the background
@@ -146,7 +156,7 @@ for dd = 1:n_chans
         % check the amplitude of the waves of appropriate duration
         for i = 1:length(startdx)
             spkmintic = spv(find(spv > startdx(i) & spv < startdx1(i)));  % find the valley that is between the two peaks
-
+            
             if HFdata(startdx1(i)) - HFdata(spkmintic) > sthresh & HFdata(startdx(i)) - HFdata(spkmintic) > lthresh  %#ok<AND2> % see if the peaks are big enough
                 spikes(end+1,1) = spkmintic;                                  % add timestamp to the spike list
                 spikes(end,2)   = (startdx1(i)-startdx(i))*1000/rate;         % add spike duration to list
@@ -184,6 +194,8 @@ for dd = 1:n_chans
 
         % check for after hyperpolarization
         dellist = [];
+        
+        
 
         LFdata = eegfilt(fndata, lfr, 'lp',srate);
         [hyperp,hyperv] = FindPeaks(LFdata);   % use to find the afterhyper wave
@@ -198,12 +210,16 @@ for dd = 1:n_chans
             try  % this try is just to catch waves that are on the edge of the data, where we try to look past the edge
                 if a(2)-a(1) < aftdur                        % too short duration, not a spike, delete these from the list
                     dellist(end+1) = i;
-                else                                         % might be a spike so get the amplitude of the slow wave
+                else 
+                    % might be a spike so get the amplitude of the slow wave
                     spikes(i,4) = (a(2)-a(1))*1000/rate;       % add duration of afhp to the list
                     b = hyperv(find(hyperv > a(1) & hyperv < a(2))); % this is the valley
                     spikes(i,5) = LFdata(a(1)) - LFdata(b);  % this is the amplitude of the afhp
-                    if a(1) == olda                         % if this has the same afterhyperpolarization peak as the prev
-                        dellist(end+1) = i-1;               % spike then the prev spike should be deleted
+                    if a(1) == olda    
+                        % if this has the same afterhyperpolarization peak as the prev
+                        if strcmp(ch_type,'D') == 0
+                            dellist(end+1) = i-1;           % spike then the prev spike should be deleted
+                        end
                     end
                 end
                 olda = a(1);
@@ -216,7 +232,12 @@ for dd = 1:n_chans
         end
 
         s = spikes;
+        
+        
+        
         spikes(dellist,:) = [];
+        
+       
 
         tooshort = [];
         toosmall = [];
@@ -225,7 +246,7 @@ for dd = 1:n_chans
         % now have all the info we need to decide if this thing is a spike or not.
         for i = 1:size(spikes, 1);  % for each spike
             if sum(spikes(i,[3 5])) > thresh && sum(spikes(i,[3 5])) > absthresh            % both parts together are bigger than thresh: so have some flexibility in relative sizes
-                if spikes(i,2) > 20                     % spike wave cannot be too sharp: then it is either too small or noise
+                if spikes(i,2) > spikedur     % spike wave cannot be too sharp: then it is either too small or noise
                     out(end+1,1) = spikes(i,1);         % add timestamp of spike to output list
                 else
                     toosharp(end+1) = spikes(i,1);
@@ -256,7 +277,7 @@ for dd = 1:n_chans
     end
         %}
         
-  
+        
         
     end
     %fprintf('no');
