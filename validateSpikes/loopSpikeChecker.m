@@ -139,6 +139,18 @@ for i = whichPts
                 allSens = [k m sensitivity];
                 allAcc = [k m accuracy];
            else
+               
+                if size(allSens(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:),1) > 1
+                    fprintf('Warning, 2 already with same absthresh and tmul\n');
+                    allSens(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:) = [];
+                    allSens = [allSens; k m sensitivity];
+                end
+                
+                if size(allAcc(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:),1) > 1
+                    allAcc(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:) = [];
+                    allAcc = [allAcc; k m accuracy];
+                end
+                
                 allSens(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:) = [k m sensitivity];
                 allAcc(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:) = [k m accuracy];
            end
