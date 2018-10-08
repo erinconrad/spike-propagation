@@ -12,7 +12,10 @@ clear
 % 4 is the fspk3 detector, which is my edited version of the Marsh lab
 % detector, edited to use a moving window of one minute over which I
 % calculate the baseline amplitude for the relative amplitude threshold
-whichDetector = 4;
+
+% 5 is fspk4, which is like fspk3 but it uses different parameters if
+% looking at depth electrodes
+whichDetector = 5;
 
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
@@ -40,7 +43,7 @@ else
 end
 
 %% Loop through patients, szs, run times
-for i = 11%1:length(pt)
+for i = 10%1:length(pt)
     
     thresh =  pt(i).thresh;
     
