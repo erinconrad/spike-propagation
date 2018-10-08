@@ -140,13 +140,13 @@ for i = whichPts
                 allAcc = [k m accuracy];
            else
                
-                if size(allSens(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:),1) > 1
+                if isempty(allSens) == 0 && size(allSens(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:),1) > 1
                     fprintf('Warning, 2 already with same absthresh and tmul\n');
                     allSens(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:) = [];
                     allSens = [allSens; k m sensitivity];
                 end
                 
-                if size(allAcc(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:),1) > 1
+                if isempty(allAcc) == 0 && size(allAcc(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:),1) > 1
                     allAcc(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:) = [];
                     allAcc = [allAcc; k m accuracy];
                 end
