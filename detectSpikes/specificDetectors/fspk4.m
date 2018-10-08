@@ -1,9 +1,7 @@
-%% Like fspk3 except I am changing the fr
+%% Like fspk3 except I am changing parameters for depth electrodes
 
 function [gdf,noise,removed] = fspk4(eeg,tmul,absthresh,n_chans,...
     srate,window,electrodes)
-
-% search CHANGE FOR D to find the things I need to change for depths
 
 %{
 This program is the non-GUI version of the spike detection algorithm fspk.
@@ -75,7 +73,7 @@ for dd = 1:n_chans
         spikedur = 10;
 
     else
-        fr     = 40;  % high pass freq, used to be 20
+        fr     = 20;  % high pass freq, used to be 20
         lfr    = 7;   % low pass freq
         aftdur = 150;
         spikedur = 20;
@@ -244,7 +242,7 @@ for dd = 1:n_chans
         toosharp = [];
 
         % now have all the info we need to decide if this thing is a spike or not.
-        for i = 1:size(spikes, 1);  % for each spike
+        for i = 1:size(spikes, 1)  % for each spike
             if sum(spikes(i,[3 5])) > thresh && sum(spikes(i,[3 5])) > absthresh            % both parts together are bigger than thresh: so have some flexibility in relative sizes
                 if spikes(i,2) > spikedur     % spike wave cannot be too sharp: then it is either too small or noise
                     out(end+1,1) = spikes(i,1);         % add timestamp of spike to output list
