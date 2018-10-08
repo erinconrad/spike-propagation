@@ -139,6 +139,13 @@ for i = whichPts
                 allSens = [k m sensitivity];
                 allAcc = [k m accuracy];
            else
+                if exist('allSens') == 0
+                    allSens = [];
+                end
+                
+                if exist('allAcc') == 0
+                    allAcc = [];
+                end
                
                 if isempty(allSens) == 0 && size(allSens(find(oldAllSens(:,1) == k & oldAllSens(:,2) == m),:),1) > 1
                     fprintf('Warning, 2 already with same absthresh and tmul\n');
