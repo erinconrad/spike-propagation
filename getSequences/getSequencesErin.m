@@ -39,6 +39,11 @@ overall  = [];
 
 % Start at second row of spike and loop through all the spikes
 for row = 2:size(spikes,1)
+    
+    % A fix to remove repeat spikes (same channel and same time)
+    if spikes(row,2) == spikes(row-1,2) && spikes(row,1) == spikes(row-1,1)
+        continue
+    end
 
     % If the time of the next spike is less than t1 from the first spike or
     % if the time of the next spike is less than t2 from the preceding
@@ -92,6 +97,8 @@ for row = 2:size(spikes,1)
             
            % If acceptably unique, accept the sequence
            if acceptablyUnique == 1
+               
+            
                 
                 % the difference between the length of the current sequence
                 % and the length of the overall matrix of sequences

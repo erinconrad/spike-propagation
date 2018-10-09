@@ -31,7 +31,7 @@ oldStartEnd = oldtimes*fs;
 chLocs = pt(whichPt).electrodeData.locs;
 
 % Force it to look at least 60 seconds if detector 4
-if whichDetector == 4 && times(2)-times(1)<60
+if (whichDetector == 4 || whichDetector == 5) && times(2)-times(1)<60
     fprintf('Warning, need at least 60 seconds to use detector 4. Running with 60 s of data.');
     times(2) = times(1)+60;
 end
@@ -174,8 +174,12 @@ for i = 1:size(gdf,1)
     [~,I] = max(abs(snapshot));
     new_gdf(i,2) = gdf(i,2) + timeToPeak(1) + I/fs;
 end
-
 gdf = new_gdf;
+
+% Remove duplicates
+gdf = unique(gdf,'rows');
+
+
 
 % Re-sort spike times
 if isempty(gdf) == 0
@@ -191,6 +195,7 @@ end
 % test plot for re-aligned spikes
 %{
 for whichSp = 10:min(size(gdf,1),30)
+if gdf(whichSp,2)*fs-2*fs < 0, continue, end
 toplot = values((gdf(whichSp,2)*fs-2*fs:gdf(whichSp,2)*fs+13*fs),gdf(whichSp,1));
 plot(linspace(-2,13,length(toplot)),toplot);
 hold on
