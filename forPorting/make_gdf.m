@@ -43,9 +43,10 @@ else
 end
 
 %% Loop through patients, szs, run times
-for i = 10%1:length(pt)
-    
+for i = 7%1:length(pt)
+    pt(i).thresh.whichDetector = whichDetector;
     thresh =  pt(i).thresh;
+    
     
     mkdir([resultsFolder,'gdf/',pt(i).name]);
     

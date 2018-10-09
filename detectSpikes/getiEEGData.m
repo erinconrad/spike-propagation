@@ -10,16 +10,34 @@ function data = getiEEGData(dataName,channels,indices,pwname)
 loginname = 'erinconr';
 %pwname = 'eri_ieeglogin.bin';
 
+n = 0;
+
+
 %% Open and get data
-session = IEEGSession(dataName, loginname, pwname);
-fs = session.data.sampleRate;
-channelLabels = session.data.channelLabels;
+% I am putting this whole thing in a try-catch block inside a while loop
+% because sometimes the ieeg.org server fails to give data, and this would
+% usually crash the program
+while n == 0
 
-if sum(channels) ~= 0
-    times = indices/fs;
-    values = session.data.getvalues(indices, channels);
+    try
+        session = IEEGSession(dataName, loginname, pwname);
+        fs = session.data.sampleRate;
+        channelLabels = session.data.channelLabels;
+
+        if sum(channels) ~= 0
+            times = indices/fs;
+            values = session.data.getvalues(indices, channels);
+        end
+        
+        n = 1;
+        
+    catch
+       fprintf('Failed to retrieve ieeg.org data, trying again...\n'); 
+       n = 0; 
+    end
+
+
 end
-
 
 %% Create struct
 if sum(channels) ~= 0 
