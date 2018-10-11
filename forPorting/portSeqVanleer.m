@@ -24,7 +24,7 @@ rmNoisy = 0;
 p1 = genpath(scriptFolder);
 addpath(p1);
 ptWithFs = 'ptPostVanleerGDF.mat';
-gdfFolder = [resultsFolder,'gdf/'];
+gdfFolder = [resultsFolder,'gdf_vanleer/'];
 chLocationsFolder = 'chLocations/';
 ptWithSeq = 'ptWithVanleerSeq.mat';
 

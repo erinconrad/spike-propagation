@@ -33,7 +33,7 @@ merge = 1;
 p1 = genpath(scriptFolder);
 addpath(p1);
 timeFile = 'ptWithElectrodeData.mat'; 
-gdfFolder = [resultsFolder,'gdf/'];
+gdfFolder = [resultsFolder,'gdf_vanleer/'];
 chLocationsFolder = 'chLocations/';
 newptfile = 'ptPostVanleerGDF.mat';
 
@@ -50,7 +50,7 @@ for i = 8%1:length(pt)
     thresh =  pt(i).thresh;
     
     
-    mkdir([resultsFolder,'gdf/',pt(i).name]);
+    mkdir([resultsFolder,'gdf_vanleer/',pt(i).name]);
     
     dataName =  pt(i).ieeg_name;
     if isempty(dataName) == 1
@@ -90,9 +90,10 @@ for i = 8%1:length(pt)
             
             desiredTimes = [pt(i).sz(j).runTimes(k,:)];
             
-            
+            %{
             if overwrite == 1 || exist([gdfFolder,pt(i).name,'/',pt(i).sz(j).EKGchunkFiles{k}],'file') == 0
             
+                
                 
                 
                 % get ekg spikes
@@ -105,6 +106,7 @@ for i = 8%1:length(pt)
             else
                 fprintf('File %s already found, skipping\n',pt(i).sz(j).EKGchunkFiles{k});
             end
+            %}
             
             
             if exist([gdfFolder,pt(i).name,'/',pt(i).sz(j).chunkFiles{k}],'file') ~= 0
