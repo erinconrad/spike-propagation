@@ -1,7 +1,7 @@
-function [chunk_seqs,times_plot,MI,rl,dot_prod] = seqFreqOverTime(pt,whichPt,window)
+function [chunk_seqs,times_plot,MI,rl,dot_prod,chunk_seqs_chs] = seqFreqOverTime(pt,whichPt,window)
 
 %% Parameters
-dmin = 31;
+dmin = pt(whichPt).dmin;
 nchs = length(pt(whichPt).channels);
 
 % output file name
@@ -56,13 +56,16 @@ vec = cell(size(seq_all));
 dot_prod = cell(size(seq_all));
 
 %% Get a reference vector
-% Define this to be the average vector for the sequences in the first
-% seizure
-seq = seq_all{1};
-firstSpikes = min(seq,[],1);
-first_sz_seq = seq(:,firstSpikes >= pt(whichPt).sz(1).onset...
-    & firstSpikes <= pt(whichPt).sz(1).offset);
-ref_vec = mean(getVectors2(first_sz_seq,pt(whichPt).electrodeData));
+% Define this to be the average vector for all sequences
+all_seq_cat = [];
+for i = 1:length(seq_all)
+    seq = seq_all{1};
+    all_seq_cat = [all_seq_cat,seq];
+end
+%firstSpikes = min(seq,[],1);
+%first_sz_seq = seq(:,firstSpikes >= pt(whichPt).sz(1).onset...
+%    & firstSpikes <= pt(whichPt).sz(1).offset);
+ref_vec = mean(getVectors2(all_seq_cat,pt(whichPt).electrodeData));
 
 
 

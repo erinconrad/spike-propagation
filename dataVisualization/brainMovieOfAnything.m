@@ -1,8 +1,8 @@
 function brainMovieOfAnything(thing,chLocs,info)
 
 % Parameters
-circleSize = 50;
-delay = 0.4; % time delay between steps
+circleSize = 60;
+delay = 0.5; % time delay between steps
 
 colormin = min(min(thing));
 colormax = max(max(thing));
@@ -24,9 +24,9 @@ for iTime = 1:nsteps
     z1 = griddata(x,y,z,xq,yq,'natural');
     zcol = griddata(x,y,thing(iTime,:),xq,yq,'natural');
     
-    surf(xq,yq,z1,zcol);
+    %surf(xq,yq,z1,zcol);
    
-    %{
+    
     scatter3(chLocs(:,1),chLocs(:,2),chLocs(:,3),...
         circleSize,'markeredgecolor','k');
     
@@ -36,7 +36,7 @@ for iTime = 1:nsteps
     scatter3(chLocs(:,1),chLocs(:,2),chLocs(:,3),...
         circleSize,thing(iTime,:),'filled')
     
-    %}
+    
 
     grid off
     axis off
@@ -46,7 +46,7 @@ for iTime = 1:nsteps
     set(gca,'YTickLabel',[]);
     set(gca,'ZTickLabel',[]);
     %caxis([colormin,colormax])
-    colormap(flipud(gray))
+    %colormap(flipud(gray))
     
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.4, 0.4, 0.3, 0.45]);
     

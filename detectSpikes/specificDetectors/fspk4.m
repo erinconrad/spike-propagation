@@ -67,7 +67,7 @@ for dd = 1:n_chans
     ch_type = electrodes(dd).type;
     
     if strcmp(ch_type,'D') == 1
-        fr     = 40;  % high pass freq, used to be 20
+        fr     = 30;%40;  % high pass freq, used to be 20
         lfr    = 7;   % low pass freq
         aftdur   = 70;   % afterhyperpolarization wave must be longer than this
         spikedur = 10;
@@ -215,9 +215,9 @@ for dd = 1:n_chans
                     spikes(i,5) = LFdata(a(1)) - LFdata(b);  % this is the amplitude of the afhp
                     if a(1) == olda    
                         % if this has the same afterhyperpolarization peak as the prev
-                        if strcmp(ch_type,'D') == 0
+                        %if strcmp(ch_type,'D') == 0
                             dellist(end+1) = i-1;           % spike then the prev spike should be deleted
-                        end
+                        %end
                     end
                 end
                 olda = a(1);

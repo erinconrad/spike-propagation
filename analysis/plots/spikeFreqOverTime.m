@@ -1,12 +1,17 @@
-function [chunk_spikes,times_plot] = spikeFreqOverTime(pt,whichPt,window)
+function [chunk_spikes,times_plot,MI_sp,chunk_spike_chs] = spikeFreqOverTime(pt,whichPt,window)
 
 % Get spike frequency overall and by channel
 
 %% Remove EKG artifact and depth electrodes
 rmEKG = 1;
 prox = 0.02; %20 ms
-rmDepth = 1;
+rmDepth = 0;
 rmType = 'D';
+
+%% Get wij
+dmin = pt(whichPt).dmin;
+xyChan = pt(whichPt).electrodeData.locs;
+wij = getwij(xyChan,dmin);
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 gdfFolder = [resultsFolder,'gdf/'];
@@ -109,6 +114,7 @@ end
 chunk_spikes = cell(size(gdf_all));
 chunk_spike_chs = cell(size(gdf_all));
 times_plot = cell(size(gdf_all));
+MI_sp = cell(size(gdf_all));
 
 %% Now divide spikes into windows
 for i = 1:size(gdf_all,2)
@@ -134,7 +140,13 @@ for i = 1:size(gdf_all,2)
             chunk_spike_chs{i}(tt,ch) = chunk_spike_chs{i}(tt,ch) + 1;
              
          end
-        
+         
+         MI_sp_struct = moranStats(chunk_spike_chs{i}(tt,:),wij,nchs);
+         MI_sp{i}(tt) = MI_sp_struct.I;
+         
+         
+         %brainImageOfAnything(chunk_spike_chs{i}(tt,:),xyChan(:,2:4),[])
+         
     end
     chunk_spikes{i} = chunk_spikes{i}/window;
     chunk_spike_chs{i} = chunk_spike_chs{i}/window;
