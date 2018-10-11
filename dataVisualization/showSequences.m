@@ -109,7 +109,7 @@ for i = 1:size(seqs,2)
     %% Get the data for these times
     thresh.tmul = P(pt).thresh.tmul;
     thresh.absthresh = P(pt).thresh.absthresh;
-    [gdf,extraoutput] = getSpikesSimple(P,pt,times,4,thresh);
+    [gdf,extraoutput] = getSpikesSimple(P,pt,times,4,thresh,0);
     values = extraoutput.values;
     unignoredChLabels = P(pt).electrodeData.unignoredChs;
     plottimes =  [1:size(values,1)]/fs;

@@ -4,7 +4,7 @@ function seqs = vanleerGetSeqs(vanleer)
 % normal sequences
 
 %% Parameters
-minFrac = 0.1; %
+minFrac = 0.2; %
 
 times = vanleer.times;
 rms = vanleer.rms;

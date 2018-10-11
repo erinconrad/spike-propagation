@@ -1,4 +1,4 @@
-function [chunk_seqs,times_plot,MI,rl,dot_prod,chunk_seqs_chs] = seqFreqOverTime(pt,whichPt,window)
+function [chunk_seqs,times_plot,MI,rl,dot_prod,chunk_seqs_chs,vec,early] = seqFreqOverTime(pt,whichPt,window)
 
 %% Parameters
 dmin = pt(whichPt).dmin;
@@ -83,6 +83,7 @@ for i = 1:length(seq_all)
    MI{i} = zeros(nchunks,1);
    vec{i} = zeros(nchunks,3);
    dot_prod{i} = zeros(nchunks,1);
+   early{i} = zeros(nchunks,3);
    
    for tt = 1:nchunks
       times =  [(tt-1)*window + firstSpikes(1),tt*window + firstSpikes(1)];
@@ -119,8 +120,9 @@ for i = 1:length(seq_all)
       
       %% Get a vector representing the direction of each sequence
       % Confirm that this function is correct!!!!!
-      vec_temp = getVectors2(correct_seqs,pt(whichPt).electrodeData);
+      [vec_temp,early_temp] = getVectors2(correct_seqs,pt(whichPt).electrodeData);
       vec{i}(tt,:) = mean(vec_temp,1);
+      early{i}(tt,:) = mean(early_temp,1);
       dot_prod{i}(tt) = dot(mean(vec_temp,1)/norm(mean(vec_temp,1)),...
           ref_vec/norm(ref_vec));
       

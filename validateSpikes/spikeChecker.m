@@ -69,7 +69,7 @@ fs = data.fs;
 
 %% Detect spikes
 for i = 1:length(time)
-    [time(i).gdf,extraoutput] = getSpikesSimple(pt,whichPt,time(i).runTimes,whichDetector,thresh);
+    [time(i).gdf,extraoutput] = getSpikesSimple(pt,whichPt,time(i).runTimes,whichDetector,thresh,0);
     
     
    

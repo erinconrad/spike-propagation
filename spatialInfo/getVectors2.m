@@ -1,4 +1,4 @@
-function vec = getVectors2(sequences,xyChan)
+function [vec,early_mean] = getVectors2(sequences,xyChan)
 
 xyChan = xyChan.locs;
 
