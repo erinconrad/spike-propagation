@@ -1,4 +1,4 @@
-function showSequences(P,pts,whichSeq,nseq,ic)
+function showSequences(P,pts,whichSeq,nseq,ic,seqs_temp)
 % This is another function to plot sequences, using the spike times from
 % the inputted structure
 
