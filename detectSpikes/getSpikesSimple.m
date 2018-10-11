@@ -1,4 +1,4 @@
-function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thresh)
+function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thresh,v)
 
 % This is my basic spike detector file which can call one of a number of
 % specific detectors
@@ -9,7 +9,7 @@ function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thre
 setChLimits = 1; % Should I toss out spikes that occur across too many channels at the same time
 multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
 multiChTime = .025;
-vtime = [-0.002,0.048]; % Do I use this?
+vtime = [-0.005,0.05]; %[-0.002,0.048]
 
 %% Load file paths, etc.
 [~,~,~,~,pwfile] = fileLocations;
@@ -231,7 +231,12 @@ extraOutput.values = values;
 if isempty(gdf) == 1
     vanleer = [];
 else
-    vanleer = [];% vMakeSegments(gdf,data.values,fs,vtime,chLocs);
+    if v == 1
+        vanleer = vMakeSegments(gdf,values,fs,vtime,chLocs);
+    else
+        vanleer = [];
+    end
+
 end
 
 
@@ -239,8 +244,10 @@ end
 % Re-align gdf times to be the actual times
 if isempty(gdf) == 0
     gdf(:,2) = gdf(:,2) + times(1);
-    vanleer = [];
-    %vanleer.spikeTimes = vanleer.spikeTimes + times(1);
+    if v == 1
+        vanleer.times = vanleer.times + times(1);
+    end
+        
 end
 
 if isempty(removed) == 0

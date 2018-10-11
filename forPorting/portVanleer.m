@@ -1,4 +1,6 @@
-%% make_gdf
+
+
+%% portVanleer
 
 % This script takes a patient structure with information about what times
 % to look for spikes over, and then this actually detects those spikes and
@@ -33,7 +35,7 @@ addpath(p1);
 timeFile = 'ptWithElectrodeData.mat'; 
 gdfFolder = [resultsFolder,'gdf/'];
 chLocationsFolder = 'chLocations/';
-newptfile = 'ptPostGDF.mat';
+newptfile = 'ptPostVanleerGDF.mat';
 
 %% Load file with filenames and run times
 if merge == 1 && exist([resultsFolder,'ptStructs/',newptfile],'file') ~= 0
@@ -43,7 +45,7 @@ else
 end
 
 %% Loop through patients, szs, run times
-for i = 9%1:length(pt)
+for i = 8%1:length(pt)
     pt(i).thresh.whichDetector = whichDetector;
     thresh =  pt(i).thresh;
     
@@ -121,7 +123,7 @@ for i = 9%1:length(pt)
             % Run the spike detector
             
             tic
-            [gdf,extraOutput] = getSpikesSimple(pt,i,desiredTimes,whichDetector,thresh,0);
+            [gdf,extraOutput] = getSpikesSimple(pt,i,desiredTimes,whichDetector,thresh,1);
             toc
             
             %noise(:,10)

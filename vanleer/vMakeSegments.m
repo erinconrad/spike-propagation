@@ -73,10 +73,10 @@ for i = 1:length(spikeIdx)
         % Get the values in that segment for that channel
         temp_signal = values(spikeIdx(i)+nIdx(1):spikeIdx(i)+nIdx(2),j);
         
-        % Get the index corresponding to the maximum value the channel has
+        % Get the index corresponding to the maximum absolute value the channel has
         % in that segment. This is the delay for that channel within that
         % segment
-        [~,I] = max(temp_signal);
+        [~,I] = max(abs(temp_signal));
         delay(i,j) = I;
         abstime(i,j) = I + nIdx(1) + spikeIdx(i);
         
@@ -87,7 +87,7 @@ for i = 1:length(spikeIdx)
     % get minimum delay amongs the channels and subtract this from each
     % delay to make min 0
     
-    delay(i,:) = delay(i,:) - min(delay(i,:));
+    %delay(i,:) = delay(i,:) - min(delay(i,:));
     delay(i,:) = delay(i,:)/fs;
     
    
@@ -97,23 +97,23 @@ end
 
 %{
 % Plot spike for a specific channel
-test_i = 30;
-toplot = values(spikeIdx(test_i)-2*fs:spikeIdx(test_i)+13*fs,chs(test_i));
-plot(linspace(-2,13,length(toplot)),toplot(:,1))
+test_i = 1;
+toplot = values(:,chs(test_i));
+plot(linspace(0,4,length(toplot)),toplot(:,1))
 hold on
-scatter(0,values(spikeIdx(test_i),chs(test_i)))
+scatter(0,values(round(spikeIdx(test_i)),chs(test_i)))
 %}
 
 % Plot snapshot for a bunch of channels for a specific spike
 %{
-for test_i =50:70
-test_time = [-1 5];
-plot_values = values(spikeIdx(test_i)+test_time(1)*fs:spikeIdx(test_i)+test_time(2)*fs,[chs(test_i),21:30])+...
+for test_i =1
+test_time = [-1 1];
+plot_values = values(spikeIdx(test_i)+test_time(1)*fs:spikeIdx(test_i)+test_time(2)*fs,[chs(test_i),71:80])+...
     linspace(0,300*10,11);
 plot(linspace(test_time(1),test_time(2),size(plot_values,1)),plot_values,'k')
 hold on
 count = 0;
-for j = [chs(test_i),21:30]
+for j = [chs(test_i),71:80]
     count = count+1;
     scatter(abstime(test_i,j)/fs-spikeIdx(test_i)/fs,...
    values(abstime(test_i,j),j)+(count-1)*300);
@@ -124,21 +124,55 @@ pause
 end
 %}
 
+%{
+for test_i =1
+test_time = [-1 1];
+plot_values = values+...
+    linspace(0,300*(size(values,2)-1),size(values,2));
+plot(plot_values,'k')
+hold on
+count = 0;
+for j = 1:size(values,2)
+    count = count+1;
+    scatter(abstime(test_i,j),...
+   values(abstime(test_i,j),j)+(count-1)*300);
+end
+
+hold off
+pause
+end
+%}
+
+%{
+for i = 50:100
+    plot(values(:,i))
+    hold on
+    scatter(abstime(1,i),values(round(abstime(1,i)),i))
+    fprintf('RMS is %1.2f fraction of max\n',rms(1,i)/max(rms(1,:)));
+    hold off
+    pause
+end
+%}
  % Sample plot
 %{
 test_chs = 1:20;
 test_values = values(spikeIdx(i)+nIdx(1):spikeIdx(i)+nIdx(2),test_chs);
 plot(test_values,'k');
 
-for i = 20:50
+for i = 1
     scatter3(chLocs(:,2),chLocs(:,3),chLocs(:,4),50,delay(i,:),'filled');
     pause
 end
  %}
 
+ %{
+high_amp = rms > max(rms)/5; 
+scatter3(chLocs(high_amp,1),chLocs(high_amp,2),chLocs(high_amp,3),...
+    50,delay(i,high_amp),'filled');
+ %}
+ 
 gdf = struct;
-gdf.delay = delay;
+gdf.times = abstime;
 gdf.rms = rms;
-gdf.spikeTimes = spikeTimes;
 
 end
