@@ -80,7 +80,7 @@ else
     
 end
 
-
+%seqs = seqs_temp;
 
 %% Define the structure that I will put plotting data into
 seq = struct;

@@ -172,7 +172,7 @@ scatter3(chLocs(high_amp,1),chLocs(high_amp,2),chLocs(high_amp,3),...
  %}
  
 gdf = struct;
-gdf.times = abstime;
+gdf.times = abstime*fs;
 gdf.rms = rms;
 
 end

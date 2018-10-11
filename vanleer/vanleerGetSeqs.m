@@ -25,7 +25,7 @@ for i = 1:size(rms,2)
     rms(~bigEnough,i) = nan;
     times(~bigEnough,i) = nan;
     
-    seqs(:,i) = times(i);
+    seqs(:,i) = times(:,i);
     
 end
 
