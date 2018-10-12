@@ -71,7 +71,7 @@ for i = 1:length(spikeIdx)
     for j = 1:n_channels
      
         % Get the values in that segment for that channel
-        temp_signal = values(spikeIdx(i)+nIdx(1):spikeIdx(i)+nIdx(2),j);
+        temp_signal = values(max(spikeIdx(i)+nIdx(1),1):min(spikeIdx(i)+nIdx(2),size(values,1)),j);
         
         % Get the index corresponding to the maximum absolute value the channel has
         % in that segment. This is the delay for that channel within that
