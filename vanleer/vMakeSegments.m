@@ -16,9 +16,16 @@ nIdx = round(fs*vtime);
 
 n_channels = size(values,2);
 
+% throw out first spikes if too close to the start
+if gdf(1,2)+vtime(2) < 0
+    gdf = gdf(2:end);
+end
+    
 
 % get spike times
 spikeTimes = gdf(:,2);
+
+
 
 %% How to throw out overlapping spikes
 
@@ -66,6 +73,7 @@ rms = zeros(length(spikeIdx),n_channels);
 
 % Loop through the spike indices
 for i = 1:length(spikeIdx)
+    
     
     % Loop through each channel
     for j = 1:n_channels
