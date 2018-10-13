@@ -6,7 +6,7 @@ load(structWithElecFile)
 
 
 %% Loop through all patients
-for i = 1:length(pt)
+for i = 8%1:length(pt)
 
     if isfield(pt(i).electrodeData,'ref_vector') == 1
         fprintf('Already did this for patient %s, skipping...\n',...
@@ -51,6 +51,8 @@ for i = 1:length(pt)
 
     % Save this vector in the electrode data
     pt(i).electrodeData.ref_vector = [start;finish];
+    fprintf('Vector for %s:\nstart: %1.2f %1.2f %1.2f\nend: %1.2f %1.2f %1.2f\n',pt(i).name,...
+    start(1),start(2),start(3),finish(1),finish(2),finish(3));
 
     disp('Press enter to move to the next patient');
     pause

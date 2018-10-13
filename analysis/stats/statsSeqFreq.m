@@ -47,6 +47,9 @@ for i = whichPts
     wij = getwij(xyChan,dmin);
     nchs = length(pt(i).channels);
     
+    
+   all_seq = [];
+    
    for j = 1:length(pt(i).sz)
        
        % Get sequence
@@ -102,6 +105,9 @@ for i = whichPts
             % Get the appropriate sequences for the window
             correct_seqs = seq(:,first_spikes >= times(1) & first_spikes <= times(2));
             
+            % add to all_seq (looking at stats on the whole patient)
+            all_seq = [all_seq,correct_seqs];
+            
             % Get the latency for each sequence
             latency_all_seq = correct_seqs - min(correct_seqs,[],1);
             
@@ -118,6 +124,12 @@ for i = whichPts
         
        
    end
+   
+   %% Get stats on whole patient
+   all_lat = all_seq - min(all_seq,[],1);
+   mean_lat_all = nanmean(all_lat,2);
+   rl_all = mean_lat_all';
+   MI_whole_pt(i) = moranStats(rl_all,wij,nchs);
     
 end
 
@@ -162,5 +174,7 @@ scatter(chunk,b_MI(1) + b_MI(2)*chunk,'r');
 xlabel('which window')
 ylabel('MI')
 legend('Data','linear regression');
+
+
 
 end

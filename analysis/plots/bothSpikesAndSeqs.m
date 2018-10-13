@@ -5,7 +5,7 @@ function bothSpikesAndSeqs(pt,whichPt,window)
 
 
 
-[chunk_seqs,times_plot_seq,MI,rl,dot,chunk_seqs_chs,vec,early] = seqFreqOverTime(pt,whichPt,window);
+[chunk_seqs,times_plot_seq,MI,rl,angle,chunk_seqs_chs,vec,early] = seqFreqOverTime(pt,whichPt,window);
 [chunk_spikes,times_plot_spike,MI_sp,chunk_spike_chs] = spikeFreqOverTime(pt,whichPt,window);
 
 p_spike = zeros(length(chunk_spikes),1);
@@ -113,7 +113,7 @@ saveas(gcf,[saveFolder,pt(whichPt).name,'MI.png']);
 figure
 for i = 1:size(chunk_seqs,2)
     times = times_plot_seq{i};
-    do = plot(times/3600,dot{i},'k','LineWidth',2);
+    do = plot(times/3600,angle{i},'k','LineWidth',2);
     hold on  
 end
 
@@ -126,9 +126,9 @@ for j = 1:length(pt(whichPt).sz)
 end
 
 xlabel('Hour');
-ylabel('Dot product');
-legend([do,sz],{'Dot product','Seizure times'});
-title(sprintf('Dot product of spike sequence vector with overall average for %s',pt(whichPt).name));
+ylabel('Angle (degrees)');
+legend([do,sz],{'Angle','Seizure times'});
+title(sprintf('Angle between spike sequence vector and overall average for %s',pt(whichPt).name));
 set(gca,'FontSize',15)
 
 ax = gca;

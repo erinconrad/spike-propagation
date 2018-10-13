@@ -1,4 +1,4 @@
-function [chunk_seqs,times_plot,MI,rl,dot_prod,chunk_seqs_chs,vec,early] = seqFreqOverTime(pt,whichPt,window)
+function [chunk_seqs,times_plot,MI,rl,angle,chunk_seqs_chs,vec,early] = seqFreqOverTime(pt,whichPt,window)
 
 %% Parameters
 dmin = pt(whichPt).dmin;
@@ -18,9 +18,14 @@ sequences = pt(whichPt).sz(1).seq_matrix;
 sequences(sequences==0) = nan; % WHY ARE THERE ANY ZEROS?????
 
 
-% Fill up the info from the first seizure
-szTime = pt(whichPt).sz(1).onset;
+%% Fill up the info from the first seizure
+firstSpikes = min(sequences,[],1);  
+
+% remove sequences occuring during the seizure
+sz = [pt(whichPt).sz(1).onset pt(whichPt).sz(1).offset];
+sequences(:,firstSpikes>=sz(1) & firstSpikes<=sz(2)) = [];
 seq_all{1} = sequences;
+
 
 % Loop through the other seizures
 for j = 2:length(pt(whichPt).sz)
@@ -30,6 +35,7 @@ for j = 2:length(pt(whichPt).sz)
     
     sequences = pt(whichPt).sz(j).seq_matrix;
     sequences(sequences==0) = nan; % WHY ARE THERE ANY ZEROS?????
+
     
     if szTime - szTimeLast > totalTime
         % If the seizure time is more than 24 hours after the last seizure,
@@ -42,6 +48,12 @@ for j = 2:length(pt(whichPt).sz)
         keepAfter = pt(whichPt).sz(j-1).runTimes(end,2);
         firstSpikes = min(sequences,[],1);  
         seq_to_keep = sequences(:,firstSpikes > keepAfter);
+
+        % remove sequences occuring during the seizure
+        sz = [pt(whichPt).sz(j).onset pt(whichPt).sz(j).offset];
+        firstSpikes = min(seq_to_keep,[],1);  
+        seq_to_keep(:,firstSpikes>=sz(1) & firstSpikes<=sz(2)) = [];
+        
         seq_all{end} = [seq_all{end},seq_to_keep];
     end
 
@@ -54,6 +66,7 @@ rl = cell(size(seq_all));
 MI = cell(size(seq_all));
 vec = cell(size(seq_all));
 dot_prod = cell(size(seq_all));
+angle = cell(size(seq_all));
 
 %% Get a reference vector
 % Define this to be the average vector for all sequences
@@ -68,6 +81,13 @@ end
 ref_vec = mean(getVectors2(all_seq_cat,pt(whichPt).electrodeData));
 
 
+%% REMOVE ME
+%{
+ref_vec = pt(whichPt).electrodeData.ref_vector(2,:)-...
+pt(whichPt).electrodeData.ref_vector(1,:);
+%}
+
+all_angle = [];
 
 %% Now divide the sequences into windows
 for i = 1:length(seq_all)
@@ -91,6 +111,7 @@ for i = 1:length(seq_all)
       
       % Get the appropriate sequences in this time
       correct_seqs = seq(:,firstSpikes >= times(1) & firstSpikes <= times(2));
+    
       chunk_seqs{i}(tt) = size(correct_seqs,2);
       
       % get the number of sequences per channel (the starting channel???)
@@ -125,6 +146,15 @@ for i = 1:length(seq_all)
       early{i}(tt,:) = mean(early_temp,1);
       dot_prod{i}(tt) = dot(mean(vec_temp,1)/norm(mean(vec_temp,1)),...
           ref_vec/norm(ref_vec));
+      angle{i}(tt) = acos(dot_prod{i}(tt))*180/pi;
+
+      % Get individual angle
+%{
+      dots = dot(vec_temp/norm(vec_temp),...
+    repmat(ref_vec/norm(ref_vec),size(vec_temp,1),1),2);
+      angles = acos(dots)*180/pi;
+      all_angle = [all_angle;angles];
+%}
       
    end
    
@@ -135,7 +165,16 @@ for i = 1:length(seq_all)
 end
 
 
+%% Look at all angles
+%{
 
+histogram(all_angle);
+
+fake = normrnd(mean(all_angle),std(all_angle),size(all_angle));
+
+figure
+histogram(fake);
+%}
 
 %{
 figure

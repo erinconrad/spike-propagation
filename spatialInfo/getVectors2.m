@@ -1,10 +1,11 @@
-function [vec,early_mean_all] = getVectors2(sequences,xyChan)
+function [vec,early_mean_all,late_mean_all] = getVectors2(sequences,xyChan)
 
 xyChan = xyChan.locs;
 
 nseq = size(sequences,2);
 vec = zeros(nseq,3);
 early_mean_all = zeros(nseq,3);
+late_mean_all = zeros(nseq,3);
 
 %% Loop through sequences
 for i = 1:nseq
@@ -38,6 +39,7 @@ for i = 1:nseq
    % get vector between them 
    vec(i,:) = (late_mean - early_mean);%/norm(late_mean - early_mean);
    early_mean_all(i,:) = early_mean;
+   late_mean_all(i,:) = late_mean;
    
    %{
    ref_vector_both = electrodeData.ref_vector;
