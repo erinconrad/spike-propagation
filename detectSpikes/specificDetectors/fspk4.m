@@ -274,8 +274,7 @@ for dd = 1:n_chans
         error('look\n');
     end
         %}
-        
-        
+
         
     end
     %fprintf('no');

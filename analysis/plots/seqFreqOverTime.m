@@ -114,7 +114,7 @@ for i = 1:length(seq_all)
       % Get the moran index
       MIstruct= moranStats(mean_latency',wij,nchs);
       if MIstruct.I > 1
-          error('look\n');
+          %error('look\n');
       end
       MI{i}(tt) = MIstruct.I;
       
