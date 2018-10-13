@@ -103,12 +103,16 @@ elseif strcmp(name,'HUP094') == 1
     ieeg_name = 'HUP094_phaseII';
     electrode_name = 'HUP094_T1_19991225_electrode_labels.csv';
     ignore = {"EKG1","EKG2"};
+    tmul = 13;
+    absthresh = 300;
 elseif strcmp(name,'HUP105') == 1
     ieeg_name = 'HUP105_phaseII';
     electrode_name = 'HUP105_T1_19981114_electrode_labels.csv';
     ignore = {"EKG1"};
     dmin = 20;
     notes = 'no grids';
+    tmul = 7;
+    absthresh = 100;
 elseif strcmp(name,'HUP106') == 1
     ieeg_name = 'HUP106_phaseII';
     electrode_name = 'HUP106_T1_19990923_electrode_labels.csv';
@@ -118,8 +122,8 @@ elseif strcmp(name,'HUP107') == 1
     ieeg_name = 'HUP107_phaseII';
     electrode_name = 'HUP107_T1_19991219_electrode_labels.csv';
     ignore = {"ECG1","ECG2"};
-    tmul = 12;
-    absthresh = 1000;
+    tmul = 6;
+    absthresh = 300;
     dmin = 31;
 elseif strcmp(name,'HUP111') == 1
     ieeg_name = 'HUP111_phaseII_D01';
