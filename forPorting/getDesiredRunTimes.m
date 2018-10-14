@@ -75,7 +75,7 @@ end
 for i = 1:length(ptnames)
     
     % Loop through seizures
-    for j = 1:length(szs)
+    for j = 1:length(pt(i).sz)
        
        sztimes =  [pt(i).sz(j).onset,pt(i).sz(j).offset];
        
