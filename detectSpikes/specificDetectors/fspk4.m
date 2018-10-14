@@ -277,9 +277,6 @@ for dd = 1:n_chans
     end
         %}
         
-        if dd == 82
-            error('look\n');
-        end
         
 
         
