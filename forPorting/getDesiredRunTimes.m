@@ -62,7 +62,7 @@ for i = 1:length(ptnames)
                pt(i).sz(j-1).offset = firstSz(2);
                
                pt(i).sz(j).onset = secondSz(1);
-               pt(i).sz(j).onset = secondSz(2);
+               pt(i).sz(j).offset = secondSz(2);
                
            end
            
