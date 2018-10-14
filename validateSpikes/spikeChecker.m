@@ -68,7 +68,7 @@ data = getiEEGData(dataName,0,0,pwfile);
 fs = data.fs;
 
 %% Detect spikes
-for i = 1:length(time)
+for i = 4%1:length(time)
     [time(i).gdf,extraoutput] = getSpikesSimple(pt,whichPt,time(i).runTimes,whichDetector,thresh,0);
     
     
@@ -99,7 +99,7 @@ TP = 0;
 FP = 0;
 TN = 0;
 FN = 0;
-for i = 1:length(time)
+for i = 4%1:length(time)
    % if there is a spike there per my gold standard human detection 
    if time(i).isSpike == 1 
       
@@ -180,7 +180,7 @@ for ichunk = 1:nchunks
     pcolumns = length(spike_idx);
     figure
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.99, 0.8]);
-    for sidx = 1:length(spike_idx)
+    for sidx = 4%1:length(spike_idx)
         s = spike_idx(sidx);
         sp(sidx) = subplot(1,length(spike_idx),sidx);
        
@@ -234,7 +234,7 @@ for ichunk = 1:nchunks
 
     end
     
-    for sidx = 1:length(spike_idx)
+    for sidx = 4%1:length(spike_idx)
        
         whichcol = sidx;
         whichrow = 1;

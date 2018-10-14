@@ -269,13 +269,14 @@ for dd = 1:n_chans
         
         all_spikes = [all_spikes;allout];
        
-      %{
-    if dd == 69
+    %{  
+    if dd == 82
         plot_times = 1:2*srate;
         plot(linspace(0,2,length(plot_times)),data(plot_times))
         error('look\n');
     end
         %}
+        
         
         
 
