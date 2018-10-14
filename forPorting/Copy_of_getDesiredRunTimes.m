@@ -56,18 +56,16 @@ for i = 1:length(ptnames)
        % Start detecting spikes 12 hours before the seizure onset
        initialTime = max(pt(i).sz(j).onset - totalTime/2,1);
        
-       % If it is not the first seizure, can start detecting just after the
-       % run of the prior seizure (removes redundant data collection)
-       if j > 1
-           initialTime = max(pt(i).sz(j).onset - totalTime/2,...
-               pt(i).sz(j).runTimes(end,2)); 
-       end
+       
        
        % This will break if it's too close to the end of the file
-       finalTime = pt(i).sz(j).onset + totalTime/2;
+       if initialTime == 1
+           finalTime = max(pt(i).sz(j).onset + totalTime/2,initialTime+(nchunks)*chunkTime);
+       else
+           finalTime = pt(i).sz(j).onset + totalTime/2;
+       end
        
-       % If it's not the first seizure, nchunks might be smaller
-       nchunks = ceil((finalTime - initialTime)/chunkTime);
+   
        
        % Initialize run times and file names
        pt(i).sz(j).runTimes = zeros(nchunks,2);
