@@ -41,6 +41,8 @@ for i = 1:length(ptnames)
     % Get seizures
     szs = fieldnames(info.Events.Ictal);
     
+    whichSz = 0;
+    
     for j = 1:length(szs)
        sz = info.Events.Ictal.(szs{j});
        
@@ -48,21 +50,43 @@ for i = 1:length(ptnames)
            continue
        end
        
+       skipSz = 0;
+       
+       % If the seizure is the same time as a prior, skip this one
+       if j > 1
+           for k = 1:whichSz-1
+               if abs(pt(i).sz(k).onset - sz.SeizureEEC) < 1
+                  skipSz = 1;
+                   
+               end
+               
+           end
+           
+       end
+       
+       if skipSz == 1
+           continue
+       end
+       
+       whichSz = whichSz + 1;
+       
        % Get seizure onset and offset
-       pt(i).sz(j).onset = sz.SeizureEEC;
-       pt(i).sz(j).offset = sz.SeizureEnd;
+       pt(i).sz(whichSz).onset = sz.SeizureEEC;
+       pt(i).sz(whichSz).offset = sz.SeizureEnd;
+       
+       
        
        % If the seizure onset is before the prior seizure onset, switch
        % positions
        if j > 1
-           if pt(i).sz(j).onset < pt(i).sz(j-1).onset
-               firstSz = [pt(i).sz(j).onset pt(i).sz(j).offset];
-               secondSz = [pt(i).sz(j-1).onset pt(i).sz(j-1).offset];
-               pt(i).sz(j-1).onset = firstSz(1);
-               pt(i).sz(j-1).offset = firstSz(2);
+           if pt(i).sz(whichSz).onset < pt(i).sz(whichSz-1).onset
+               firstSz = [pt(i).sz(whichSz).onset pt(i).sz(whichSz).offset];
+               secondSz = [pt(i).sz(whichSz-1).onset pt(i).sz(whichSz-1).offset];
+               pt(i).sz(whichSz-1).onset = firstSz(1);
+               pt(i).sz(whichSz-1).offset = firstSz(2);
                
-               pt(i).sz(j).onset = secondSz(1);
-               pt(i).sz(j).offset = secondSz(2);
+               pt(i).sz(whichSz).onset = secondSz(1);
+               pt(i).sz(whichSz).offset = secondSz(2);
                
            end
            
