@@ -23,6 +23,7 @@ nchunks = ceil(totalTime/chunkTime);
 window = 3600; % For spatial organization calculation, calculate SO over a one hour window
 overlap = 600; % Allow 10 minutes of overlap between the SO windows
 
+
 %% Loop through the patients in the json file
 for i = 1:length(ptnames)
     info = ptInfo.PATIENTS.(ptnames{i});
@@ -40,7 +41,6 @@ for i = 1:length(ptnames)
     % Get seizures
     szs = fieldnames(info.Events.Ictal);
     
-    % Loop through seizures
     for j = 1:length(szs)
        sz = info.Events.Ictal.(szs{j});
        
@@ -51,6 +51,32 @@ for i = 1:length(ptnames)
        % Get seizure onset and offset
        pt(i).sz(j).onset = sz.SeizureEEC;
        pt(i).sz(j).offset = sz.SeizureEnd;
+       
+       % If the seizure onset is before the prior seizure onset, switch
+       % positions
+       if j > 1
+           if pt(i).sz(j).onset < pt(i).sz(j-1).onset
+               firstSz = [pt(i).sz(j).onset pt(i).sz(j).offset];
+               secondSz = [pt(i).sz(j-1).onset pt(i).sz(j-1).offset];
+               pt(i).sz(j-1).onset = firstSz(1);
+               pt(i).sz(j-1).offset = firstSz(2);
+               
+               pt(i).sz(j).onset = secondSz(1);
+               pt(i).sz(j).onset = secondSz(2);
+               
+           end
+           
+       end
+       
+    end
+    
+end
+
+for i = 1:length(ptnames)
+    
+    % Loop through seizures
+    for j = 1:length(szs)
+       
        sztimes =  [pt(i).sz(j).onset,pt(i).sz(j).offset];
        
        % Start detecting spikes 12 hours before the seizure onset
