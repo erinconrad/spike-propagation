@@ -15,7 +15,7 @@ if whichMethod == 1
     % adjacent time points (so basically the amplitude of the high
     % frequency content of the data)
     noise = sqrt(sum(diff(data).^2));
-    if noise > 1e4
+    if noise > 5e4
         noise_bin = 1;
     end
 

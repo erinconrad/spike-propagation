@@ -3,6 +3,8 @@
 function [gdf,noise,removed] = fspk4(eeg,tmul,absthresh,n_chans,...
     srate,window,electrodes)
 
+
+
 %{
 This program is the non-GUI version of the spike detection algorithm fspk.
 It was broken down to run over the CHOP network remotely, not over Matlab.
@@ -143,8 +145,8 @@ for dd = 1:n_chans
         fndata   = eegfilt(data, 1, 'hp',srate);
 
         % first look at the high frequency data for the 'spike' component
-        %HFdata    = eegfilt(fndata, fr, 'lp',srate);
-        HFdata = data;
+        HFdata    = eegfilt(fndata, fr, 'lp',srate);
+        %HFdata = data;
         [spp,spv] = FindPeaks(HFdata);
 
         idx      = find(diff(spp) <= spkdur);       % find the durations less than or equal to that of a spike
@@ -274,6 +276,11 @@ for dd = 1:n_chans
         error('look\n');
     end
         %}
+        
+        if dd == 82
+            error('look\n');
+        end
+        
 
         
     end
