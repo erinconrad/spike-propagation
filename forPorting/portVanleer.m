@@ -45,7 +45,7 @@ else
 end
 
 %% Loop through patients, szs, run times
-for i = 8%1:length(pt)
+for i = 1:12%1:length(pt)
     pt(i).thresh.whichDetector = whichDetector;
     thresh =  pt(i).thresh;
     
