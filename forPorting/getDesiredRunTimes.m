@@ -75,7 +75,6 @@ for i = 1:length(ptnames)
        pt(i).sz(whichSz).offset = sz.SeizureEnd;
        
        
-       
        % If the seizure onset is before the prior seizure onset, switch
        % positions
        if j > 1
