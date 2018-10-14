@@ -3,6 +3,7 @@ function vectorsOverTime(pt,whichPts)
 %% Parameters
 sm_span = 100;
 window = 3600;
+doPlots = 0;
 
 [~,~,~,resultsFolder,~] = fileLocations;
 
@@ -136,6 +137,8 @@ p_diff_HT = HotellingT2([early_HT;late_HT],0.05);
 %% Plot histograms to see if vectors are normally distributed
 % Need to be more or less normal to justify the above tests
 
+if doPlots == 1
+
 % Early points
 figure
 set(gca,'FontSize',15)
@@ -198,6 +201,8 @@ set(gcf,'Position',[50 100 900 800])
 saveas(gcf,[saveFolder,pt(whichPt).name,'late_hist.png']);
 close(gcf)
 
+end
+
 
 %% Plot the vectors over time
 % I am using a smoothing function
@@ -239,10 +244,12 @@ set(gcf,'Position',[50 100 1200 400])
 
 mkdir(saveFolder)
 saveas(gcf,[saveFolder,pt(whichPt).name,'vec_time.png']);
-close(gcf)
+%close(gcf)
 
 
 %% Plot histograms to see if vectors are normally distributed
+if doPlots == 1
+
 figure
 
 set(gca,'FontSize',15)
@@ -273,6 +280,8 @@ set(gcf,'Position',[50 100 900 800])
 saveas(gcf,[saveFolder,pt(whichPt).name,'hist.png']);
 close(gcf)
 
+end
+
 %% Test if vectors are different for each different hour long chunk
 nchunks = ceil((all_times(end)-all_times(1))/window);
 times = zeros(nchunks,2);
@@ -299,6 +308,50 @@ fprintf(['For %s:\nEarly vs late channel position difference p = %1.2e\n'...
     'Change in vector over time p_x = %1.2e, p_y = %1.2e, p_z=%1.2e\n'],...
     pt(whichPt).name,p_diff_HT,p_chunk_comparison(1),...
     p_chunk_comparison(2),p_chunk_comparison(3));
+
+
+%% Look for evidence of cyclic variation in the data
+signal = all_vecs;
+Y = fft(signal);
+L = size(signal,1);
+P2 = abs(Y/L);
+P1 = P2(1:L/2+1,:);
+P1(2:end-1,:) = 2*P1(2:end-1,:);
+Fs = pt(whichPt).fs;
+f = Fs*(0:(L/2))/L;
+
+
+figure
+for i = 1:length(seq_all)
+    
+    temp_all_times = all_times(:,trackingNo==i);
+    temp_all_vecs = all_vecs(trackingNo==i,:);
+    
+    x=plot(f,smooth(P1(:,1),sm_span),'b','LineWidth',2);
+    hold on
+    y=plot(f,smooth(P1(:,2),sm_span),'r','LineWidth',2);
+    z=plot(f,smooth(P1(:,3),sm_span),'g','LineWidth',2);
+end
+
+
+xlabel('Frequency');
+ylabel('Magnitude and sign of vector component (mm)');
+legend([x,y,z],{'x-component','y-component','z-component'});
+
+title(sprintf('Spike propagation vector for %s',pt(whichPt).name));
+set(gca,'FontSize',15)
+
+ax = gca;
+outerpos = ax.OuterPosition;
+ti = ax.TightInset; 
+left = outerpos(1) + ti(1);
+bottom = outerpos(2) + ti(2);
+ax_width = outerpos(3) - ti(1) - ti(3);
+ax_height = outerpos(4) - ti(2) - ti(4);
+ax.Position = [left bottom ax_width ax_height];
+
+set(gcf,'Position',[50 100 1200 400])
+
 
 end
 
