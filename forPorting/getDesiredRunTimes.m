@@ -103,6 +103,10 @@ for i = 1:length(ptnames)
        end
        pt(i).sz(j).timesRL = timesRL;
        
+       if size(pt(i).sz(j).runTimes,1) == 0
+           continue;
+       end
+           
        % Add additional things to say if it's during a seizure
        for k = 1:size(timesRL,1)
            blocktimes = pt(i).sz(j).blockRL(k).times + pt(i).sz(j).runTimes(1,1);
