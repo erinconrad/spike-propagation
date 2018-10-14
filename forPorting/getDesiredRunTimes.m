@@ -60,7 +60,7 @@ for i = 1:length(ptnames)
        % run of the prior seizure (removes redundant data collection)
        if j > 1
            initialTime = max(pt(i).sz(j).onset - totalTime/2,...
-               pt(i).sz(j).runTimes(end,2)); 
+               pt(i).sz(j-1).runTimes(end,2)); 
        end
        
        % This will break if it's too close to the end of the file
