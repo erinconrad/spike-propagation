@@ -15,13 +15,13 @@ end
 %electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
 addpath(p1);
-timeFile = 'ptWithSeq.mat'; 
+timeFile = 'ptWithElectrodeData.mat'; 
 newptfile = 'ptAccuracies.mat';
 validatedFile = 'validated.mat';
 
 %% Load file with filenames and run times
-load([resultsFolder,'ptStructs/',timeFile]);
-%load([resultsFolder,'ptStructs/allPtsElectrodeData/',timeFile]);
+%load([resultsFolder,'ptStructs/',timeFile]);
+load([resultsFolder,'ptStructs/allPtsElectrodeData/',timeFile]);
 load([resultsFolder,'validation/',validatedFile]);
 
 
