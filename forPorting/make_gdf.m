@@ -15,7 +15,7 @@ clear
 
 % 5 is fspk4, which is like fspk3 but it uses different parameters if
 % looking at depth electrodes
-whichDetector = 5;
+whichDetector = 6;
 
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
@@ -43,7 +43,7 @@ else
 end
 
 %% Loop through patients, szs, run times
-for i = 1:12 %1:length(pt)
+for i = 1:18 %1:length(pt)
     pt(i).thresh.whichDetector = whichDetector;
     thresh =  pt(i).thresh;
     

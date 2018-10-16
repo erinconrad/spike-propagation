@@ -7,7 +7,7 @@ thresh.absthresh = absthresh;
 
 if whichDetector ==  2
     detect_duration = [-1 599]; %1 seconds before, 599 after
-elseif whichDetector == 4 || whichDetector == 5
+elseif whichDetector == 4 || whichDetector == 5 || whichDetector == 6
     detect_duration = [-1 59]; %1 seconds before, 59 after 
 end
 check_duration = 2; % look for 2 seconds after the start of the detection period (which begins 1 s before the spike)

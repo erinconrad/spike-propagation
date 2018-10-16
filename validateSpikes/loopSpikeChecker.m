@@ -1,5 +1,7 @@
 function loopSpikeChecker(whichPts,whichDetector,trainOrTest,merge,tmuls_to_try,absthresh_to_try)
 
+short = 0;
+
 if trainOrTest == 2
     error('Are you sure you want to look at the testing data?\n');
 end
@@ -73,7 +75,12 @@ for i = whichPts
      end
      
      
-    
+    if short  == 1
+        subset = 1:5;
+        spikeTimes = spikeTimes(subset);
+        notSpikeTimes = [];
+        whichSpikes = whichSpikes(subset);
+    end
     
     if isempty(spikeTimes) || isempty(chnames)
         fprintf('Missing start times or channel names for patient %s\n',pt(i).name);
@@ -171,14 +178,14 @@ for i = whichPts
                end
             
             %% Save output file
-            if merge == 1 && exist(outputDest,'file') ~= 0
+            if merge == 1 && exist(outputDest,'file') ~= 0 && short == 0
                 allSens = unique([oldAllSens;allSens],'rows');
                 allAcc = unique([oldAllAcc;allAcc],'rows');
                 
                 
             end
             
-            if merge == 1
+            if merge == 1 && short == 0
                 save(outputDest,'allSens','allAcc');
 
                 validated(i).allSens = allSens;

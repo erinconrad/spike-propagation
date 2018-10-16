@@ -1,6 +1,6 @@
 %% Like fspk3 except I am changing parameters for depth electrodes
 
-function [gdf,noise,removed] = fspk4(eeg,tmul,absthresh,n_chans,...
+function [gdf,noise,removed] = fspk5(eeg,tmul,absthresh,n_chans,...
     srate,window,electrodes)
 
 %% I CHANGED A BUNCH OF THINGS
@@ -68,9 +68,13 @@ for dd = 1:n_chans
     
     ch_type = electrodes(dd).type;
     
-  
+    fr     = 30;  % high pass freq, used to be 20
+    lfr    = 7;   % low pass freq
+    aftdur = 70;
+    spikedur = 5;
+    fn_fr  = 1;
     
-    
+    %{
     if strcmp(ch_type,'D') == 1
         fr     = 30;%30;  % high pass freq, used to be 20
         lfr    = 7;   % low pass freq
@@ -85,7 +89,7 @@ for dd = 1:n_chans
         spikedur = 20;
         fn_fr  = 1;
     end
-   
+    %}
     
     aftdur   = aftdur*rate/1000;   % convert to points;
     
@@ -158,7 +162,8 @@ for dd = 1:n_chans
             HFdata = data;
         end
         %}
-       
+        
+        HFdata = data;
        
         [spp,spv] = FindPeaks(HFdata);
 
@@ -170,8 +175,8 @@ for dd = 1:n_chans
         for i = 1:length(startdx)
             spkmintic = spv(find(spv > startdx(i) & spv < startdx1(i)));  % find the valley that is between the two peaks
             
-  
-            if HFdata(startdx1(i)) - HFdata(spkmintic) > sthresh & HFdata(startdx(i)) - HFdata(spkmintic) > lthresh  %#ok<AND2> % see if the peaks are big enough
+            %% commented out the second check
+            if HFdata(startdx1(i)) - HFdata(spkmintic) > sthresh %& HFdata(startdx(i)) - HFdata(spkmintic) > lthresh  %#ok<AND2> % see if the peaks are big enough
                 spikes(end+1,1) = spkmintic;                                  % add timestamp to the spike list
                 spikes(end,2)   = (startdx1(i)-startdx(i))*1000/rate;         % add spike duration to list
                 spikes(end,3)   = HFdata(startdx1(i)) - HFdata(spkmintic);    % add spike amplitude to list

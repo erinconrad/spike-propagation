@@ -244,7 +244,7 @@ set(gcf,'Position',[50 100 1200 400])
 
 mkdir(saveFolder)
 saveas(gcf,[saveFolder,pt(whichPt).name,'vec_time.png']);
-%close(gcf)
+close(gcf)
 
 
 %% Plot histograms to see if vectors are normally distributed
@@ -304,14 +304,16 @@ end
 
 [d,p_chunk_comparison,stats] = manova1(all_vecs,whichChunk,0.05);
 
-fprintf(['For %s:\nEarly vs late channel position difference p = %1.2e\n'...
+fprintf(['For %s:\nNumber of sequences: %d\n',...
+    'Early vs late channel position difference p = %1.2e\n'...
     'Change in vector over time p_x = %1.2e, p_y = %1.2e, p_z=%1.2e\n'],...
-    pt(whichPt).name,p_diff_HT,p_chunk_comparison(1),...
+    pt(whichPt).name,length(all_vecs),p_diff_HT,p_chunk_comparison(1),...
     p_chunk_comparison(2),p_chunk_comparison(3));
 
 
 %% Look for evidence of cyclic variation in the data
-signal = all_vecs;
+%{
+signal = all_vecs(trackingNo==2,:);
 Y = fft(signal);
 L = size(signal,1);
 P2 = abs(Y/L);
@@ -327,10 +329,10 @@ for i = 1:length(seq_all)
     temp_all_times = all_times(:,trackingNo==i);
     temp_all_vecs = all_vecs(trackingNo==i,:);
     
-    x=plot(f,smooth(P1(:,1),sm_span),'b','LineWidth',2);
+    x=plot(f,(P1(:,1)),'b','LineWidth',2);
     hold on
-    y=plot(f,smooth(P1(:,2),sm_span),'r','LineWidth',2);
-    z=plot(f,smooth(P1(:,3),sm_span),'g','LineWidth',2);
+    y=plot(f,(P1(:,2)),'r','LineWidth',2);
+    z=plot(f,(P1(:,3)),'g','LineWidth',2);
 end
 
 
@@ -351,6 +353,7 @@ ax_height = outerpos(4) - ti(2) - ti(4);
 ax.Position = [left bottom ax_width ax_height];
 
 set(gcf,'Position',[50 100 1200 400])
+%}
 
 
 end
