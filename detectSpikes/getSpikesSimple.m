@@ -43,7 +43,11 @@ tmul = thresh.tmul;
 absthresh = thresh.absthresh;
 
 %% get the data from those indices and channels (ignoring ignored channels)
+fprintf('Retrieving data for %s time %d...\n',pt(whichPt).name,times(1));
+tic
 data = getiEEGData(dataName,channels,indices,pwfile);
+toc
+fprintf('Retrieved data\n');
 
 % remove nans
 data.values(isnan(data.values)) = 0;
@@ -59,6 +63,9 @@ end
 
 
 %% Run spike detector
+
+fprintf('Running detector\n');
+tic
 if whichDetector == 1
     
     fprintf('Warning, why are you using Detector 1?\n');
@@ -178,6 +185,8 @@ elseif whichDetector == 6
     end
 
 end
+toc
+fprintf('Finished detection\n');
 
 
 %% Re-align the spike to be the peak (positive or negative)
