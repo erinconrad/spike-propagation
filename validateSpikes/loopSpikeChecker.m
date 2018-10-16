@@ -1,6 +1,6 @@
 function loopSpikeChecker(whichPts,whichDetector,trainOrTest,merge,tmuls_to_try,absthresh_to_try)
 
-short = 0;
+short = 1;
 
 if trainOrTest == 2
     error('Are you sure you want to look at the testing data?\n');
@@ -15,12 +15,13 @@ end
 %electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
 addpath(p1);
-timeFile = 'ptWithElectrodeData.mat'; 
+timeFile = 'ptWithSeq.mat'; 
 newptfile = 'ptAccuracies.mat';
 validatedFile = 'validated.mat';
 
 %% Load file with filenames and run times
-load([resultsFolder,'ptStructs/allPtsElectrodeData/',timeFile]);
+load([resultsFolder,'ptStructs/',timeFile]);
+%load([resultsFolder,'ptStructs/allPtsElectrodeData/',timeFile]);
 load([resultsFolder,'validation/',validatedFile]);
 
 
