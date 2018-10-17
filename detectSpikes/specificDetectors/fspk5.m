@@ -173,8 +173,8 @@ for dd = 1:n_chans
 
         % check the amplitude of the waves of appropriate duration
         for i = 1:length(startdx)
-            spkmintic = spv(find(spv > startdx(i) & spv < startdx1(i)));  % find the valley that is between the two peaks
-            
+            %spkmintic = spv(find(spv > startdx(i) & spv < startdx1(i)));  % find the valley that is between the two peaks
+            spkmintic = spv((spv > startdx(i) & spv < startdx1(i)));
             %% commented out the second check
             if HFdata(startdx1(i)) - HFdata(spkmintic) > sthresh %& HFdata(startdx(i)) - HFdata(spkmintic) > lthresh  %#ok<AND2> % see if the peaks are big enough
                 spikes(end+1,1) = spkmintic;                                  % add timestamp to the spike list

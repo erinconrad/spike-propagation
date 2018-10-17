@@ -18,16 +18,8 @@ n = 0;
 % because sometimes the ieeg.org server fails to give data, and this would
 % usually crash the program
 
-session = IEEGSession(dataName, loginname, pwname);
-fs = session.data.sampleRate;
-channelLabels = session.data.channelLabels;
 
-if sum(channels) ~= 0
-    times = indices/fs;
-    values = session.data.getvalues(indices, channels);
-end
 
-%{
 while n == 0
 
     try
@@ -49,7 +41,7 @@ while n == 0
 
 
 end
-%}
+
 
 %% Create struct
 if sum(channels) ~= 0 

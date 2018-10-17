@@ -3,7 +3,7 @@ function vectorsOverTime(pt,whichPts)
 %% Parameters
 sm_span = 100;
 window = 3600;
-doPlots = 0;
+doPlots = 1;
 
 [~,~,~,resultsFolder,~] = fileLocations;
 
