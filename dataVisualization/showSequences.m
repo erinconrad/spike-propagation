@@ -148,7 +148,7 @@ for s = 1:nseq
     pl = zeros(length(seq(s).whichCh),1);
     for i = 1:length(seq(s).whichCh)
         ch = seq(s).whichCh(i);
-        amps = seq(s).values(:,ch) - range;
+        amps = seq(s).values(:,ch) - mean(seq(s).values(:,ch)) - range;
         pl(i) = plot(seq(s).plottimes,amps,colors{i});
         hold on
 
@@ -156,7 +156,8 @@ for s = 1:nseq
         % find the times of the spikes with the desired channel
         spiketimes = seq(s).spikes(seq(s).spikes(:,1) == ch,2)-seq(s).time_col(1)+surroundtime;
 
-        spikeamp = ones(size(spiketimes,1),1)*max(seq(s).values(:,ch))-range;
+        spikeamp = amps(round(fs*spiketimes));
+        %spikeamp = ones(size(spiketimes,1),1)*max(seq(s).values(:,ch))-range;
 
         scatter(spiketimes,spikeamp,80,colors{i},'filled');
         range = range + max(seq(s).values(:,ch)) - min(seq(s).values(:,ch));
@@ -222,7 +223,7 @@ for s = 1:nseq
         % find the times of the spikes with the desired channel
         spiketimes = seq(s).spikes(seq(s).spikes(:,1) == ch,2)-seq(s).time_col(1)+surroundtime;
 
-        spikeamp = ones(size(spiketimes,1),1)*max(seq(s).values(:,ch))-range;
+        spikeamp = amps(round(fs*spiketimes));
 
         scatter(spiketimes,spikeamp,80,'k','filled');
         range = range + max(seq(s).values(:,ch)) - min(seq(s).values(:,ch));

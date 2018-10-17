@@ -88,6 +88,10 @@ for i = 1:length(pt)
                
             end
             
+            if isempty(vanleer) == 1
+                continue
+            end
+            
           
             vanleer_all.times = [vanleer_all.times;vanleer.times];
             vanleer_all.rms = [vanleer_all.rms;vanleer.rms];

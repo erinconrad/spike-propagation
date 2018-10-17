@@ -192,7 +192,7 @@ end
 info.save = [saveFolder,pt(whichPt).name,'vectors.gif'];
 movieChangeVectors(early{1},vec{1},pt(whichPt).electrodeData.locs(:,2:4),info)
 
-%{
+
 
 % For each seizure, find which times are closest to the seizure
 closeToSz = zeros(length(times_plot_spike{1}),1);

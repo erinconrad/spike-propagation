@@ -311,6 +311,48 @@ fprintf(['For %s:\nNumber of sequences: %d\n',...
     p_chunk_comparison(2),p_chunk_comparison(3));
 
 
+%% Also plot how location of spike sequences changes over time
+figure
+early_rel = early - early(1,:);
+for i = 1:length(seq_all)
+    
+    temp_all_times = all_times(:,trackingNo==i);
+    temp_all_early = early_rel(trackingNo==i,:);
+    
+    x=plot(temp_all_times/3600,smooth(temp_all_early(:,1),sm_span),'b','LineWidth',2);
+    hold on
+    y=plot(temp_all_times/3600,smooth(temp_all_early(:,2),sm_span),'r','LineWidth',2);
+    z=plot(temp_all_times/3600,smooth(temp_all_early(:,3),sm_span),'g','LineWidth',2);
+end
+
+for j = 1:length(pt(whichPt).sz)
+   yl = get(gca,'ylim'); 
+   szOnset = pt(whichPt).sz(j).onset;
+   sz = plot([szOnset szOnset]/3600,yl,'k--','LineWidth',2);
+end
+
+xlabel('Hour');
+ylabel('Location of component of mean location of early spikes (mm)');
+legend([x,y,z,sz],{'x-component','y-component','z-component','seizure times'});
+
+title(sprintf('Mean location of beginning of spike sequence\nrelative to first sequence for %s',pt(whichPt).name));
+set(gca,'FontSize',15)
+
+ax = gca;
+outerpos = ax.OuterPosition;
+ti = ax.TightInset; 
+left = outerpos(1) + ti(1);
+bottom = outerpos(2) + ti(2);
+ax_width = outerpos(3) - ti(1) - ti(3);
+ax_height = outerpos(4) - ti(2) - ti(4);
+ax.Position = [left bottom ax_width ax_height];
+
+set(gcf,'Position',[50 100 1200 400])
+
+mkdir(saveFolder)
+saveas(gcf,[saveFolder,pt(whichPt).name,'early_time.png']);
+%close(gcf)
+
 %% Look for evidence of cyclic variation in the data
 %{
 signal = all_vecs(trackingNo==2,:);
