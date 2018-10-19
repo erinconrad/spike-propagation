@@ -111,8 +111,8 @@ elseif strcmp(name,'HUP105') == 1
     ignore = {"EKG1"};
     dmin = 20;
     notes = 'no grids';
-    tmul = 7;
-    absthresh = 100;
+    tmul = 11;
+    absthresh = 300;
 elseif strcmp(name,'HUP106') == 1
     ieeg_name = 'HUP106_phaseII';
     electrode_name = 'HUP106_T1_19990923_electrode_labels.csv';
