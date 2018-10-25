@@ -1,4 +1,4 @@
-function showSequences(P,pts,whichSeq,nseq,ic,seqs_temp)
+function showSequences(P,pts,whichSeq,nseq,ic,save_plots)
 % This is another function to plot sequences, using the spike times from
 % the inputted structure
 
@@ -200,7 +200,9 @@ elseif isempty(whichSeq) == 1
     end
 end
 
+if save_plots == 1
 saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/exampleSeqs/',outputFile,'.png'])
+end
 
 
 %% Plot again but make it pretty
@@ -259,7 +261,9 @@ end
 
 outputFile = [outputFile,'_pretty'];
 
+if save_plots == 1
 saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/exampleSeqs/',outputFile,'.png'])
+end
 
 end
 

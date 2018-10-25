@@ -18,6 +18,7 @@ rmType = 'D';
 % times for each electrode
 rmNoisy = 0;
 
+
 %% File names
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 %electrodeFile = [electrodeFolder,csvFile];
@@ -30,6 +31,7 @@ ptWithSeq = 'ptWithSeq.mat';
 
 %% Load file with filenames and run times
 load([resultsFolder,'ptStructs/',ptWithFs]);
+
 
 %% Loop through patients and seizures
 for i = 1:length(pt)
@@ -245,5 +247,8 @@ end
 
 %scatter(linspace(pt(5).sz(1).runTimes(1,1),pt(5).sz(1).runTimes(end,2),length(noise_all)),noise_all(:,1));
 
+
 save([resultsFolder,'ptStructs/',ptWithSeq],'pt');
+
+
 
