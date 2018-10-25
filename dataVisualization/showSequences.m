@@ -66,12 +66,20 @@ if isempty(whichSeq) == 1
     % Pick random set of non-ictal sequences
     if ic == 0
         fprintf('Picking a random set of non-ictal sequences from all seizures\n');
+        if size(nonIctalSeq,2) < nseq 
+            fprintf('Not enough sequences for %s, skipping\n',P(pt).name);
+            continue
+        end
         y = randsample(size(nonIctalSeq,2),nseq);
         seqs = nonIctalSeq(:,y);
 
     
     elseif ic == 1
         fprintf('Picking a random set of ictal sequences from all seizures\n');
+        if size(ictalSeq,2) < nseq 
+            fprintf('Not enough sequences for %s, skipping\n',P(pt).name);
+            continue
+        end
         y = randsample(size(ictalSeq,2),nseq);
         seqs = ictalSeq(:,y);
     end
