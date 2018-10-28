@@ -15,7 +15,9 @@ z1 = griddata(x,y,z,xq,yq,'natural');
 zcol = griddata(x,y,thing,xq,yq,'natural');
 fig = figure;
 
-surf(xq,yq,z1,zcol)
-
+%surf(xq,yq,z1,zcol)
+scatter3(x,y,z,60,'k');
+hold on
+scatter3(x,y,z,60,thing,'filled');
 
 end

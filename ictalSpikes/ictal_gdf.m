@@ -16,10 +16,12 @@ clear
 % 5 is fspk4, which is like fspk3 but it uses different parameters if
 % looking at depth electrodes
 whichDetector = 6;
+absthresh = 800; 
+tmul = 10;
 
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
-overwrite = 0; 
+overwrite = 1; 
 
 % Should we try to merge the patient structure with an existing, incomplete
 % patient structure?
@@ -37,15 +39,26 @@ newptfile = 'ptIctalGDF.mat';
 
 %% Load file with filenames and run times
 if merge == 1 && exist([resultsFolder,'ptStructs/',newptfile],'file') ~= 0
+    fprintf('Adding current run to existing file %s\n',newptfile);
     load([resultsFolder,'ptStructs/',newptfile]);
 else
     load([resultsFolder,'ptStructs/',timeFile]);
 end
 
 %% Loop through patients, szs, run times
-for i = 1:length(pt)
+for i = 3%1:length(pt)
+    
     
     pt(i).ictal_thresh.whichDetector = whichDetector;
+    
+    if isempty(tmul) == 0
+    pt(i).ictal_thresh.tmul = tmul;
+    end
+    
+    if isempty(absthresh) == 0
+    pt(i).ictal_thresh.absthresh = absthresh;
+    end
+    
     thresh =  pt(i).ictal_thresh;
     
     

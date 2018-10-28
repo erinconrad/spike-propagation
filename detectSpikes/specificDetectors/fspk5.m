@@ -96,12 +96,12 @@ for dd = 1:n_chans
     % Break the data into time segments, 1 minute each, so that the
     % threshold we are using to see if the spike rises above the background
     % is based on just the one minute we are considering.
-    for tt = 1:num_segs-1
+    for tt = 1:num_segs
         time_points(1) = (tt-1)*window+1;
         time_points(2) = min(window*tt,size(eeg,1));
         
         
-        if tt == num_segs-1
+        if tt == num_segs
            time_points(2) = size(eeg,1);
         end
         
@@ -110,6 +110,7 @@ for dd = 1:n_chans
         out     = [];
         data    = alldata(time_points(1):time_points(2),dd);
         
+  
         
         %% Skip spike detection if the amplitude is very low during the time period for that channel
         if sum(abs(data)) <= 1
@@ -289,13 +290,13 @@ for dd = 1:n_chans
         all_spikes = [all_spikes;allout];
        
    %{
-    if dd == 49
+    if dd == 32
         plot_times = 1:2*srate;
         plot(linspace(0,2,length(plot_times)),data(plot_times))
         error('look\n');
     end
-     %}   
-      
+       
+     %} 
         
         
         

@@ -1,7 +1,7 @@
 function vectorsOverTime(pt,whichPts)
 
 %% Parameters
-sm_span = 100;
+sm_span = 10;
 window = 3600;
 doPlots = 1;
 
@@ -138,7 +138,7 @@ p_diff_HT = HotellingT2([early_HT;late_HT],0.05);
 % Need to be more or less normal to justify the above tests
 
 if doPlots == 1
-
+%{
 % Early points
 figure
 set(gca,'FontSize',15)
@@ -202,7 +202,7 @@ saveas(gcf,[saveFolder,pt(whichPt).name,'late_hist.png']);
 close(gcf)
 
 end
-
+%}
 
 %% Plot the vectors over time
 % I am using a smoothing function
@@ -243,10 +243,10 @@ ax.Position = [left bottom ax_width ax_height];
 set(gcf,'Position',[50 100 1200 400])
 
 mkdir(saveFolder)
-saveas(gcf,[saveFolder,pt(whichPt).name,'vec_time.png']);
-close(gcf)
+%saveas(gcf,[saveFolder,pt(whichPt).name,'vec_time.png']);
+%close(gcf)
 
-
+%{
 %% Plot histograms to see if vectors are normally distributed
 if doPlots == 1
 
@@ -281,6 +281,7 @@ saveas(gcf,[saveFolder,pt(whichPt).name,'hist.png']);
 close(gcf)
 
 end
+%}
 
 %% Test if vectors are different for each different hour long chunk
 nchunks = ceil((all_times(end)-all_times(1))/window);
@@ -310,7 +311,7 @@ fprintf(['For %s:\nNumber of sequences: %d\n',...
     pt(whichPt).name,length(all_vecs),p_diff_HT,p_chunk_comparison(1),...
     p_chunk_comparison(2),p_chunk_comparison(3));
 
-
+%{
 %% Also plot how location of spike sequences changes over time
 figure
 early_rel = early - early(1,:);
@@ -353,6 +354,7 @@ mkdir(saveFolder)
 saveas(gcf,[saveFolder,pt(whichPt).name,'early_time.png']);
 %close(gcf)
 
+%}
 %% Look for evidence of cyclic variation in the data
 %{
 signal = all_vecs(trackingNo==2,:);
@@ -397,7 +399,8 @@ ax.Position = [left bottom ax_width ax_height];
 set(gcf,'Position',[50 100 1200 400])
 %}
 
-
+end
+end
 end
 
 
