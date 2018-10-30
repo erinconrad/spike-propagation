@@ -2,7 +2,7 @@ function clustersOverTime(pt,whichPts)
 
 %% To do
 %{
-1) Think of removing sequences with mostly ties
+1) Think of other ways to validate
 2) Run over longer times
 3) Run on peds data
 4) Check out other clustering options
@@ -11,7 +11,7 @@ function clustersOverTime(pt,whichPts)
 %}
 
 %% Parameters
-
+window = 3600; % 10 minutes
 n_clusters = ones(20,1)*3;
 %n_cluster = 
 
@@ -83,12 +83,14 @@ for i = 1:n_clusters(whichPt)
 end
 
 %% Plot representative sequences
+%{
 for i = 1:n_clusters
     movieSeqs(rep_seq{i},xyChan(:,2:4),info(i));
 end
+%}
 
 %% Assign each sequence a color based on what cluster index it it
-colors = [1 0 0;0 1 0;0 0 1; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5];
+colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5];
 c_idx = zeros(size(idx,1),3);
 for i = 1:length(idx)
    c_idx(i,:) = colors(idx(i),:); 
@@ -100,7 +102,7 @@ figure
 set(gcf,'Position',[50 100 1200 1200])
 
 % Plot of x, y, z coordinates of starting position over time
-subplot(4,1,1)
+subplot(5,1,1)
 toAdd = 0;
 marker = {'x','o','>'};
 for i = 1:3
@@ -120,7 +122,7 @@ title(sprintf('X, y, z coordinates of spike leader for %s',pt(whichPt).name));
 
 
 % Plot of x, y, z coordinates of unit vector over time
-subplot(4,1,2)
+subplot(5,1,2)
 toAdd = 0;
 marker = {'x','o','>'};
 for i = 1:3
@@ -139,8 +141,8 @@ end
 title(sprintf('X, y, z coordinates of propagation vector for %s',pt(whichPt).name));
 
 % Plot cluster identities
-subplot(4,1,3)
-scatter(all_times/3600,idx,20,c_idx);
+subplot(5,1,3)
+scatter(all_times/3600,idx,10,c_idx,'filled');
 hold on
 for j = 1:length(pt(whichPt).sz)
    yl = ylim; 
@@ -149,9 +151,62 @@ for j = 1:length(pt(whichPt).sz)
 end
 title(sprintf('Cluster identities for %s',pt(whichPt).name));
 
+%% Plot percent of sequences in most popular cluster
+
+%% Put sequences into chunks
+
+% Fill up the first chunk with the first sequence
+nchunks = ceil((all_times(end) - all_times(1))/window);
+chunk_times = zeros(nchunks,1);
+chunk_indices = cell(nchunks,1);
+chunk_clusters = cell(nchunks,1);
+n_clusters_chunk = zeros(nchunks,3);
+
+for tt = 1:nchunks
+    times = [(tt-1)*window + all_times(1),tt*window + all_times(1)];
+    chunk_times(tt) = (times(1)+times(2))/2;
+    
+    % Get the appropriate sequences
+    chunk_indices{tt} = find(all_times >= times(1) & all_times <= times(2));
+    chunk_clusters{tt} = idx(chunk_indices{tt});
+    
+    for i = 1:size(n_clusters_chunk,2)
+        n_clusters_chunk(tt,i) = sum(chunk_clusters{tt}==i);
+    end
+end
+
+% Moving sum
+k = 10;
+clust{1} = idx == 1;
+clust{2} = idx == 2;
+clust{3} = idx == 3;
+for i = 1:length(clust)
+    sum_c{i} = movsum(clust{i},k);
+end
+    
+
+% Get most popular cluster
+most_popular = mode(idx);
+second_popular = mode(idx(idx~=most_popular));
+third_popular = mode(idx((idx~=most_popular&idx~=second_popular)));
+
+subplot(5,1,4)
+%{
+plot(chunk_times,n_clusters_chunk(:,third_popular)./...
+    n_clusters_chunk(:,most_popular),'LineWidth',2);
+%}
+
+for i = 1:3
+    plot(sum_c{i},'color',colors(i,:),'LineWidth',2);
+%plot(chunk_times,n_clusters_chunk(:,i),'color',colors(i,:),'LineWidth',2);
+hold on
+end
+legend('Cluster 1','Cluster 2','Cluster 3')
+%}
+
 
 % Plot locations of centroids 
-subplot(4,1,4)
+subplot(5,1,5)
 scatter3(xyChan(:,2),xyChan(:,3),xyChan(:,4),60,'k');
 hold on
 

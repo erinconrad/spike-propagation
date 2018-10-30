@@ -28,13 +28,11 @@ if isfield(P(pt),'sz') == 0
     continue
 end
 
-if isfield(P(pt).sz(1),'seq_matrix') == 0
+if isfield(P(pt).sz(1),'seq_matrix') == 0 && isfield(P(pt),'seq_matrix') == 0
     continue
 end
 
-if isempty(P(pt).sz(1).seq_matrix) == 1
-    continue
-end
+
 
 
 dataName = P(pt).ieeg_name;
@@ -43,8 +41,15 @@ ptname = P(pt).name;
 
 %% Concatenate all sequences
 allSeq = [];
-for j = 1:length(P(pt).sz)
-    allSeq = [allSeq,P(pt).sz(j).seq_matrix];
+if isfield(P(pt),'seq_matrix') == 0
+    if isempty(P(pt).sz(1).seq_matrix) == 1
+        continue
+    end
+    for j = 1:length(P(pt).sz)
+        allSeq = [allSeq,P(pt).sz(j).seq_matrix];
+    end
+else
+    allSeq = P(pt).seq_matrix;
 end
 
 szTimes = [];
