@@ -8,8 +8,9 @@ sequences = pt(whichPt).sz(1).seq_matrix;
 sequences(sequences==0) = nan; % WHY ARE THERE ANY ZEROS?????
 firstSpikes = min(sequences,[],1);  
 
-% remove sequences occuring during the seizure
-sz = [pt(whichPt).sz(1).onset pt(whichPt).sz(1).offset];
+% remove sequences occuring during the seizure or ten minutes before or
+% after the seizure
+sz = [pt(whichPt).sz(1).onset - 600, pt(whichPt).sz(1).offset + 600];
 sequences(:,firstSpikes>=sz(1) & firstSpikes<=sz(2)) = [];
 seq_all{1} = sequences;
 

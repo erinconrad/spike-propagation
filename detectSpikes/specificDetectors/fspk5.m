@@ -100,6 +100,9 @@ for dd = 1:n_chans
         time_points(1) = (tt-1)*window+1;
         time_points(2) = min(window*tt,size(eeg,1));
         
+        if time_points(2) - time_points(1) < 100
+            continue
+        end
         
         if tt == num_segs
            time_points(2) = size(eeg,1);
