@@ -1,6 +1,6 @@
 function loopSpikeChecker(whichPts,whichDetector,trainOrTest,merge,tmuls_to_try,absthresh_to_try)
 
-short = 1;
+short = 0;
 
 if trainOrTest == 2
     error('Are you sure you want to look at the testing data?\n');
