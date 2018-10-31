@@ -1,5 +1,6 @@
 function [chunk_seqs,times_plot,MI,rl,angle,chunk_seqs_chs,vec,early] = seqFreqOverTime(pt,whichPt,window)
 
+
 %% Parameters
 dmin = pt(whichPt).dmin;
 nchs = length(pt(whichPt).channels);
@@ -13,51 +14,8 @@ wij = getwij(xyChan,dmin);
 
 %% First need to divide it up into multiple seizure chunks for plotting
 
-% just look at first seizure
-sequences = pt(whichPt).sz(1).seq_matrix;
-sequences(sequences==0) = nan; % WHY ARE THERE ANY ZEROS?????
+[all_seq_cat,all_times,seq_all,trackingNo] = divideIntoSzChunksGen(pt,whichPt);
 
-
-%% Fill up the info from the first seizure
-firstSpikes = min(sequences,[],1);  
-
-% remove sequences occuring during the seizure
-sz = [pt(whichPt).sz(1).onset pt(whichPt).sz(1).offset];
-sequences(:,firstSpikes>=sz(1) & firstSpikes<=sz(2)) = [];
-seq_all{1} = sequences;
-
-
-% Loop through the other seizures
-for j = 2:length(pt(whichPt).sz)
-    szTimeLast = pt(whichPt).sz(j-1).onset;
-    szTime = pt(whichPt).sz(j).onset;
-    totalTime = pt(whichPt).sz(j).runTimes(end,2) - pt(whichPt).sz(j).runTimes(1,1);
-    
-    sequences = pt(whichPt).sz(j).seq_matrix;
-    sequences(sequences==0) = nan; % WHY ARE THERE ANY ZEROS?????
-
-    
-    if szTime - szTimeLast > totalTime
-        % If the seizure time is more than 24 hours after the last seizure,
-        % put this in a new chunk for plotting purposes
-        seq_all{end+1} = sequences;
-    else
-        % if it is less than 12 hours after the last seizure, then need to
-        % add any spikes that occured after the last seizure run time to
-        % this new chunk
-        keepAfter = pt(whichPt).sz(j-1).runTimes(end,2);
-        firstSpikes = min(sequences,[],1);  
-        seq_to_keep = sequences(:,firstSpikes > keepAfter);
-
-        % remove sequences occuring during the seizure
-        sz = [pt(whichPt).sz(j).onset pt(whichPt).sz(j).offset];
-        firstSpikes = min(seq_to_keep,[],1);  
-        seq_to_keep(:,firstSpikes>=sz(1) & firstSpikes<=sz(2)) = [];
-        
-        seq_all{end} = [seq_all{end},seq_to_keep];
-    end
-
-end
 
 chunk_seqs = cell(size(seq_all));
 chunk_seqs_chs = cell(size(seq_all));
@@ -69,12 +27,7 @@ dot_prod = cell(size(seq_all));
 angle = cell(size(seq_all));
 
 %% Get a reference vector
-% Define this to be the average vector for all sequences
-all_seq_cat = [];
-for i = 1:length(seq_all)
-    seq = seq_all{1};
-    all_seq_cat = [all_seq_cat,seq];
-end
+
 %firstSpikes = min(seq,[],1);
 %first_sz_seq = seq(:,firstSpikes >= pt(whichPt).sz(1).onset...
 %    & firstSpikes <= pt(whichPt).sz(1).offset);
@@ -197,5 +150,6 @@ ylabel('Sequences per hour');
 title('Sequence frequency over time');
 set(gca,'FontSize',15)
 %}
+
 
 end

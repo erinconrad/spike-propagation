@@ -1,4 +1,8 @@
-function [all_seq_cat,all_times,seq_all] = divideIntoSzChunks(pt,whichPt)
+function [all_seq_cat,all_times,seq_all,trackingNo] = divideIntoSzChunksGen(pt,whichPt)
+
+clip_time = 600;
+
+if isfield(pt(whichPt),'seq_matrix') == 0
 
 % reinitialize the sequences
 seq_all = {};
@@ -10,7 +14,7 @@ firstSpikes = min(sequences,[],1);
 
 % remove sequences occuring during the seizure or ten minutes before or
 % after the seizure
-sz = [pt(whichPt).sz(1).onset - 600, pt(whichPt).sz(1).offset + 600];
+sz = [pt(whichPt).sz(1).onset - clip_time , pt(whichPt).sz(1).offset + clip_time];
 sequences(:,firstSpikes>=sz(1) & firstSpikes<=sz(2)) = [];
 seq_all{1} = sequences;
 
@@ -39,12 +43,39 @@ for j = 2:length(pt(whichPt).sz)
         seq_to_keep = sequences(:,firstSpikes > keepAfter);
 
         % remove sequences occuring during the seizure
-        sz = [pt(whichPt).sz(j).onset pt(whichPt).sz(j).offset];
+        sz = [pt(whichPt).sz(j).onset - clip_time pt(whichPt).sz(j).offset+ clip_time];
         firstSpikes = min(seq_to_keep,[],1);  
         seq_to_keep(:,firstSpikes>=sz(1) & firstSpikes<=sz(2)) = [];
         
         seq_all{end} = [seq_all{end},seq_to_keep];
     end
+
+end
+
+
+
+else
+    
+    
+seq_all = cell(size(pt(whichPt).allTimes,1),1);
+all_seq_cat = pt(whichPt).seq_matrix;
+firstSpikes = min(all_seq_cat,[],1);
+
+% Clip seizure times
+szTimes = zeros(length(pt(whichPt).sz),2);
+for j = 1:length(pt(whichPt).sz)
+    szTimes(j,:) = [pt(whichPt).sz(j).onset pt(whichPt).sz(j).offset];
+end
+
+inSz = any(firstSpikes >= szTimes(:,1) & firstSpikes <= szTimes(:,2));
+
+all_seq_cat(:,inSz) = [];
+firstSpikes(inSz) = [];
+    
+% Split into chunks
+for i = 1:size(pt(whichPt).allTimes,1)
+    seq_all{i} = all_seq_cat(:,firstSpikes >= pt(whichPt).allTimes(i,1) & firstSpikes<= pt(whichPt).allTimes(i,2));
+end
 
 end
 

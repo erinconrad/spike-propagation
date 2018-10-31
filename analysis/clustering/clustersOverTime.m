@@ -42,7 +42,17 @@ saveFolder = [resultsFolder,'plots/',pt(whichPt).name,'/','clusters/'];
 mkdir(saveFolder)
 
 %% Get all sequences
-[all_seq_cat,all_times] = divideIntoSzChunks(pt,whichPt);
+%{
+if isfield(pt(whichPt),'seq_matrix') == 0
+    [all_seq_cat,all_times] = divideIntoSzChunks(pt,whichPt);
+else
+    all_seq_cat = pt(whichPt).seq_matrix;
+    
+    
+    all_times = min(all_seq_cat,[],1);
+end
+%}
+[all_seq_cat,all_times,~,~] = divideIntoSzChunksGen(pt,whichPt);
 
 all_seq_cat_old = all_seq_cat;
 keep = ones(size(all_seq_cat,2),1);
@@ -99,13 +109,17 @@ end
 
 for i = 1:n_clusters(whichPt)
     [sortedD,I] = sort(D(:,i));
-    rep_seq{i} = all_seq_cat(:,I(1:10));
+    rep_seq{i} = all_seq_cat(:,I(1:12));
     info(i).outputFile = [saveFolder,'cluster_',sprintf('%d',i),'.gif'];
     info(i).cluster = i;
     info(i).name = pt(whichPt).name;
 end
 
 %% Plot representative sequences
+for i = 1:n_clusters
+    outputFile = sprintf('seqs_cluster_%d',i);
+    showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
+end
 %{
 for i = 1:n_clusters
     movieSeqs(rep_seq{i},xyChan(:,2:4),info(i));
@@ -130,10 +144,10 @@ subplot(4,1,1)
 toAdd = 0;
 marker = {'x','o','>'};
 for i = 1:3
-scatter(all_times/3600,firstChs(:,1)+repmat(toAdd,size(firstChs,1),1),20,c_idx,marker{i})
+scatter(all_times/3600,firstChs(:,i)+repmat(toAdd,size(firstChs,1),1),20,c_idx,marker{i})
 hold on
 if i ~=3
-    toAdd = toAdd + quantile(firstChs(:,i),0.9) - quantile(firstChs(:,i+1),0.1);
+    toAdd = toAdd + 1.5*(max(firstChs(:,i)) - min(firstChs(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
 end
 end
 for j = 1:length(pt(whichPt).sz)
@@ -150,11 +164,11 @@ subplot(4,1,2)
 toAdd = 0;
 marker = {'x','o','>'};
 for i = 1:3
-scatter(all_times/3600,final_vecs(:,1)+repmat(toAdd,size(final_vecs,1),1),20,c_idx,marker{i})
-hold on
-if i ~=3
-    toAdd = toAdd + quantile(final_vecs(:,i),0.9999) - quantile(final_vecs(:,i+1),0.0001); 
-end
+    scatter(all_times/3600,final_vecs(:,1)+repmat(toAdd,size(final_vecs,1),1),20,c_idx,marker{i})
+    hold on
+    if i ~=3
+        toAdd = toAdd + 3;%quantile(final_vecs(:,i),0.9999) - quantile(final_vecs(:,i+1),0.0001); 
+    end
 end
 set(gca,'ytick',[]);
 for j = 1:length(pt(whichPt).sz)
@@ -165,8 +179,8 @@ end
 title(sprintf('X, y, z coordinates of propagation vector for %s',pt(whichPt).name));
 
 % Plot cluster identities
-
-subplot(5,1,3)
+%{
+subplot(4,1,3)
 scatter(all_times/3600,idx,10,c_idx,'filled');
 hold on
 for j = 1:length(pt(whichPt).sz)
@@ -205,7 +219,7 @@ for j = 1:length(pt(whichPt).sz)
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
 end
 
-%legend([pl(1) pl(2) pl(3)],{'Cluster 1','Cluster 2','Cluster 3'});
+legend([pl(1) pl(2) pl(3)],{'Cluster 1','Cluster 2','Cluster 3'});
 title(sprintf(['Proportion of sequences in given cluster, moving'...
     ' average %d s, %s'],...
     window,pt(whichPt).name));
