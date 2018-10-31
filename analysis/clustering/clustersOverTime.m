@@ -57,6 +57,16 @@ end
 all_seq_cat_old = all_seq_cat;
 keep = ones(size(all_seq_cat,2),1);
 
+%{
+szTimes = zeros(length(pt(whichPt).sz),2);
+for j = 1:length(pt(whichPt).sz)
+    szTimes(j,:) = [pt(whichPt).sz(j).onset - 600 pt(whichPt).sz(j).offset + 600];
+end
+
+firstSp = min(all_seq_cat,[],1);
+t = find(any(firstSp >= szTimes(:,1) & firstSp <= szTimes(:,2)));
+%}
+
 %% Remove sequences with too many ties??
 for s = 1:size(all_seq_cat_old,2)
    curr_seq = all_seq_cat_old(:,s);
@@ -120,7 +130,8 @@ for i = 1:n_clusters
     outputFile = sprintf('seqs_cluster_%d',i);
     showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
 end
-%{
+
+
 for i = 1:n_clusters
     movieSeqs(rep_seq{i},xyChan(:,2:4),info(i));
 end
