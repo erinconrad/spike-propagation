@@ -2,7 +2,7 @@ function altValidate(pt,whichPt,whichDetector,tmul,absthresh,times,chnames)
 
 
 
-
+if isempty(chnames) == 0
 chs = zeros(size(chnames));
 for ich = 1:length(chnames)
     [Lia,chs(ich)] = ismember(chnames{ich},pt(whichPt).electrodeData.unignoredChs);
@@ -11,6 +11,9 @@ for ich = 1:length(chnames)
             chnames{ich},pt(whichPt).name);
         error('');
     end
+end
+else
+    chs = 1:length(pt(whichPt).channels);
 end
 
 thresh.tmul = tmul;
@@ -24,7 +27,7 @@ window = seconds*pt(whichPt).fs;
 n_chunks = ceil((times(2)-times(1))/seconds);
 %% Make plots
 for i = 1:n_chunks
-    indices = [(i-1)*window+1:min(i*window,size(values,1))];
+    indices = round([(i-1)*window+1:min(i*window,size(values,1))]);
     min_time = [times(1)+(i-1)*seconds];
     max_time = times(1) + min(i*seconds,size(values,1)/pt(whichPt).fs);
     pl_values = values(indices,:);
