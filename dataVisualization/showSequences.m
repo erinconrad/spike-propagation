@@ -52,6 +52,7 @@ else
     allSeq = P(pt).seq_matrix;
 end
 
+
 szTimes = [];
 for j = 1:length(P(pt).sz)
     szTimes = [szTimes;P(pt).sz(j).onset P(pt).sz(j).offset];

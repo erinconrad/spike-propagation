@@ -36,6 +36,11 @@ doPlots = 1;
 
 
 for whichPt = whichPts
+   
+fprintf('Doing %s\n',pt(whichPt).name);
+if isempty(pt(whichPt).electrodeData) == 1
+    continue
+end
 
 xyChan = pt(whichPt).electrodeData.locs;
 saveFolder = [resultsFolder,'plots/',pt(whichPt).name,'/','clusters/'];
@@ -80,18 +85,32 @@ end
 all_seq_cat(:,keep==0) = [];
 all_times(:,keep == 0) = [];
 
-fprintf('%s had %d sequences (%1.2f of all sequences) deleted for having >50 percent ties\n',...
-    pt(whichPt).name,sum(keep == 0),sum(keep == 0)/length(keep));
+fprintf(['%s had %d sequences (%1.2f of all sequences) deleted'...
+    'for having >50 percent ties\n%d sequences remain\n'],...
+    pt(whichPt).name,sum(keep == 0),sum(keep == 0)/length(keep),sum(keep==1));
 
+if 1 == 1
 %% Get all of the vectors
 [all_vecs,early,late] = (getVectors2(all_seq_cat,pt(whichPt).electrodeData));
 unit_vecs = all_vecs./vecnorm(all_vecs,2,2);
 
+%% Remove instances of zero vectors
+I = find(vecnorm(all_vecs,2,2)==0);
+if isempty(I) == 0
+    fprintf('warning, some zero length vectors\n');
+    all_seq_cat(:,I) = [];
+    all_times(:,I) = [];
+    unit_vecs(I,:) = [];
+    all_vecs(I,:) = [];
+end
+
 %% Get first channels
 [~,firstChs] = min(all_seq_cat,[],1);
 firstChs = xyChan(firstChs,2:4);
+[~,lastChs] = max(all_seq_cat,[],1);
+lastChs = xyChan(lastChs,2:4);
 
-%% Cluster sequences by first channel and direction vecto
+%% Cluster sequences by first channel and direction vectors
 final_vecs = unit_vecs;
 
 cluster_approach = 1;
@@ -126,6 +145,7 @@ for i = 1:n_clusters(whichPt)
 end
 
 %% Plot representative sequences
+%{
 for i = 1:n_clusters
     outputFile = sprintf('seqs_cluster_%d',i);
     showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
@@ -153,12 +173,14 @@ set(gcf,'Position',[50 100 1200 1200])
 % Plot of x, y, z coordinates of starting position over time
 subplot(4,1,1)
 toAdd = 0;
-marker = {'x','o','>'};
+%marker = {'x','o','>'};
+ttext = {'x','y','z'};
 for i = 1:3
-scatter(all_times/3600,firstChs(:,i)+repmat(toAdd,size(firstChs,1),1),20,c_idx,marker{i})
+scatter(all_times/3600,firstChs(:,i)+repmat(toAdd,size(firstChs,1),1),20,c_idx)
 hold on
+text(all_times(1)/3600-0.3,toAdd+median(firstChs(:,i)),sprintf('%s',ttext{i}),'FontSize',30);
 if i ~=3
-    toAdd = toAdd + 1.5*(max(firstChs(:,i)) - min(firstChs(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
+    toAdd = toAdd + 10+(max(firstChs(:,i)) - min(firstChs(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
 end
 end
 for j = 1:length(pt(whichPt).sz)
@@ -167,16 +189,19 @@ for j = 1:length(pt(whichPt).sz)
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
 end
 set(gca,'ytick',[]);
+xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 title(sprintf('X, y, z coordinates of spike leader for %s',pt(whichPt).name));
-
+set(gca,'FontSize',15);
 
 % Plot of x, y, z coordinates of unit vector over time
 subplot(4,1,2)
 toAdd = 0;
-marker = {'x','o','>'};
+%marker = {'x','o','>'};
 for i = 1:3
-    scatter(all_times/3600,final_vecs(:,1)+repmat(toAdd,size(final_vecs,1),1),20,c_idx,marker{i})
+    scatter(all_times/3600,final_vecs(:,1)+repmat(toAdd,size(final_vecs,1),1),20,c_idx)
     hold on
+    
+    text(all_times(1)/3600-0.3,toAdd,sprintf('%s',ttext{i}),'FontSize',30);
     if i ~=3
         toAdd = toAdd + 3;%quantile(final_vecs(:,i),0.9999) - quantile(final_vecs(:,i+1),0.0001); 
     end
@@ -187,7 +212,9 @@ for j = 1:length(pt(whichPt).sz)
    szOnset = pt(whichPt).sz(j).onset;
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
 end
+xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 title(sprintf('X, y, z coordinates of propagation vector for %s',pt(whichPt).name));
+set(gca,'FontSize',15);
 
 % Plot cluster identities
 %{
@@ -229,11 +256,13 @@ for j = 1:length(pt(whichPt).sz)
    szOnset = pt(whichPt).sz(j).onset;
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
 end
-
-legend([pl(1) pl(2) pl(3)],{'Cluster 1','Cluster 2','Cluster 3'});
+xlim([all_times(1)/3600-1 all_times(end)/3600+1])
+legend([pl(1) pl(2) pl(3)],{'Cluster 1','Cluster 2','Cluster 3'},'Position',...
+    [0.87 0.9 0.1 0.05]);
 title(sprintf(['Proportion of sequences in given cluster, moving'...
     ' average %d s, %s'],...
     window,pt(whichPt).name));
+set(gca,'FontSize',15);
 
 %}
 
@@ -253,7 +282,10 @@ for k = 1:size(C,1)
 end
 
 title(sprintf('Spike leader and propagation vectors for %s',pt(whichPt).name));
-
+set(gca,'FontSize',15);
+set(gca,'xticklabel',[])
+set(gca,'yticklabel',[])
+set(gca,'zticklabel',[])
 saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
 %close(gcf)
 
@@ -309,11 +341,12 @@ end
 
 % Do an chi-squared to test if the 
 % cluster changes across the 60 minute chunks
-[tbl_1,chi2_1,p_1,labels_1] = crosstab(which_chunk,idx);
+%[tbl_1,chi2_1,p_1,labels_1] = crosstab(which_chunk,idx);
 
 
 %% #2 Are 60 minute chunks containing seizures more likely to have certain cluster distributions
-[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
+%[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
+end
 
 end
 
