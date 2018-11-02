@@ -26,7 +26,7 @@ function clustersOverTime(pt,whichPts)
 
 %% Parameters
 window = 3600;
-n_clusters = ones(20,1)*3;
+n_clusters = ones(30,1)*3;
 
 
 doPlots = 1;
