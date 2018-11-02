@@ -142,6 +142,16 @@ for dd = 1:n_chans
             continue
         end
         
+        % Now filter
+        %{
+        f = designfilt('bandstopiir','FilterOrder',2, ...
+               'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
+               'DesignMethod','butter','SampleRate',srate);
+           
+        
+        data = filtfilt(f,data);   
+        %}
+        
         
         
         %% re-adjust the mean of the data to be zero (if there is a weird dc shift)

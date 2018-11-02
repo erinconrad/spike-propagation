@@ -63,6 +63,7 @@ all_seq_cat_old = all_seq_cat;
 keep = ones(size(all_seq_cat,2),1);
 
 %{
+% Test that I removed all ictal and periictal sequences
 szTimes = zeros(length(pt(whichPt).sz),2);
 for j = 1:length(pt(whichPt).sz)
     szTimes(j,:) = [pt(whichPt).sz(j).onset - 600 pt(whichPt).sz(j).offset + 600];
@@ -89,7 +90,7 @@ fprintf(['%s had %d sequences (%1.2f of all sequences) deleted'...
     'for having >50 percent ties\n%d sequences remain\n'],...
     pt(whichPt).name,sum(keep == 0),sum(keep == 0)/length(keep),sum(keep==1));
 
-if 1 == 1
+
 %% Get all of the vectors
 [all_vecs,early,late] = (getVectors2(all_seq_cat,pt(whichPt).electrodeData));
 unit_vecs = all_vecs./vecnorm(all_vecs,2,2);
@@ -145,7 +146,7 @@ for i = 1:n_clusters(whichPt)
 end
 
 %% Plot representative sequences
-%{
+
 for i = 1:n_clusters
     outputFile = sprintf('seqs_cluster_%d',i);
     showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
@@ -165,7 +166,7 @@ for i = 1:length(idx)
    c_idx(i,:) = colors(idx(i),:); 
 end
 
-
+if 1 == 1
 %% Do plot
 figure
 set(gcf,'Position',[50 100 1200 1200])
@@ -287,8 +288,9 @@ set(gca,'xticklabel',[])
 set(gca,'yticklabel',[])
 set(gca,'zticklabel',[])
 saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
-%close(gcf)
+close(gcf)
 
+end
 %}
 
 %}
@@ -341,12 +343,116 @@ end
 
 % Do an chi-squared to test if the 
 % cluster changes across the 60 minute chunks
-%[tbl_1,chi2_1,p_1,labels_1] = crosstab(which_chunk,idx);
+[tbl_1,chi2_1,p_1,labels_1] = crosstab(which_chunk,idx);
 
+fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'...
+    ' distributions,\n the p-value is %1.1e\n\n\n'],pt(whichPt).name,p_1);
+
+
+%% Do test to compare cluster distributions between pre-ictal and inter-ictal data
+
+% Get all the pre-ictal sequences
+preIcRange = [-40*60,-10*60];
+preIcClustIdx = [];
+preIcIdx = [];
+preIcTimes = zeros(length(pt(whichPt).sz),2);
+for j = 1:length(pt(whichPt).sz)
+    szTime = pt(whichPt).sz(j).onset; 
+    preIcTime = szTime + preIcRange;
+    preIcTimes(j,:) = preIcTime;
+    preIcClustIdx = [preIcClustIdx;idx(all_times >= preIcTime(1) & ...
+        all_times <= preIcTime(2))];
+    preIcIdx = [preIcIdx;find(all_times >= preIcTime(1) & ...
+        all_times <= preIcTime(2))'];
+    
+end
+
+% The harder part: get random 30 minute chunks in the interictal period
+% equivalent to the number of pre-ictal chunks
+szTimes = zeros(length(pt(whichPt).sz),1);
+for j= 1:length(pt(whichPt).sz)
+    szTimes(j) = pt(whichPt).sz(j).onset; 
+end
+
+%{
+n_chunks = 3*length(pt(whichPt).sz);
+interIcTimes = zeros(n_chunks,2);
+i_chunk = 1;
+while i_chunk <= n_chunks
+    t_1 = randi([round(all_times(1)),round(all_times(end))]);
+    if any(abs(interIcTimes(:,1)-t_1)<=1*3600)
+        continue;
+    end
+    
+    if any(abs(szTimes-t_1) <= 3*3600)
+        continue
+    end
+    
+    if any(abs(t_1-szTimes) <= 1*3600)
+        continue
+    end
+    
+    interIcTimes(i_chunk,:) = [t_1 t_1+60*60];
+    i_chunk = i_chunk + 1;
+    
+end
+%}
+
+% Alternate idea without randomness:
+n_chunks = length(pt(whichPt).sz);
+interIcTimes = [];
+for i = 1:n_chunks
+    
+    % potential late_time is 4 hours before the pre-ictal period
+   late_time = preIcTimes(i,1) - 3600*2;
+   
+   % potential early time is either the start of the run or an hour after
+   % the last seizure
+   if i ==1
+       early_time = all_times(1);
+   else
+       early_time = szTimes(i-1) + 3600*1;
+   end
+   
+   if early_time > late_time
+       continue
+   end
+   
+   interIcTimes = [interIcTimes;early_time late_time];
+
+end
+ % add another time
+ late_time = all_times(end);
+ early_time = szTimes(end) + 3600*1;
+ if late_time>early_time
+     interIcTimes = [interIcTimes;early_time late_time];
+ end
+
+interIcClustIdx = [];
+interIcIdx = [];
+for i = 1:size(interIcTimes,1)
+    interIcClustIdx = [interIcClustIdx;idx(all_times >= interIcTimes(i,1) & ...
+        all_times <= interIcTimes(i,2))];
+    interIcIdx = [interIcIdx;find(all_times >= interIcTimes(i,1) & ...
+        all_times <= interIcTimes(i,2))'];
+
+    
+end
+
+[tbl_2,chi2_2,p_2,labels_2] = crosstab([ones(size(preIcClustIdx));...
+    2*ones(size(interIcClustIdx))],[preIcClustIdx;interIcClustIdx]);
+
+
+fprintf('For %s, there are\n %d pre-ictal and\n %d interictal sequences\n\n\n',...
+    pt(whichPt).name,length(preIcClustIdx), length(interIcClustIdx));
+fprintf(['For %s, regarding whether the pre-ictal period\n has a different cluster'...
+    ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
 
 %% #2 Are 60 minute chunks containing seizures more likely to have certain cluster distributions
 %[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
-end
+
+
+
 
 end
 

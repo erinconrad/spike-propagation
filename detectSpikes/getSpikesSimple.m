@@ -52,6 +52,7 @@ fprintf('Retrieved data\n');
 % remove nans
 data.values(isnan(data.values)) = 0;
 
+old_values = data.values;
 %% Notch filter to remove 60 Hz noise
 f = designfilt('bandstopiir','FilterOrder',2, ...
                'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
@@ -60,6 +61,7 @@ f = designfilt('bandstopiir','FilterOrder',2, ...
 for i = 1:size(data.values,2)
    data.values(:,i) = filtfilt(f,data.values(:,i));   
 end
+
 
 
 %% Run spike detector
