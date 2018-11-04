@@ -2,6 +2,17 @@ function clustersOverTime(pt,whichPts)
 
 %% To do
 %{
+1) Get ideal number of clusters using "gap statistic"
+2) Just remove artifact clusters
+3) Correlate with SOZ, clinical info, number of spikes, location (temporal,
+vs other, grid, strip, depth)
+4) try more adult and CHOP
+5) classifier?
+6) talk to Taki
+7) validate chi2 with bootstrap
+8) ask radiology about getting DICOMs for chop folks (ask Tim Roberts)
+
+
 1) Think of other ways to validate
 2) Run over longer times
 3) Run on peds data
@@ -28,6 +39,15 @@ function clustersOverTime(pt,whichPts)
 window = 3600;
 n_clusters = ones(30,1)*3;
 
+%% Optimal cluster numbers
+n_clusters(3) = 4;
+n_clusters(4) = 5;
+n_clusters(8) = 4;
+n_clusters(11) = 5;
+n_clusters(12) = 6;
+n_clusters(18) = 4;
+n_clusters(19) = 4;
+n_clusters(30) = 5;
 
 doPlots = 1;
 
@@ -110,9 +130,69 @@ end
 firstChs = xyChan(firstChs,2:4);
 [~,lastChs] = max(all_seq_cat,[],1);
 lastChs = xyChan(lastChs,2:4);
-
-%% Cluster sequences by first channel and direction vectors
 final_vecs = unit_vecs;
+cluster_vec = [firstChs,final_vecs];
+
+%% Determine optimal number of clusters
+
+
+% Elbow approach
+if 1 == 0
+SSE = zeros(10,1);
+for k = 1:10
+    
+    SSE_temp = zeros(30,1);
+    for j = 1:30
+        [idx_test,C_test] = ...
+            kmeans(cluster_vec,k);
+
+        % Get SSE
+        for i = 1:k
+           SSE_temp(j) = SSE_temp(j) + sum(sum((cluster_vec(idx_test == i,:) - ...
+               repmat(C_test(i,:),size(cluster_vec(idx_test == i,:),1),1)).^2));
+        end
+
+    end
+    SSE(k) = min(SSE_temp);
+    
+    %{
+    % For Erin's education
+    idx = sub2ind(size(C_test), repmat(idx_test, [1 p]), ...
+        repmat(1:p, [length(idx_test) 1]));
+    C = C_test(idx);
+    SSE(k) = sum(sum((cluster_vec - C).^2));
+    %}
+    
+end
+
+figure
+plot(1:10,SSE)
+end
+
+% Silhouette method
+if 1 == 0
+E = evalclusters(cluster_vec,'kmeans','silhouette','klist',[1:10]);
+E
+gscatter(cluster_vec(:,1),cluster_vec(:,2),E.OptimalY,'rbg','xod')
+end
+
+%{
+myfunc = @(X,K)(kmeans(X, K, 'emptyaction','singleton',...
+    'replicate',5));
+eva = evalclusters([firstChs,final_vecs],myfunc,'CalinskiHarabasz',...
+    'klist',[1:6]);
+plot(eva)
+eva
+%}
+
+%E = evalclusters([firstChs,final_vecs],'kmeans','DaviesBouldin','klist',[1:6]);
+
+% Gap method
+if 1 == 0
+eva = evalclusters([firstChs,final_vecs],'kmeans','gap','KList',[1:20]);
+end
+
+%% Do clustering algorithm
 
 cluster_approach = 1;
 if cluster_approach == 1
@@ -146,16 +226,18 @@ for i = 1:n_clusters(whichPt)
 end
 
 %% Plot representative sequences
-
+%{
 for i = 1:n_clusters
     outputFile = sprintf('seqs_cluster_%d',i);
     showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
 end
+%}
 
-
+%{
 for i = 1:n_clusters
     movieSeqs(rep_seq{i},xyChan(:,2:4),info(i));
 end
+%}
 %}
 %}
 
@@ -199,7 +281,7 @@ subplot(4,1,2)
 toAdd = 0;
 %marker = {'x','o','>'};
 for i = 1:3
-    scatter(all_times/3600,final_vecs(:,1)+repmat(toAdd,size(final_vecs,1),1),20,c_idx)
+    scatter(all_times/3600,final_vecs(:,i)+repmat(toAdd,size(final_vecs,1),1),20,c_idx)
     hold on
     
     text(all_times(1)/3600-0.3,toAdd,sprintf('%s',ttext{i}),'FontSize',30);
@@ -258,7 +340,8 @@ for j = 1:length(pt(whichPt).sz)
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
 end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
-legend([pl(1) pl(2) pl(3)],{'Cluster 1','Cluster 2','Cluster 3'},'Position',...
+legend([pl(1) pl(2) pl(3) pl(4)],...
+    {'Cluster 1','Cluster 2','Cluster 3','Cluster 4'},'Position',...
     [0.87 0.9 0.1 0.05]);
 title(sprintf(['Proportion of sequences in given cluster, moving'...
     ' average %d s, %s'],...
@@ -288,7 +371,7 @@ set(gca,'xticklabel',[])
 set(gca,'yticklabel',[])
 set(gca,'zticklabel',[])
 saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
-close(gcf)
+%close(gcf)
 
 end
 %}
