@@ -40,7 +40,6 @@ window = 3600;
 n_clusters = ones(30,1)*3;
 
 %% Optimal cluster numbers
-
 n_clusters(3) = 4;
 n_clusters(4) = 5;
 n_clusters(8) = 4;
@@ -555,11 +554,11 @@ fprintf(['For %s, regarding whether the pre-ictal period\n has a different clust
 %[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
 
 
-
+save('ptClust.mat','pt');
 
 end
 
 %% Save new pt struct
-save('ptClust.mat','pt');
+
 
 end
