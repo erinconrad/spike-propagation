@@ -48,6 +48,7 @@ n_clusters(11) = 5;
 n_clusters(12) = 6;
 n_clusters(18) = 4;
 n_clusters(19) = 4;
+n_clusters(27) = 4;
 n_clusters(30) = 5;
 
 
@@ -394,7 +395,7 @@ set(gca,'xticklabel',[])
 set(gca,'yticklabel',[])
 set(gca,'zticklabel',[])
 saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
-close(gcf)
+%close(gcf)
 
 end
 %}

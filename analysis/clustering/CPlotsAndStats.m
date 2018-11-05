@@ -1,7 +1,24 @@
 
 function CPlotsAndStats(pt,whichPts)
 
+%% Parameters
+window = 3600;
+
+% Save file location
+[~,~,~,resultsFolder,~] = fileLocations;
+
 for whichPt = whichPts
+
+fprintf('Doing %s\n',pt(whichPt).name);
+if isempty(pt(whichPt).electrodeData) == 1
+    continue
+end
+
+xyChan = pt(whichPt).electrodeData.locs;
+saveFolder = [resultsFolder,'plots/',pt(whichPt).name,'/','clusters/'];
+mkdir(saveFolder)
+
+
     
 %% Pull cluster info
 all_times = pt(whichPt).cluster.all_times;
@@ -9,8 +26,16 @@ all_seq_cat = pt(whichPt).cluster.all_seq_cat;
 cluster_vec = pt(whichPt).cluster.cluster_vec;
 k = pt(whichPt).cluster.k;
 idx = pt(whichPt).cluster.idx;
-bad_cluster = pt(whichPt).cluster.badCluster;
+C = pt(whichPt).cluster.C;
+bad_cluster = pt(whichPt).cluster.bad_cluster;
 
+%% Remove bad clusters
+bad_idx = find(ismember(idx,bad_cluster));
+all_times(bad_idx) = [];
+all_seq_cat(:,bad_idx) = [];
+cluster_vec(bad_idx,:) = [];
+idx(bad_idx) = [];
+clusters = 1:k; clusters(bad_cluster) = [];
 
 
 %% Assign each sequence a color based on what cluster index it it
@@ -86,21 +111,21 @@ title(sprintf('Cluster identities for %s',pt(whichPt).name));
 
 %% Plot proportion of sequences in a given cluster over a moving window
 % Moving sum
-for i = 1:k
+for i = clusters
 clust{i} = all_times(idx == i);
 end
 
 [sum_c,sum_times] = movingSumCounts(clust,all_times,window);
 
 totalSum = zeros(1,size(sum_times,2));
-for i = 1:n_clusters(whichPt)
+for i = clusters
     totalSum = totalSum + sum_c(i,:);
 end
 
 subplot(4,1,3)
 
-pl = zeros(n_clusters(whichPt),1);
-for i = 1:n_clusters(whichPt)
+pl = zeros(k,1);
+for i = clusters
    pl(i)= plot(sum_times/3600,sum_c(i,:)./totalSum,'color',colors(i,:),'LineWidth',2);
 %plot(chunk_times,n_clusters_chunk(:,i),'color',colors(i,:),'LineWidth',2);
 hold on
@@ -114,11 +139,11 @@ end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 
 leg_text = {};
-for i = 1:length(pl)
+for i = clusters
    leg_text = [leg_text,sprintf('Cluster %d',i)];
 end
 
-legend([pl],...
+legend([pl(pl~=0)],...
     leg_text,'Position',...
     [0.87 0.9 0.1 0.05]);
 title(sprintf(['Proportion of sequences in given cluster, moving'...
@@ -137,6 +162,7 @@ scatter3(xyChan(:,2),xyChan(:,3),xyChan(:,4),60,'k');
 hold on
 
 for k = 1:size(C,1)
+    if ismember(k,bad_cluster), continue; end;
     scatter3(C(k,1),C(k,2),C(k,3),60,colors(k,:),'filled');
     plot3([C(k,1) C(k,1) + 10*C(k,4)],...
         [C(k,2) C(k,2) + 10*C(k,5)],...
@@ -149,7 +175,7 @@ set(gca,'xticklabel',[])
 set(gca,'yticklabel',[])
 set(gca,'zticklabel',[])
 saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
-close(gcf)
+%close(gcf)
 
 end
 %}
@@ -180,7 +206,7 @@ n_chunks = ceil((all_times(end) - all_times(1))/test_t);
 prop_pop = zeros(n_chunks,1);
 times_pop = zeros(n_chunks,1);
 which_chunk = zeros(length(all_times),1);
-num_cluster = zeros(n_chunks,n_clusters(whichPt));
+num_cluster = zeros(n_chunks,k);
 sz_chunk = zeros(n_chunks,1);
 most_num = zeros(n_chunks,1);
 
@@ -311,6 +337,7 @@ fprintf(['For %s, regarding whether the pre-ictal period\n has a different clust
     ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
 
 %% Validate the chi2 with bootstrap
+if 1==0
 truePreIcIdx = preIcIdx; % the real pre ictal indices
 trueInterIcIdx = interIcIdx; % the real interictal indices
 truePreIcClustIdx = preIcClustIdx;
@@ -342,7 +369,7 @@ fprintf('By bootstrap, the p value is %1.1e\n',boot_p);
 
 %% #2 Are 60 minute chunks containing seizures more likely to have certain cluster distributions
 %[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
-
+end
 
 end
 
