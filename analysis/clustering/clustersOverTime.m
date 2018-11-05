@@ -2,14 +2,15 @@ function clustersOverTime(pt,whichPts)
 
 %% To do
 %{
-1) Get ideal number of clusters using "gap statistic"
-2) Just remove artifact clusters
+1) Get ideal number of clusters using "gap statistic" - using the elbow
+appproach, non ideal but eh
+2) Just remove artifact clusters [] (working on it)
 3) Correlate with SOZ, clinical info, number of spikes, location (temporal,
 vs other, grid, strip, depth)
 4) try more adult and CHOP
 5) classifier?
 6) talk to Taki
-7) validate chi2 with bootstrap
+7) validate chi2 with bootstrap [x]
 8) ask radiology about getting DICOMs for chop folks (ask Tim Roberts)
 
 
@@ -239,14 +240,14 @@ pt(whichPt).cluster.rep_seq = rep_seq;
 
 %% Plot representative sequences
 
-for i = 1:n_clusters
+for i = 1:n_clusters(whichPt)
     outputFile = sprintf('seqs_cluster_%d',i);
     showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
 end
 %}
 
 
-for i = 1:n_clusters
+for i = 1:n_clusters(whichPt)
     movieSeqs(rep_seq{i},xyChan(:,2:4),info(i));
 end
 
@@ -550,7 +551,7 @@ fprintf('For %s, there are\n %d pre-ictal and\n %d interictal sequences\n\n\n',.
 fprintf(['For %s, regarding whether the pre-ictal period\n has a different cluster'...
     ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
 
-% Validate the chi2 with bootstrap
+%% Validate the chi2 with bootstrap
 truePreIcIdx = preIcIdx; % the real pre ictal indices
 trueInterIcIdx = interIcIdx; % the real interictal indices
 truePreIcClustIdx = preIcClustIdx;
@@ -562,13 +563,23 @@ allClustIdx = [preIcClustIdx;interIcClustIdx];
 
 % My goal is going to be to randomly swap out pre-ictal and interictal
 % indices
-%{
-for ib = 1:1e3
+nboot = 1e4;
+chi2_boot = zeros(nboot,1);
+for ib = 1:nboot
     p = randperm(length(allClustIdx),nPreIc);
-    preIcClustIdx_temp
-    
+    preIcClustIdx_temp = allClustIdx(p);
+    interIcClustIdx_temp = allClustIdx(~ismember(1:end, p));
+    [~,chi2_boot(ib)] = crosstab([ones(size(preIcClustIdx_temp));...
+    2*ones(size(interIcClustIdx_temp))],...
+    [preIcClustIdx_temp;interIcClustIdx_temp]);
 end
-%}
+
+[s_chi2_boot,I] = sort(chi2_boot);
+diff_boot = abs(chi2_2-s_chi2_boot);
+[~,I_min] = min(diff_boot);
+boot_p = (length(I) - I_min)/length(I);
+
+fprintf('By bootstrap, the p value is %1.1e\n',boot_p);
 
 %% #2 Are 60 minute chunks containing seizures more likely to have certain cluster distributions
 %[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
