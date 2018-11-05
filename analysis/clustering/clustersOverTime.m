@@ -339,7 +339,7 @@ end
 
 subplot(4,1,3)
 
-pl = zeros(n_clusters,1);
+pl = zeros(n_clusters(whichPt),1);
 for i = 1:n_clusters(whichPt)
    pl(i)= plot(sum_times/3600,sum_c(i,:)./totalSum,'color',colors(i,:),'LineWidth',2);
 %plot(chunk_times,n_clusters_chunk(:,i),'color',colors(i,:),'LineWidth',2);
@@ -551,6 +551,24 @@ fprintf(['For %s, regarding whether the pre-ictal period\n has a different clust
     ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
 
 % Validate the chi2 with bootstrap
+truePreIcIdx = preIcIdx; % the real pre ictal indices
+trueInterIcIdx = interIcIdx; % the real interictal indices
+truePreIcClustIdx = preIcClustIdx;
+trueInterIcClustIdx = interIcClustIdx;
+
+nPreIc = length(preIcIdx);
+nInterIc = length(interIcIdx);
+allClustIdx = [preIcClustIdx;interIcClustIdx];
+
+% My goal is going to be to randomly swap out pre-ictal and interictal
+% indices
+%{
+for ib = 1:1e3
+    p = randperm(length(allClustIdx),nPreIc);
+    preIcClustIdx_temp
+    
+end
+%}
 
 %% #2 Are 60 minute chunks containing seizures more likely to have certain cluster distributions
 %[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
