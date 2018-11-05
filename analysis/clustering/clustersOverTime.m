@@ -249,7 +249,7 @@ end
 for i = 1:n_clusters
     movieSeqs(rep_seq{i},xyChan(:,2:4),info(i));
 end
-%}
+
 %}
 %}
 
@@ -339,7 +339,7 @@ end
 
 subplot(4,1,3)
 
-
+pl = zeros(n_clusters,1);
 for i = 1:n_clusters(whichPt)
    pl(i)= plot(sum_times/3600,sum_c(i,:)./totalSum,'color',colors(i,:),'LineWidth',2);
 %plot(chunk_times,n_clusters_chunk(:,i),'color',colors(i,:),'LineWidth',2);
@@ -549,6 +549,8 @@ fprintf('For %s, there are\n %d pre-ictal and\n %d interictal sequences\n\n\n',.
     pt(whichPt).name,length(preIcClustIdx), length(interIcClustIdx));
 fprintf(['For %s, regarding whether the pre-ictal period\n has a different cluster'...
     ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
+
+% Validate the chi2 with bootstrap
 
 %% #2 Are 60 minute chunks containing seizures more likely to have certain cluster distributions
 %[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);

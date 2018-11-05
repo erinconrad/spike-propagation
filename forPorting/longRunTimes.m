@@ -15,6 +15,7 @@ p1 = genpath(scriptFolder);
 addpath(p1);
 ptInfo = loadjson(jsonfile);
 ptnames = fieldnames(ptInfo.PATIENTS);
+load([resultsFolder,'ptStructs/',outputFile])
 
 %% Desired times
 % Look 12 hours before the sz and 12 hours after
@@ -22,7 +23,7 @@ chunkTime = 2000; % Save it in 2000 s chunks (ieeg crashes if request more than 
 totalTime = 3600*24;
 
 %% Loop through the patients in the json file
-for i = 1:length(ptnames)
+for i = 11%:length(ptnames)
     info = ptInfo.PATIENTS.(ptnames{i});
     
     % Get basic info
@@ -99,7 +100,7 @@ for i = 1:length(ptnames)
     if isempty(pt(i).sz) ==1, continue; end
     
     % If the time between seizures is less than 100 hours, run the whole time
-    if pt(i).sz(end).offset -  pt(i).sz(1).onset < 3600*100
+    if pt(i).sz(end).offset -  pt(i).sz(1).onset < 3600*200
         pt(i).allTimes = [pt(i).sz(1).onset - 3600*12,...
             pt(i).sz(end).offset + 3600*12];
     

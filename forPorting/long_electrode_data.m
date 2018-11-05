@@ -27,7 +27,7 @@ end
 
 
 %% Loop through patients, run times
-for i = 1:length(pt)
+for i = 11%:length(pt)
     fprintf('Doing patient %s\n',pt(i).name);
     dataName =  pt(i).ieeg_name;
     if isempty(dataName) == 1
