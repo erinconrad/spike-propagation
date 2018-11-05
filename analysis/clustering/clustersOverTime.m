@@ -111,6 +111,10 @@ fprintf(['%s had %d sequences (%1.2f of all sequences) deleted'...
     pt(whichPt).name,sum(keep == 0),sum(keep == 0)/length(keep),sum(keep==1));
 
 
+%% Add these sequences to the pt Struct
+pt(whichPt).cluster.all_seq_cat = all_seq_cat;
+pt(whichPt).cluster.all_times = all_times;
+
 %% Get all of the vectors
 [all_vecs,early,late] = (getVectors2(all_seq_cat,pt(whichPt).electrodeData));
 unit_vecs = all_vecs./vecnorm(all_vecs,2,2);
@@ -132,6 +136,9 @@ firstChs = xyChan(firstChs,2:4);
 lastChs = xyChan(lastChs,2:4);
 final_vecs = unit_vecs;
 cluster_vec = [firstChs,final_vecs];
+
+pt(whichPt).cluster.cluster_vec = cluster_vec;
+pt(whichPt).cluster.k = n_clusters(whichPt);
 
 %% Determine optimal number of clusters
 
@@ -215,6 +222,8 @@ else
     n_clusters(whichPt) = length(unique(idx));
 end
 
+pt(whichPt).cluster.idx = idx;
+
 %% Get representative sequences
 
 for i = 1:n_clusters(whichPt)
@@ -225,15 +234,17 @@ for i = 1:n_clusters(whichPt)
     info(i).name = pt(whichPt).name;
 end
 
+pt(whichPt).cluster.rep_seq = rep_seq;
+
 %% Plot representative sequences
-%{
+
 for i = 1:n_clusters
     outputFile = sprintf('seqs_cluster_%d',i);
     showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
 end
 %}
 
-%{
+
 for i = 1:n_clusters
     movieSeqs(rep_seq{i},xyChan(:,2:4),info(i));
 end
@@ -340,8 +351,14 @@ for j = 1:length(pt(whichPt).sz)
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
 end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
-legend([pl(1) pl(2) pl(3) pl(4)],...
-    {'Cluster 1','Cluster 2','Cluster 3','Cluster 4'},'Position',...
+
+leg_text = {};
+for i = 1:length(pl)
+   leg_text = [leg_text,sprintf('Cluster %d',i)];
+end
+
+legend([pl],...
+    leg_text,'Position',...
     [0.87 0.9 0.1 0.05]);
 title(sprintf(['Proportion of sequences in given cluster, moving'...
     ' average %d s, %s'],...
@@ -376,7 +393,9 @@ saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
 end
 %}
 
-%}
+
+
+
 
 %% Statistical tests
 
@@ -525,7 +544,6 @@ end
 [tbl_2,chi2_2,p_2,labels_2] = crosstab([ones(size(preIcClustIdx));...
     2*ones(size(interIcClustIdx))],[preIcClustIdx;interIcClustIdx]);
 
-
 fprintf('For %s, there are\n %d pre-ictal and\n %d interictal sequences\n\n\n',...
     pt(whichPt).name,length(preIcClustIdx), length(interIcClustIdx));
 fprintf(['For %s, regarding whether the pre-ictal period\n has a different cluster'...
@@ -539,3 +557,7 @@ fprintf(['For %s, regarding whether the pre-ictal period\n has a different clust
 
 end
 
+%% Save new pt struct
+save('ptClust.mat','pt');
+
+end
