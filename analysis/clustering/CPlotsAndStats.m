@@ -1,262 +1,17 @@
-function clustersOverTime(pt,whichPts)
 
-%% To do
-%{
-1) Get ideal number of clusters using "gap statistic" - using the elbow
-appproach, non ideal but eh
-2) Just remove artifact clusters [] (working on it)
-3) Correlate with SOZ, clinical info, number of spikes, location (temporal,
-vs other, grid, strip, depth)
-4) try more adult and CHOP
-5) classifier?
-6) talk to Taki
-7) validate chi2 with bootstrap [x]
-8) ask radiology about getting DICOMs for chop folks (ask Tim Roberts)
-
-
-1) Think of other ways to validate
-2) Run over longer times
-3) Run on peds data
-4) Check out other clustering options
-5) Come up with some statistical tests
-      - does the sequence cluster vary over time (over 30 minute chunks,
-      perhaps) (the answer will be yes, kind of exciting)
-      - are seizures more likely during certain cluster distributions?
-      - does the cluster distribution change prior to seizures?
-6) run on ictal data
-7) Come up with nicer visualization for poster and to show Eric
-
-
-%}
-
-%% FYIs
-%{
-
-- I clip ten minutes before to ten minutes after the seizure in divideIntoSzChunks
-
-%}
-
-%% Parameters
-window = 3600;
-n_clusters = ones(30,1)*3;
-
-%% Optimal cluster numbers
-n_clusters(3) = 4;
-n_clusters(4) = 5;
-n_clusters(8) = 4;
-n_clusters(11) = 5;
-n_clusters(12) = 6;
-n_clusters(18) = 4;
-n_clusters(19) = 4;
-n_clusters(30) = 5;
-
-
-doPlots = 1;
-
-% Save file location
-[~,~,~,resultsFolder,~] = fileLocations;
-
+function CPlotsAndStats(pt,whichPts)
 
 for whichPt = whichPts
-   
-fprintf('Doing %s\n',pt(whichPt).name);
-if isempty(pt(whichPt).electrodeData) == 1
-    continue
-end
-
-xyChan = pt(whichPt).electrodeData.locs;
-saveFolder = [resultsFolder,'plots/',pt(whichPt).name,'/','clusters/'];
-mkdir(saveFolder)
-
-%% Get all sequences
-%{
-if isfield(pt(whichPt),'seq_matrix') == 0
-    [all_seq_cat,all_times] = divideIntoSzChunks(pt,whichPt);
-else
-    all_seq_cat = pt(whichPt).seq_matrix;
     
-    
-    all_times = min(all_seq_cat,[],1);
-end
-%}
-[all_seq_cat,all_times,~,~] = divideIntoSzChunksGen(pt,whichPt);
-
-all_seq_cat_old = all_seq_cat;
-keep = ones(size(all_seq_cat,2),1);
-
-%{
-% Test that I removed all ictal and periictal sequences
-szTimes = zeros(length(pt(whichPt).sz),2);
-for j = 1:length(pt(whichPt).sz)
-    szTimes(j,:) = [pt(whichPt).sz(j).onset - 600 pt(whichPt).sz(j).offset + 600];
-end
-
-firstSp = min(all_seq_cat,[],1);
-t = find(any(firstSp >= szTimes(:,1) & firstSp <= szTimes(:,2)));
-%}
-
-%% Remove sequences with too many ties??
-for s = 1:size(all_seq_cat_old,2)
-   curr_seq = all_seq_cat_old(:,s);
-   nonans = curr_seq(~isnan(curr_seq));
-   norepeats = unique(nonans);
-   if length(norepeats) < 0.5*length(nonans)
-       keep(s) = 0;
-   end
-end
-
-all_seq_cat(:,keep==0) = [];
-all_times(:,keep == 0) = [];
-
-fprintf(['%s had %d sequences (%1.2f of all sequences) deleted'...
-    'for having >50 percent ties\n%d sequences remain\n'],...
-    pt(whichPt).name,sum(keep == 0),sum(keep == 0)/length(keep),sum(keep==1));
+%% Pull cluster info
+all_times = pt(whichPt).cluster.all_times;
+all_seq_cat = pt(whichPt).cluster.all_seq_cat;
+cluster_vec = pt(whichPt).cluster.cluster_vec;
+k = pt(whichPt).cluster.k;
+idx = pt(whichPt).cluster.idx;
+bad_cluster = pt(whichPt).cluster.badCluster;
 
 
-%% Add these sequences to the pt Struct
-pt(whichPt).cluster.all_seq_cat = all_seq_cat;
-pt(whichPt).cluster.all_times = all_times;
-
-%% Get all of the vectors
-[all_vecs,early,late] = (getVectors2(all_seq_cat,pt(whichPt).electrodeData));
-unit_vecs = all_vecs./vecnorm(all_vecs,2,2);
-
-%% Remove instances of zero vectors
-I = find(vecnorm(all_vecs,2,2)==0);
-if isempty(I) == 0
-    fprintf('warning, some zero length vectors\n');
-    all_seq_cat(:,I) = [];
-    all_times(:,I) = [];
-    unit_vecs(I,:) = [];
-    all_vecs(I,:) = [];
-end
-
-%% Get first channels
-[~,firstChs] = min(all_seq_cat,[],1);
-firstChs = xyChan(firstChs,2:4);
-[~,lastChs] = max(all_seq_cat,[],1);
-lastChs = xyChan(lastChs,2:4);
-final_vecs = unit_vecs;
-cluster_vec = [firstChs,final_vecs];
-
-pt(whichPt).cluster.cluster_vec = cluster_vec;
-pt(whichPt).cluster.firstChs = firstChs;
-pt(whichPt).cluster.unit_vecs = unit_vecs;
-pt(whichPt).cluster.k = n_clusters(whichPt);
-
-%% Determine optimal number of clusters
-
-
-% Elbow approach
-if 1 == 0
-SSE = zeros(10,1);
-for k = 1:10
-    
-    SSE_temp = zeros(30,1);
-    for j = 1:30
-        [idx_test,C_test] = ...
-            kmeans(cluster_vec,k);
-
-        % Get SSE
-        for i = 1:k
-           SSE_temp(j) = SSE_temp(j) + sum(sum((cluster_vec(idx_test == i,:) - ...
-               repmat(C_test(i,:),size(cluster_vec(idx_test == i,:),1),1)).^2));
-        end
-
-    end
-    SSE(k) = min(SSE_temp);
-    
-    %{
-    % For Erin's education
-    idx = sub2ind(size(C_test), repmat(idx_test, [1 p]), ...
-        repmat(1:p, [length(idx_test) 1]));
-    C = C_test(idx);
-    SSE(k) = sum(sum((cluster_vec - C).^2));
-    %}
-    
-end
-
-figure
-plot(1:10,SSE)
-end
-
-% Silhouette method
-if 1 == 0
-E = evalclusters(cluster_vec,'kmeans','silhouette','klist',[1:10]);
-E
-gscatter(cluster_vec(:,1),cluster_vec(:,2),E.OptimalY,'rbg','xod')
-end
-
-%{
-myfunc = @(X,K)(kmeans(X, K, 'emptyaction','singleton',...
-    'replicate',5));
-eva = evalclusters([firstChs,final_vecs],myfunc,'CalinskiHarabasz',...
-    'klist',[1:6]);
-plot(eva)
-eva
-%}
-
-%E = evalclusters([firstChs,final_vecs],'kmeans','DaviesBouldin','klist',[1:6]);
-
-% Gap method
-if 1 == 0
-eva = evalclusters([firstChs,final_vecs],'kmeans','gap','KList',[1:20]);
-end
-
-%% Do clustering algorithm
-
-cluster_approach = 1;
-if cluster_approach == 1
-
-    for i = 1:30
-    [idx_all{i},C_all{i},sumd_all{i},D_all{i}] = ...
-        kmeans([firstChs,final_vecs],n_clusters(whichPt));
-    metric(i) = sum(sumd_all{i});
-    end
-
-    % Take the results of the clustering algorithm that worked the best
-    [~,minidx] = min(metric);
-    idx = idx_all{minidx};
-    C = C_all{minidx};
-    D = D_all{minidx};
-else
-    [clustCent,data2cluster,cluster2dataCell] = MeanShiftCluster([firstChs,final_vecs]',50);
-    C = clustCent;
-    idx = data2cluster;
-    n_clusters(whichPt) = length(unique(idx));
-end
-
-pt(whichPt).cluster.idx = idx;
-pt(whichPt).cluster.C = C;
-pt(whichPt).cluster.D = D;
-
-%% Get representative sequences
-
-for i = 1:n_clusters(whichPt)
-    [sortedD,I] = sort(D(:,i));
-    rep_seq{i} = all_seq_cat(:,I(1:12));
-    info(i).outputFile = [saveFolder,'cluster_',sprintf('%d',i),'.gif'];
-    info(i).cluster = i;
-    info(i).name = pt(whichPt).name;
-end
-
-pt(whichPt).cluster.rep_seq = rep_seq;
-
-%% Plot representative sequences
-
-for i = 1:n_clusters(whichPt)
-    outputFile = sprintf('seqs_cluster_%d',i);
-    showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
-end
-%}
-
-
-for i = 1:n_clusters(whichPt)
-    movieSeqs(rep_seq{i},xyChan(:,2:4),info(i));
-end
-
-%}
-%}
 
 %% Assign each sequence a color based on what cluster index it it
 colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
@@ -276,11 +31,11 @@ toAdd = 0;
 %marker = {'x','o','>'};
 ttext = {'x','y','z'};
 for i = 1:3
-scatter(all_times/3600,firstChs(:,i)+repmat(toAdd,size(firstChs,1),1),20,c_idx)
+scatter(all_times/3600,cluster_vec(:,i)+repmat(toAdd,size(cluster_vec,1),1),20,c_idx)
 hold on
-text(all_times(1)/3600-0.3,toAdd+median(firstChs(:,i)),sprintf('%s',ttext{i}),'FontSize',30);
+text(all_times(1)/3600-0.3,toAdd+median(cluster_vec(:,i)),sprintf('%s',ttext{i}),'FontSize',30);
 if i ~=3
-    toAdd = toAdd + 10+(max(firstChs(:,i)) - min(firstChs(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
+    toAdd = toAdd + 10+(max(cluster_vec(:,i)) - min(cluster_vec(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
 end
 end
 for j = 1:length(pt(whichPt).sz)
@@ -297,12 +52,12 @@ set(gca,'FontSize',15);
 subplot(4,1,2)
 toAdd = 0;
 %marker = {'x','o','>'};
-for i = 1:3
-    scatter(all_times/3600,final_vecs(:,i)+repmat(toAdd,size(final_vecs,1),1),20,c_idx)
+for i = 4:6
+    scatter(all_times/3600,cluster_vec(:,i)+repmat(toAdd,size(cluster_vec,1),1),20,c_idx)
     hold on
     
-    text(all_times(1)/3600-0.3,toAdd,sprintf('%s',ttext{i}),'FontSize',30);
-    if i ~=3
+    text(all_times(1)/3600-0.3,toAdd,sprintf('%s',ttext{i-3}),'FontSize',30);
+    if i ~=6
         toAdd = toAdd + 3;%quantile(final_vecs(:,i),0.9999) - quantile(final_vecs(:,i+1),0.0001); 
     end
 end
@@ -331,7 +86,7 @@ title(sprintf('Cluster identities for %s',pt(whichPt).name));
 
 %% Plot proportion of sequences in a given cluster over a moving window
 % Moving sum
-for i = 1:n_clusters(whichPt)
+for i = 1:k
 clust{i} = all_times(idx == i);
 end
 
@@ -589,11 +344,8 @@ fprintf('By bootstrap, the p value is %1.1e\n',boot_p);
 %[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
 
 
-save('ptClust.mat','pt');
+end
+
 
 end
 
-%% Save new pt struct
-
-
-end
