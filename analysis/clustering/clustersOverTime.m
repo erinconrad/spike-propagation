@@ -40,6 +40,7 @@ window = 3600;
 n_clusters = ones(30,1)*3;
 
 %% Optimal cluster numbers
+
 n_clusters(3) = 4;
 n_clusters(4) = 5;
 n_clusters(8) = 4;
@@ -48,6 +49,7 @@ n_clusters(12) = 6;
 n_clusters(18) = 4;
 n_clusters(19) = 4;
 n_clusters(30) = 5;
+
 
 doPlots = 1;
 
@@ -377,9 +379,9 @@ hold on
 
 for k = 1:size(C,1)
     scatter3(C(k,1),C(k,2),C(k,3),60,colors(k,:),'filled');
-    plot3([C(k,1) C(k,1) + C(k,4)],...
-        [C(k,2) C(k,2) + C(k,5)],...
-        [C(k,3) C(k,3) + C(k,6)],'k','LineWidth',2)
+    plot3([C(k,1) C(k,1) + 10*C(k,4)],...
+        [C(k,2) C(k,2) + 10*C(k,5)],...
+        [C(k,3) C(k,3) + 10*C(k,6)],'k','LineWidth',2)
 end
 
 title(sprintf('Spike leader and propagation vectors for %s',pt(whichPt).name));
@@ -388,7 +390,7 @@ set(gca,'xticklabel',[])
 set(gca,'yticklabel',[])
 set(gca,'zticklabel',[])
 saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
-%close(gcf)
+close(gcf)
 
 end
 %}
