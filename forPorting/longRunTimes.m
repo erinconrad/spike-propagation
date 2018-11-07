@@ -23,7 +23,7 @@ chunkTime = 2000; % Save it in 2000 s chunks (ieeg crashes if request more than 
 totalTime = 3600*24;
 
 %% Loop through the patients in the json file
-for i = 11%:length(ptnames)
+for i = 1:length(ptnames)
     info = ptInfo.PATIENTS.(ptnames{i});
     
     % Get basic info

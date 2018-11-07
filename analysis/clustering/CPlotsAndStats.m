@@ -38,6 +38,11 @@ cluster_vec(bad_idx,:) = [];
 idx(bad_idx) = [];
 clusters = 1:k; clusters(bad_cluster) = [];
 
+%% Remove extra times
+if size(all_times,2) > size(cluster_vec,1)
+    fprintf('Warning, there are %d more times than vectors\n',size(all_times,2)-size(cluster_vec,1));
+    all_times = all_times(1:end-(size(all_times,2)-size(cluster_vec,1)));
+end
 
 %% Assign each sequence a color based on what cluster index it it
 colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
@@ -58,20 +63,60 @@ for i = 1:length(szChs)
    szByCh{szChs(i)} = [szByCh{szChs(i)} szIndex(i)];
 end
 
-if 1 == 0
-%% Do plot
+if 1 == 1
+%% Do plots
+
+%% Plot the clustering algorithm results 
+figure
+scatter3(cluster_vec(:,1),cluster_vec(:,2),cluster_vec(:,3),60,c_idx)
+hold on
+for i = 1:size(C,1)
+   if i == bad_cluster, continue; end
+   scatter3(C(i,1),C(i,2),C(i,3),100,colors(i,:),'filled');
+     
+end
+
+%{
+figure
+scatter3(cluster_vec(:,4),cluster_vec(:,5),cluster_vec(:,6),60,c_idx)
+hold on
+for i = 1:size(C,1)
+   if i == bad_cluster, continue; end
+   scatter3(C(i,4),C(i,5),C(i,6),100,colors(i,:),'filled');
+     
+end
+%}
+
+%% Main cluster plot
 figure
 set(gcf,'Position',[50 100 1200 1200])
 
-% Plot of x, y, z coordinates of starting position over time
+% Sequence frequency
 subplot(4,1,1)
+[t_return,counts] = binCounts(all_times,window);
+plot(t_return/3600,counts,'k','LineWidth',2);
+hold on
+for j = 1:length(pt(whichPt).sz)
+   yl = ylim; 
+   szOnset = pt(whichPt).sz(j).onset;
+   sz = plot([szOnset szOnset]/3600,yl,'k--','LineWidth',3);
+end
+xlim([all_times(1)/3600-1 all_times(end)/3600+1])
+ylabel('Sequences per hour');
+title(sprintf('X, y, z coordinates of propagation vector for %s',pt(whichPt).name));
+set(gca,'FontSize',15);
+
+% Plot of x, y, z coordinates of starting position over time
+subplot(4,1,2)
 toAdd = 0;
 %marker = {'x','o','>'};
 ttext = {'x','y','z'};
+ytick_locations = zeros(3,1);
 for i = 1:3
 scatter(all_times/3600,cluster_vec(:,i)+repmat(toAdd,size(cluster_vec,1),1),20,c_idx)
 hold on
-text(all_times(1)/3600-0.3,toAdd+median(cluster_vec(:,i)),sprintf('%s',ttext{i}),'FontSize',30);
+ytick_locations(i) = toAdd+median(cluster_vec(:,i));
+%text(all_times(1)/3600-0.3,toAdd+median(cluster_vec(:,i)),sprintf('%s',ttext{i}),'FontSize',30);
 if i ~=3
     toAdd = toAdd + 10+(max(cluster_vec(:,i)) - min(cluster_vec(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
 end
@@ -79,35 +124,41 @@ end
 for j = 1:length(pt(whichPt).sz)
    yl = ylim; 
    szOnset = pt(whichPt).sz(j).onset;
-   sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
+   sz = plot([szOnset szOnset]/3600,yl,'k--','LineWidth',3);
 end
-set(gca,'ytick',[]);
+yticks(ytick_locations)
+yticklabels({'X','Y','Z'})
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
+ylabel('Coordinate');
 title(sprintf('X, y, z coordinates of spike leader for %s',pt(whichPt).name));
 set(gca,'FontSize',15);
 
 % Plot of x, y, z coordinates of unit vector over time
-subplot(4,1,2)
+subplot(4,1,3)
 toAdd = 0;
 %marker = {'x','o','>'};
+ytick_locations = zeros(3,1);
 for i = 4:6
     scatter(all_times/3600,cluster_vec(:,i)+repmat(toAdd,size(cluster_vec,1),1),20,c_idx)
     hold on
-    
-    text(all_times(1)/3600-0.3,toAdd,sprintf('%s',ttext{i-3}),'FontSize',30);
+    ytick_locations(i-3) = toAdd;
+    %text(all_times(1)/3600-0.3,toAdd,sprintf('%s',ttext{i-3}),'FontSize',30);
     if i ~=6
         toAdd = toAdd + 3;%quantile(final_vecs(:,i),0.9999) - quantile(final_vecs(:,i+1),0.0001); 
     end
 end
-set(gca,'ytick',[]);
+yticks(ytick_locations)
+yticklabels({'X','Y','Z'})
 for j = 1:length(pt(whichPt).sz)
    yl = ylim; 
    szOnset = pt(whichPt).sz(j).onset;
-   sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
+   sz = plot([szOnset szOnset]/3600,yl,'k--','LineWidth',3);
 end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
+ylabel('Coordinate');
 title(sprintf('X, y, z coordinates of propagation vector for %s',pt(whichPt).name));
 set(gca,'FontSize',15);
+
 
 % Plot cluster identities
 %{
@@ -135,7 +186,7 @@ for i = clusters
     totalSum = totalSum + sum_c(i,:);
 end
 
-subplot(4,1,3)
+subplot(4,1,4)
 
 pl = zeros(k,1);
 for i = clusters
@@ -147,7 +198,7 @@ end
 for j = 1:length(pt(whichPt).sz)
    yl = ylim; 
    szOnset = pt(whichPt).sz(j).onset;
-   sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
+   sz = plot([szOnset szOnset]/3600,yl,'k--','LineWidth',3);
 end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 
@@ -156,9 +207,10 @@ for i = clusters
    leg_text = [leg_text,sprintf('Cluster %d',i)];
 end
 
-legend([pl(pl~=0)],...
-    leg_text,'Position',...
+legend([pl(pl~=0);sz],...
+    [leg_text,'Seizures'],'Position',...
     [0.87 0.9 0.1 0.05]);
+xlabel('Time (hours)');
 title(sprintf(['Proportion of sequences in given cluster, moving'...
     ' average %d s, %s'],...
     window,pt(whichPt).name));
@@ -167,10 +219,10 @@ set(gca,'FontSize',15);
 %}
 
 
-% Plot locations of centroids 
+%% Plot locations of centroids 
 
 
-subplot(4,1,4)
+figure
 scatter3(xyChan(:,2),xyChan(:,3),xyChan(:,4),60,'k');
 hold on
 
@@ -368,6 +420,18 @@ fprintf('For %s, there are\n %d pre-ictal and\n %d interictal sequences\n\n\n',.
 fprintf(['For %s, regarding whether the pre-ictal period\n has a different cluster'...
     ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
 
+%% Does sequence frequency predict sz?
+time1 = sum(interIcTimes(:,2) - interIcTimes(:,1));
+time2 = sum(preIcTime(:,2) - preIcTime(:,1));
+count1 = length(interIcClustIdx);
+count2 = length(preIcClustIdx);
+[p_freq,z_freq] = poisson_mean_diff(count1,count2,time1,time2);
+
+fprintf(['For %s, regarding whether the pre-ictal period\n has a different sequence'...
+    ' frequency from the interictal period,\n the p-value is %1.1e\n\n'],...
+    pt(whichPt).name,p_freq);
+
+
 %% Validate the chi2 with bootstrap
 if 1==0
 truePreIcIdx = preIcIdx; % the real pre ictal indices
@@ -401,6 +465,10 @@ fprintf('By bootstrap, the p value is %1.1e\n',boot_p);
 
 
 end
+
+
+
+
 
 %% Are the cluster leads close to the SOZ electrodes?
 

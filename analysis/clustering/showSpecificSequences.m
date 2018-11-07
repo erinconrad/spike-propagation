@@ -122,7 +122,7 @@ end
 
 
 if save_plots == 1
-saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/clusters/',outputFile,'.png'])
+saveas(gcf,[resultsFolder,'/cluster_validation/',pt(whichPt).name,'/',outputFile,'.png'])
 end
 
 
