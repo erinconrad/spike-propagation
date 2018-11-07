@@ -10,7 +10,7 @@ vs other, grid, strip, depth)
 4) try more adult and CHOP
 5) classifier?
 6) talk to Taki
-7) validate chi2 with bootstrap [x]
+7) validate chi2 with bootstrap [x] []
 8) ask radiology about getting DICOMs for chop folks (ask Tim Roberts)
 
 
@@ -66,7 +66,7 @@ if isempty(pt(whichPt).electrodeData) == 1
 end
 
 xyChan = pt(whichPt).electrodeData.locs;
-saveFolder = [resultsFolder,'plots/',pt(whichPt).name,'/','clusters/'];
+saveFolder = [resultsFolder,'cluster_validation/',pt(whichPt).name,'/'];
 mkdir(saveFolder)
 
 %% Get all sequences
@@ -85,7 +85,6 @@ end
 all_seq_cat_old = all_seq_cat;
 keep = ones(size(all_seq_cat,2),1);
 
-%{
 % Test that I removed all ictal and periictal sequences
 szTimes = zeros(length(pt(whichPt).sz),2);
 for j = 1:length(pt(whichPt).sz)
@@ -94,7 +93,7 @@ end
 
 firstSp = min(all_seq_cat,[],1);
 t = find(any(firstSp >= szTimes(:,1) & firstSp <= szTimes(:,2)));
-%}
+
 
 %% Remove sequences with too many ties??
 for s = 1:size(all_seq_cat_old,2)
@@ -394,7 +393,7 @@ set(gca,'FontSize',15);
 set(gca,'xticklabel',[])
 set(gca,'yticklabel',[])
 set(gca,'zticklabel',[])
-saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
+%saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
 %close(gcf)
 
 end
@@ -557,6 +556,7 @@ fprintf(['For %s, regarding whether the pre-ictal period\n has a different clust
     ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
 
 %% Validate the chi2 with bootstrap
+if 1 == 0
 truePreIcIdx = preIcIdx; % the real pre ictal indices
 trueInterIcIdx = interIcIdx; % the real interictal indices
 truePreIcClustIdx = preIcClustIdx;
@@ -585,12 +585,13 @@ diff_boot = abs(chi2_2-s_chi2_boot);
 boot_p = (length(I) - I_min)/length(I);
 
 fprintf('By bootstrap, the p value is %1.1e\n',boot_p);
+end
 
 %% #2 Are 60 minute chunks containing seizures more likely to have certain cluster distributions
 %[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
 
 
-save('ptClust.mat','pt');
+save([saveFolder,'ptClust.mat'],'pt');
 
 end
 

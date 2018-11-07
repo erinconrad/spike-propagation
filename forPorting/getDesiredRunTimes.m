@@ -73,7 +73,7 @@ for i = 1:length(ptnames)
        % Get seizure onset and offset
        pt(i).sz(whichSz).onset = sz.SeizureEEC;
        pt(i).sz(whichSz).offset = sz.SeizureEnd;
-       
+       pt(i).sz(whichSz).electrodes = sz.SEIZURE_ONSET_ELECTRODES;
        
        % If the seizure onset is before the prior seizure onset, switch
        % positions

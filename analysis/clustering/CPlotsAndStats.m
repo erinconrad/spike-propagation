@@ -3,6 +3,7 @@ function CPlotsAndStats(pt,whichPts)
 
 %% Parameters
 window = 3600;
+nboot = 1e4;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -45,7 +46,19 @@ for i = 1:length(idx)
    c_idx(i,:) = colors(idx(i),:); 
 end
 
-if 1 == 1
+%% Get sz onset chs
+szChs = [];
+szIndex = [];
+for j = 1:length(pt(whichPt).sz)
+    szChs = [szChs;pt(whichPt).sz(j).chs]; 
+    szIndex = [szIndex;j*ones(length(pt(whichPt).sz(j).chs),1)];
+end
+szByCh = cell(max(szChs),1);
+for i = 1:length(szChs)
+   szByCh{szChs(i)} = [szByCh{szChs(i)} szIndex(i)];
+end
+
+if 1 == 0
 %% Do plot
 figure
 set(gcf,'Position',[50 100 1200 1200])
@@ -161,8 +174,27 @@ subplot(4,1,4)
 scatter3(xyChan(:,2),xyChan(:,3),xyChan(:,4),60,'k');
 hold on
 
+
+
+for i = 1:length(szByCh)
+   if isempty(szByCh{i}) == 0
+      szText = sprintf('\n');
+      for j = 1:length(szByCh{i})
+          szText = [szText,sprintf('%d, ',szByCh{i}(j))];
+          
+      end
+      szText = szText(1:end-2);
+      scatter3(xyChan(i,2),xyChan(i,3),xyChan(i,4),100,'b');
+      text(xyChan(i,2),xyChan(i,3),xyChan(i,4),szText,'FontSize',10)
+      
+   end
+    
+end
+
+%scatter3(xyChan(szChs,2),xyChan(szChs,3),xyChan(szChs,4),100,colors(szIndex,:));
+
 for k = 1:size(C,1)
-    if ismember(k,bad_cluster), continue; end;
+    if ismember(k,bad_cluster), continue; end
     scatter3(C(k,1),C(k,2),C(k,3),60,colors(k,:),'filled');
     plot3([C(k,1) C(k,1) + 10*C(k,4)],...
         [C(k,2) C(k,2) + 10*C(k,5)],...
@@ -174,7 +206,7 @@ set(gca,'FontSize',15);
 set(gca,'xticklabel',[])
 set(gca,'yticklabel',[])
 set(gca,'zticklabel',[])
-saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
+%saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
 %close(gcf)
 
 end
@@ -238,6 +270,28 @@ fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'..
     ' distributions,\n the p-value is %1.1e\n\n\n'],pt(whichPt).name,p_1);
 
 
+%% Validate the above method with bootstrap
+%{
+% Randomly shuffle which chunk each sequence is in and recheck
+chi2_1_test = zeros(nboot,1);
+for ib = 1:nboot
+    fake_chunks = zeros(length(idx),1);
+    n_remain = length(idx);
+    for i = 1:n_chunks
+        y = randsample(n_remain,sum(which_chunk == i));
+        fake_chunks(y) = i;
+        n_remain = n_remain - length(y);
+    end
+    [~,chi2_1_test(ib)] = crosstab(fake_chunks,idx);  
+end
+[s_chi2_1_test,I] = sort(chi2_1_test);
+diff_boot_1 = abs(chi2_1-s_chi2_1_test);
+[~,I_min] = min(diff_boot_1);
+boot_p_1 = (length(I) - I_min)/length(I);
+
+fprintf('By bootstrap, the p value is %1.1e\n',boot_p_1);
+%}
+
 %% Do test to compare cluster distributions between pre-ictal and inter-ictal data
 
 % Get all the pre-ictal sequences
@@ -263,29 +317,7 @@ for j= 1:length(pt(whichPt).sz)
     szTimes(j) = pt(whichPt).sz(j).onset; 
 end
 
-%{
-n_chunks = 3*length(pt(whichPt).sz);
-interIcTimes = zeros(n_chunks,2);
-i_chunk = 1;
-while i_chunk <= n_chunks
-    t_1 = randi([round(all_times(1)),round(all_times(end))]);
-    if any(abs(interIcTimes(:,1)-t_1)<=1*3600)
-        continue;
-    end
-    
-    if any(abs(szTimes-t_1) <= 3*3600)
-        continue
-    end
-    
-    if any(abs(t_1-szTimes) <= 1*3600)
-        continue
-    end
-    
-    interIcTimes(i_chunk,:) = [t_1 t_1+60*60];
-    i_chunk = i_chunk + 1;
-    
-end
-%}
+
 
 % Alternate idea without randomness:
 n_chunks = length(pt(whichPt).sz);
@@ -349,7 +381,6 @@ allClustIdx = [preIcClustIdx;interIcClustIdx];
 
 % My goal is going to be to randomly swap out pre-ictal and interictal
 % indices
-nboot = 1e4;
 chi2_boot = zeros(nboot,1);
 for ib = 1:nboot
     p = randperm(length(allClustIdx),nPreIc);
@@ -367,9 +398,88 @@ boot_p = (length(I) - I_min)/length(I);
 
 fprintf('By bootstrap, the p value is %1.1e\n',boot_p);
 
-%% #2 Are 60 minute chunks containing seizures more likely to have certain cluster distributions
-%[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
+
+
 end
+
+%% Are the cluster leads close to the SOZ electrodes?
+
+%% NEED TO DO SOMETHING TO DEAL WITH MULTIPLE MEASUREMENTS
+% Like, if you get to pick the best of n randomly placed channels, how
+% often will you get closer
+
+szLoc = xyChan(unique(szChs),2:4);
+szCentroid = mean(szLoc,1);
+
+C_mode = C(pop_c,:);
+D_mode = sqrt(sum((C_mode(1:3)-szCentroid).^2));
+
+% Decide how to remove bad clusters!
+
+C(bad_cluster,:) = [];
+
+cToSz = zeros(size(C,1),size(szLoc,1));
+for i = 1:size(szLoc,1)
+   for j = 1:size(C,1) 
+       cToSz(j,i) = sqrt(sum((C(j,1:3)-szLoc(i,:)).^2));
+    
+   end
+end
+
+%{
+figure
+imagesc(cToSz)
+xlabel('Seizure onset zone electrode')
+ylabel('Cluster centroid')
+colorbar
+%}
+
+
+avgD = zeros(size(C,1),1);
+for i = 1:size(C,1)
+   %avgD(i) = mean(cToSz(i,:)); 
+   avgD(i) = sqrt(sum((C(i,1:3)-szCentroid).^2));
+end
+
+allChsAvgD = zeros(size(xyChan,1),1);
+allChToSz = zeros(size(xyChan,1),size(szLoc,1));
+for i = 1:size(szLoc,1)
+   for j = 1:size(xyChan,1) 
+       allChToSz(j,i) = sqrt(sum((xyChan(j,2:4)-szLoc(i,:)).^2));
+    
+   end
+end
+%{
+figure
+imagesc(allChToSz)
+xlabel('Seizure onset zone electrode')
+ylabel('Channel locations')
+colorbar
+%}
+
+for i = 1:size(xyChan,1)
+   %allChsAvgD(i) = mean(allChToSz(i,:)); 
+   allChsAvgD(i) = sqrt(sum((xyChan(i,2:4)-szCentroid).^2));
+end
+
+[bestD,bestC] = min(avgD);
+[allChsS,I] = sort(allChsAvgD);
+diff_boot = abs(bestD-allChsS);
+[~,I_min] = min(diff_boot);
+perc = (length(I) - I_min)/length(I);
+fprintf(['The best cluster of %d is\n %1.1f mm from the average SOZ electrode location,\n'...
+    'closer to the SOZ electrodes than \n'...
+    '%1.2f (%d of %d) of all electrodes\n\n\n'],...
+    size(C,1),bestD,perc,length(I) - I_min,length(I));
+
+
+diff_boot = abs(D_mode-allChsS);
+[~,I_min] = min(diff_boot);
+perc = (length(I) - I_min)/length(I);
+fprintf(['The mode cluster is\n %1.1f mm from the average SOZ electrode location,\n'...
+    'closer to the SOZ electrodes than \n'...
+    '%1.2f (%d of %d) of all electrodes\n\n\n'],D_mode,perc,length(I) - I_min,length(I));
+
 
 end
 
