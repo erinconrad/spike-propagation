@@ -1,4 +1,6 @@
-function pt = getSOZChs(pt,i)
+function pt = getSOZChs(pt,whichChs)
+
+for i = whichChs
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 
@@ -44,6 +46,8 @@ for j = 1:length(pt(i).sz)
 
     end
     pt(i).sz(j).chs = chnums;
+
+end
 
 end
     
