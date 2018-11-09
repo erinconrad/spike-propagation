@@ -43,7 +43,7 @@ n_clusters = ones(30,1)*3;
 %% Optimal cluster numbers
 n_clusters(3) = 4;
 n_clusters(4) = 5;
-n_clusters(8) = 4;
+n_clusters(8) = 3;
 n_clusters(11) = 4;
 n_clusters(12) = 6;
 n_clusters(18) = 4;
@@ -52,9 +52,9 @@ n_clusters(27) = 4;
 n_clusters(30) = 5;
 
 
-clustOpt = 0;
-doPlots = 1;
-doLongPlots = 1;
+clustOpt = 1;
+doPlots = 0;
+doLongPlots = 0;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
