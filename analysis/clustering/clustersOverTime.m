@@ -44,7 +44,7 @@ n_clusters = ones(30,1)*3;
 n_clusters(3) = 4;
 n_clusters(4) = 5;
 n_clusters(8) = 4;
-n_clusters(11) = 5;
+n_clusters(11) = 4;
 n_clusters(12) = 6;
 n_clusters(18) = 4;
 n_clusters(19) = 4;
@@ -52,7 +52,9 @@ n_clusters(27) = 4;
 n_clusters(30) = 5;
 
 
+clustOpt = 0;
 doPlots = 1;
+doLongPlots = 1;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -148,7 +150,7 @@ pt(whichPt).cluster.k = n_clusters(whichPt);
 
 
 % Elbow approach
-if 1 == 0
+if clustOpt == 1
 SSE = zeros(10,1);
 for k = 1:10
     
@@ -243,20 +245,19 @@ end
 pt(whichPt).cluster.rep_seq = rep_seq;
 
 %% Plot representative sequences
+if doLongPlots == 1
+    for i = 1:n_clusters(whichPt)
+        outputFile = sprintf('seqs_cluster_%d',i);
+        showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
+    end
 
-for i = 1:n_clusters(whichPt)
-    outputFile = sprintf('seqs_cluster_%d',i);
-    showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
+
+
+    for i = 1:n_clusters(whichPt)
+        movieSeqs(rep_seq{i},xyChan(:,2:4),info(i));
+    end
 end
-%}
 
-
-for i = 1:n_clusters(whichPt)
-    movieSeqs(rep_seq{i},xyChan(:,2:4),info(i));
-end
-
-%}
-%}
 
 %% Assign each sequence a color based on what cluster index it it
 colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
@@ -265,7 +266,7 @@ for i = 1:length(idx)
    c_idx(i,:) = colors(idx(i),:); 
 end
 
-if 1 == 1
+if doPlots == 1
 %% Do plot
 figure
 set(gcf,'Position',[50 100 1200 1200])
@@ -393,8 +394,8 @@ set(gca,'FontSize',15);
 set(gca,'xticklabel',[])
 set(gca,'yticklabel',[])
 set(gca,'zticklabel',[])
-%saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
-%close(gcf)
+saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
+close(gcf)
 
 end
 %}
