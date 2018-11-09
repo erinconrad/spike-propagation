@@ -27,7 +27,7 @@ locs = pt(whichPt).electrodeData.locs(:,2:4);
 %% Make plot
 figure
 set(gcf,'Position',[200 200 800 550]);
-scatter3(locs(:,1),locs(:,2),locs(:,3),100,[0.5 0.5 0.5],'LineWidth',1.5);
+scatter3(locs(:,1),locs(:,2),locs(:,3),100,[0.6 0.6 0.6],'LineWidth',1.3);
 hold on
 scatter3(locs(spike_chs,1),locs(spike_chs,2),locs(spike_chs,3),100,'r','filled');
 
@@ -37,20 +37,20 @@ for i = 1:length(spike_times)-1
     finish = locs(spike_chs(i+1),:);
     dp = finish-start;
     quiver3([start(1)],[start(2)], [start(3)],...
-        dp(1), dp(2), dp(3),'Color',[0 0 0],'LineWidth',2,'MaxHeadSize',1.3);
+        dp(1), dp(2), dp(3),'Color',[0 0 0],'LineWidth',2,'MaxHeadSize',1.5);
     if i == 1
-        text(start(1),start(2)-7,start(3)-3,'Start','FontSize',25);
+        text(start(1),start(2)-12,start(3)-4,'Start','FontSize',25);
     end
     
 end
 
 finish = locs(spike_chs(end),:);
-text(finish(1),finish(2)-4,finish(3)+5,'End','FontSize',25);
+text(finish(1),finish(2)-5,finish(3)+5,'End','FontSize',25);
 xticklabels([]);
 yticklabels([]);
 zticklabels([]);
 
-view([0.9 0.1 0.2])
+view([0.7 0.2 0.2])
 
 print(gcf,[destFolder,'brainSeq'],'-depsc');
 eps2pdf([destFolder,'brainSeq.eps'])
@@ -91,9 +91,10 @@ xticklabels([]);
 yticklabels([]);
 zticklabels([]);
 
-%{
-print(gcf,[destFolder,'brainSeq'],'-depsc');
-eps2pdf([destFolder,'brainSeq.eps'])
-%}
+view([0.7 0.2 0.2])
+
+print(gcf,[destFolder,'brainVec'],'-depsc');
+eps2pdf([destFolder,'brainVec.eps'])
+
 
 end

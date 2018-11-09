@@ -5,7 +5,11 @@ function [counts,window_times] = movingSumCounts(times,all_times,window)
 totalTime = [floor(min(all_times)),ceil(max(all_times))];
 
 % initialize counts and times
-counts = zeros(length(times),totalTime(2) - totalTime(1) + 1);
+if iscell(times) == 1
+    counts = zeros(length(times),totalTime(2) - totalTime(1) + 1);
+else
+    counts = zeros(1,totalTime(2) - totalTime(1) + 1);
+end
 window_times = zeros(1,totalTime(2) - totalTime(1) + 1);
 
 
@@ -26,12 +30,14 @@ for t = totalTime(1):totalTime(2)
     window_times(n) = time_range(2);
 
     % Loop through clusters
-    for j = 1:length(times)
-        
-       
-       counts(j,n) = sum(times{j}>=time_range(1) & ...
-           times{j}<= time_range(2));
-
+    if iscell(times) == 1
+    
+        for j = 1:length(times)
+           counts(j,n) = sum(times{j}>=time_range(1) & ...
+               times{j}<= time_range(2));
+        end
+    else
+       counts(n) = sum(times>=time_range(1) & times<=time_range(2)); 
     end
 
 end

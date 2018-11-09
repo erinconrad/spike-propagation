@@ -1,6 +1,12 @@
 function chConnections(pt,whichPt)
 
 
+%% Other ideas
+%{
+-Plot SOZ spike/seq freq over time
+- plot seq frequence of leader chs over time
+%}
+
 %% Goal
 %{
 To see if the electrodes that have the biggest volume of influence (ie,
@@ -48,6 +54,13 @@ for j = 1:length(pt(whichPt).sz)
     soz = [soz;pt(whichPt).sz(j).chs];
 end
 soz = unique(soz);
+
+%% Get sz times
+szTimes = zeros(length(pt(whichPt).sz),1);
+for j = 1:length(pt(whichPt).sz)
+   szTimes(j) = pt(whichPt).sz(j).onset;
+end
+
 
 %% Construct a matrix of channel connections
 chCh = zeros(nchs,nchs);
@@ -172,7 +185,7 @@ for i = 1:nchs
    %}
 end
 
-gs = parula(50);
+gs = (parula(50));
 [Y,E] = discretize(log(chull),size(gs,1));
 figure
 subplot(2,2,1)
@@ -268,5 +281,87 @@ fprintf('%1.1f percent of electrodes (%d of %d) outperformed our electrode\n',..
     betterPerc,better,nchs);
 
 
+%% Plot SOZ seq freq and max hull seq freq over time
+
+% Get time range
+all_times = floor(min(all_seq_cat(:,1))):ceil(max(all_seq_cat(:,end)));
+
+% Get spikes containing SOZ
+seq_w_soz = (isnan(all_seq_cat(soz,:))==0);
+times_w_soz = min(all_seq_cat(:,seq_w_soz));
+
+% Get spikes starting in the SOZ
+[~,firstCh] = min(all_seq_cat,[],1);
+seq_s_soz = (ismember(firstCh,soz));
+times_s_soz = min(all_seq_cat(:,seq_s_soz));
+
+
+% Get spikes starting in the hull
+[~,I] = max(chull);
+seq_s_hull = (firstCh==I);
+times_s_hull = min(all_seq_cat(:,seq_s_hull));
+
+% Get spikes containing the hull
+seq_w_hull = isnan(all_seq_cat(I,:))==0;
+times_w_hull = min(all_seq_cat(:,seq_w_hull));
+
+
+% Plot scatter
+figure
+scatter(times_w_soz,ones(length(times_w_soz),1),100);
+hold on
+scatter(times_s_soz,2*ones(length(times_s_soz),1),100,'r');
+scatter(times_s_hull,3*ones(length(times_s_hull),1),100,'g');
+scatter(times_w_hull,4*ones(length(times_w_hull),1),100,'m');
+yl = ylim;
+for j = 1:length(szTimes)
+   plot([szTimes(j) szTimes(j)],yl,'k','LineWidth',2); 
+end
+
+% Plot moving average of counts
+window = 3600;
+
+figure
+
+
+subplot(4,1,1)
+[counts,window_times] = movingSumCounts(times_w_soz,all_times,window);
+plot(window_times,counts);
+hold on
+yl = ylim;
+for j = 1:length(szTimes)
+   plot([szTimes(j) szTimes(j)],yl,'k','LineWidth',2); 
+end
+title('Number of sequences containing SOZ');
+
+subplot(4,1,2)
+[counts,window_times] = movingSumCounts(times_s_soz,all_times,window);
+plot(window_times,counts);
+hold on
+yl = ylim;
+for j = 1:length(szTimes)
+   plot([szTimes(j) szTimes(j)],yl,'k','LineWidth',2); 
+end
+title('Number of sequences starting in SOZ')
+
+subplot(4,1,3)
+[counts,window_times] = movingSumCounts(times_s_hull,all_times,window);
+plot(window_times,counts);
+hold on
+yl = ylim;
+for j = 1:length(szTimes)
+   plot([szTimes(j) szTimes(j)],yl,'k','LineWidth',2); 
+end
+title('Number of sequences starting in max connected electrode')
+
+subplot(4,1,4)
+[counts,window_times] = movingSumCounts(times_w_hull,all_times,window);
+plot(window_times,counts);
+hold on
+yl = ylim;
+for j = 1:length(szTimes)
+   plot([szTimes(j) szTimes(j)],yl,'k','LineWidth',2); 
+end
+title('Number of sequences containing max connected electrode');
 
 end
