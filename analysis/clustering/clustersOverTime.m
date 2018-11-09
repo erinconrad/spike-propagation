@@ -52,9 +52,9 @@ n_clusters(27) = 4;
 n_clusters(30) = 5;
 
 
-clustOpt = 1;
-doPlots = 0;
-doLongPlots = 0;
+clustOpt = 0;
+doPlots = 1;
+doLongPlots = 1;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
