@@ -12,7 +12,7 @@ generalize, but probably not for focal seizures
 %}
 
 %% Parameters
-
+approach = 3;
 alpha = 99.9;
 
 
@@ -60,21 +60,40 @@ for i = 1:size(all_seq_cat,2)
     [spike_times,I] = sort(spike_times);
     spike_chs = spike_chs(I);
     
-    % Note that doing this generates a DIRECTIONAL bunch of channel pairs.
-    % It always be (1st ch, 2nd ch) and not (2nd ch, 1st ch)
-    B = nchoosek(spike_chs,2);
     
-    for j = 1:size(B,2)
+    if approach == 1
+        % Getting all unidirectional pairwise connections
+        B = nchoosek(spike_chs,2);
+        
+        for j = 1:size(B,1)
         % I am saying that chCh(i,j) is the number of times that channel i
         % influences channel j
         chCh(B(j,1),B(j,2)) = chCh(B(j,1),B(j,2)) + 1;
+        end
+    elseif approach == 2
+        % Get all unidirectional pairwise connections that start with first
+        % channel
+        B = nchoosek(spike_chs,2);
+        B=B(B(:,1)==spike_chs(1),:);
+        
+        for j = 1:size(B,1)
+        chCh(B(j,1),B(j,2)) = chCh(B(j,1),B(j,2)) + 1;
+        end
+    elseif approach == 3
+        % Just get connection from first to 2nd channel
+        chCh(spike_chs(1),spike_chs(2)) = ...
+            chCh(spike_chs(1),spike_chs(2)) + 1;
+        
     end
+    
+    
     
 end
 
 
 % Plot the pairwise connections
-if 1 == 0
+if 1 == 1
+figure
 imagesc(chCh)
 colorbar
 end
@@ -86,6 +105,7 @@ leader_freq = sum(chCh,2);
 %% Bootstrap to get significance
 if 1 == 1
 ncons = sum(sum(chCh));
+fprintf('There are %d total connections.\n',ncons);
 nboot = 1e3;
 max_size = nchs*nchs;
 chCh_all = zeros(nboot,nchs,nchs);
@@ -100,18 +120,23 @@ for ib = 1:nboot
     chCh_all(ib,:,:) = chCh_f;
 end
 
-
-figure
-imagesc(squeeze(mean(chCh_all,1)))
-s_con = sort(chCh_all(:));
-scatter(1:length(s_con),s_con)
-perc = prctile(s_con,alpha);
+if 1 == 0
+    figure
+    imagesc(squeeze(mean(chCh_all,1)))
 end
 
-minCount = perc;
+s_con = sort(chCh_all(:));
+%scatter(1:length(s_con),s_con)
+perc = prctile(s_con,alpha);
+
 fprintf(['By permutation testing, the minimum number of counts for a\n'...
     'connection to be significant is\n'...
     '%d for an alpha of %dth percentile\n'],perc,alpha);
+    
+end
+
+%minCount = perc;
+minCount = 5;
 
 %% Get convex hull of the influence of each channel
 

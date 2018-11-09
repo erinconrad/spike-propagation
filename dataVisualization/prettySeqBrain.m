@@ -27,7 +27,7 @@ locs = pt(whichPt).electrodeData.locs(:,2:4);
 %% Make plot
 figure
 set(gcf,'Position',[200 200 800 550]);
-scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
+scatter3(locs(:,1),locs(:,2),locs(:,3),100,[0.5 0.5 0.5],'LineWidth',1.5);
 hold on
 scatter3(locs(spike_chs,1),locs(spike_chs,2),locs(spike_chs,3),100,'r','filled');
 
@@ -39,19 +39,18 @@ for i = 1:length(spike_times)-1
     quiver3([start(1)],[start(2)], [start(3)],...
         dp(1), dp(2), dp(3),'Color',[0 0 0],'LineWidth',2,'MaxHeadSize',1.3);
     if i == 1
-        text(start(1)-1,start(2),start(3)-4,'Start','FontSize',18);
+        text(start(1),start(2)-7,start(3)-3,'Start','FontSize',25);
     end
     
 end
 
 finish = locs(spike_chs(end),:);
-text(finish(1)-2,finish(2)+4,finish(3)+5,'End','FontSize',18);
+text(finish(1),finish(2)-4,finish(3)+5,'End','FontSize',25);
 xticklabels([]);
 yticklabels([]);
 zticklabels([]);
 
-direction = [1 0 0];
-rotate(gca,direction,90)
+view([0.9 0.1 0.2])
 
 print(gcf,[destFolder,'brainSeq'],'-depsc');
 eps2pdf([destFolder,'brainSeq.eps'])
