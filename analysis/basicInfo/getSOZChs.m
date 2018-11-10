@@ -1,6 +1,6 @@
-function pt = getSOZChs(pt,whichChs)
+function pt = getSOZChs(pt,whichPts)
 
-for i = whichChs
+for i = whichPts
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 

@@ -4,7 +4,6 @@ function prettySeqBrain(pt,whichPt,whichSz,whichSeq)
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 p1 = genpath(scriptFolder);
 addpath(p1);
-ptInfo = loadjson(jsonfile);
 
 destFolder = [resultsFolder,'pretty_plots/Fig1/'];
 
@@ -39,7 +38,7 @@ for i = 1:length(spike_times)-1
     quiver3([start(1)],[start(2)], [start(3)],...
         dp(1), dp(2), dp(3),'Color',[0 0 0],'LineWidth',2,'MaxHeadSize',1.5);
     if i == 1
-        text(start(1),start(2)-12,start(3)-4,'Start','FontSize',25);
+       text(start(1),start(2)-12,start(3)-4,'Start','FontSize',25);
     end
     
 end
@@ -62,7 +61,7 @@ xyChan = pt(whichPt).electrodeData;
 
 
 
-
+if 1 == 1
 %% Make plot
 figure
 set(gcf,'Position',[200 200 800 550]);
@@ -95,6 +94,7 @@ view([0.7 0.2 0.2])
 
 print(gcf,[destFolder,'brainVec'],'-depsc');
 eps2pdf([destFolder,'brainVec.eps'])
+end
 
 
 end

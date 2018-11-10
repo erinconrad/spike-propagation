@@ -216,11 +216,12 @@ title(sprintf(['Proportion of sequences in given cluster, moving'...
     window,pt(whichPt).name));
 set(gca,'FontSize',15);
 
-%}
+saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
+%close(gcf)
 
 
 %% Plot locations of centroids 
-
+if 1 == 0
 
 figure
 scatter3(xyChan(:,2),xyChan(:,3),xyChan(:,4),60,'k');
@@ -258,8 +259,7 @@ set(gca,'FontSize',15);
 set(gca,'xticklabel',[])
 set(gca,'yticklabel',[])
 set(gca,'zticklabel',[])
-%saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
-%close(gcf)
+
 
 end
 %}

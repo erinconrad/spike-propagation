@@ -45,16 +45,18 @@ n_clusters(3) = 4;
 n_clusters(4) = 5;
 n_clusters(8) = 3;
 n_clusters(11) = 4;
-n_clusters(12) = 6;
+n_clusters(12) = 5;
+% Need to do beyond here
 n_clusters(18) = 4;
 n_clusters(19) = 4;
 n_clusters(27) = 4;
 n_clusters(30) = 5;
 
 
-clustOpt = 0;
+clustOpt = 1;
 doPlots = 1;
 doLongPlots = 1;
+leadOnly = 1;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -156,13 +158,24 @@ for k = 1:10
     
     SSE_temp = zeros(30,1);
     for j = 1:30
-        [idx_test,C_test] = ...
-            kmeans(cluster_vec,k);
+        if leadOnly == 0
+            [idx_test,C_test] = ...
+                kmeans(cluster_vec,k);
+        else
+            [idx_test,C_test] = ...
+                kmeans(firstChs,k);
+        end
 
         % Get SSE
         for i = 1:k
-           SSE_temp(j) = SSE_temp(j) + sum(sum((cluster_vec(idx_test == i,:) - ...
-               repmat(C_test(i,:),size(cluster_vec(idx_test == i,:),1),1)).^2));
+            if leadOnly == 0
+               SSE_temp(j) = SSE_temp(j) + sum(sum((cluster_vec(idx_test == i,:) - ...
+                   repmat(C_test(i,:),size(cluster_vec(idx_test == i,:),1),1)).^2));
+            else
+                SSE_temp(j) = SSE_temp(j) + sum(sum((firstChs(idx_test == i,:) - ...
+                   repmat(C_test(i,:),size(firstChs(idx_test == i,:),1),1)).^2));
+            end
+            
         end
 
     end
@@ -211,8 +224,14 @@ cluster_approach = 1;
 if cluster_approach == 1
 
     for i = 1:30
+        if leadOnly == 0
     [idx_all{i},C_all{i},sumd_all{i},D_all{i}] = ...
         kmeans([firstChs,final_vecs],n_clusters(whichPt));
+        else
+     [idx_all{i},C_all{i},sumd_all{i},D_all{i}] = ...
+        kmeans([firstChs],n_clusters(whichPt));      
+        end
+        
     metric(i) = sum(sumd_all{i});
     end
 
@@ -294,6 +313,7 @@ xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 title(sprintf('X, y, z coordinates of spike leader for %s',pt(whichPt).name));
 set(gca,'FontSize',15);
 
+if 1 == 1
 % Plot of x, y, z coordinates of unit vector over time
 subplot(4,1,2)
 toAdd = 0;
@@ -316,6 +336,7 @@ end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 title(sprintf('X, y, z coordinates of propagation vector for %s',pt(whichPt).name));
 set(gca,'FontSize',15);
+end
 
 % Plot cluster identities
 %{
@@ -384,9 +405,11 @@ hold on
 
 for k = 1:size(C,1)
     scatter3(C(k,1),C(k,2),C(k,3),60,colors(k,:),'filled');
+    if 1 == 0
     plot3([C(k,1) C(k,1) + 10*C(k,4)],...
         [C(k,2) C(k,2) + 10*C(k,5)],...
         [C(k,3) C(k,3) + 10*C(k,6)],'k','LineWidth',2)
+    end
 end
 
 title(sprintf('Spike leader and propagation vectors for %s',pt(whichPt).name));
@@ -394,8 +417,8 @@ set(gca,'FontSize',15);
 set(gca,'xticklabel',[])
 set(gca,'yticklabel',[])
 set(gca,'zticklabel',[])
-saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
-close(gcf)
+%saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
+%close(gcf)
 
 end
 %}

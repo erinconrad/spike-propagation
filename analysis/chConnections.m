@@ -18,7 +18,9 @@ generalize, but probably not for focal seizures
 %}
 
 %% Parameters
+map_text = 'jet';
 approach = 3;
+doBootstrap = 0;
 alpha = 99.9;
 
 
@@ -46,7 +48,8 @@ fprintf(['%s had %d sequences (%1.2f of all sequences) deleted'...
     'for having >50 percent ties\n%d sequences remain\n'],...
     pt(whichPt).name,sum(keep == 0),sum(keep == 0)/length(keep),sum(keep==1));
 
-
+%% Get colormap
+fh_map = str2func(map_text);
 
 %% Get SOZ channels
 soz = [];
@@ -115,41 +118,58 @@ end
 seq_freq = nansum(all_seq_cat,2);
 leader_freq = sum(chCh,2);
 
-%% Bootstrap to get significance
-if 1 == 1
-ncons = sum(sum(chCh));
-fprintf('There are %d total connections.\n',ncons);
-nboot = 1e3;
-max_size = nchs*nchs;
-chCh_all = zeros(nboot,nchs,nchs);
-for ib = 1:nboot
-    if mod(ib,100) == 0
-        fprintf('Doing %d of %d\n', ib,nboot);
+%% Get significant connections
+if doBootstrap == 1
+    % Bootstrap approach
+    ncons = sum(sum(chCh));
+    fprintf('There are %d total connections.\n',ncons);
+    nboot = 1e3;
+    max_size = nchs*nchs;
+    chCh_all = zeros(nboot,nchs,nchs);
+    for ib = 1:nboot
+        if mod(ib,100) == 0
+            fprintf('Doing %d of %d\n', ib,nboot);
+        end
+        chCh_f = zeros(nchs,nchs);
+        for j = 1:ncons
+           chCh_f(randi(max_size)) = chCh_f(randi(max_size)) + 1;
+        end
+        chCh_all(ib,:,:) = chCh_f;
     end
-    chCh_f = zeros(nchs,nchs);
-    for j = 1:ncons
-       chCh_f(randi(max_size)) = chCh_f(randi(max_size)) + 1;
+
+    if 1 == 0
+        figure
+        imagesc(squeeze(mean(chCh_all,1)))
     end
-    chCh_all(ib,:,:) = chCh_f;
-end
 
-if 1 == 0
-    figure
-    imagesc(squeeze(mean(chCh_all,1)))
-end
-
-s_con = sort(chCh_all(:));
-%scatter(1:length(s_con),s_con)
-perc = prctile(s_con,alpha);
-
-fprintf(['By permutation testing, the minimum number of counts for a\n'...
-    'connection to be significant is\n'...
-    '%d for an alpha of %dth percentile\n'],perc,alpha);
+    s_con = sort(chCh_all(:));
+    %scatter(1:length(s_con),s_con)
+    perc = prctile(s_con,alpha);
+    minCount = perc;
+    fprintf(['By permutation testing, the minimum number of counts for a\n'...
+        'connection to be significant is\n'...
+        '%d for an alpha of %1.1fth percentile\n\n'],perc,alpha);
     
+    ncons = sum(sum(chCh));
+    lambda = ncons/nchs^2;
+    X = poissinv(alpha/100,lambda);
+    fprintf(['By poisson assumption, the number of counts is:\n'...
+        '%d\n\n'],X);
+    
+    
+else
+    % Assume poisson distribution
+    
+    ncons = sum(sum(chCh));
+    lambda = ncons/nchs^2;
+    X = poissinv(alpha/100,lambda);
+    minCount = X;
+    
+    fprintf(['Not doing permutation test, assuming poisson distribution.\n'...
+        'Doing so yields min count number for significance of\n'...
+        '%d for an alpha of %1.1fth percentile\n\n'],X,alpha);
 end
 
-%minCount = perc;
-minCount = 5;
 
 %% Get convex hull of the influence of each channel
 
@@ -185,7 +205,7 @@ for i = 1:nchs
    %}
 end
 
-gs = (parula(50));
+gs = (fh_map(50));
 [Y,E] = discretize(log(chull),size(gs,1));
 figure
 subplot(2,2,1)
@@ -193,16 +213,16 @@ set(gcf,'Position',[200 200 1000 700]);
 scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
 hold on
 
-scatter3(locs(isnan(Y)==0,1),locs(isnan(Y)==0,2),locs(isnan(Y)==0,3),100,gs(Y(isnan(Y)==0)));
+scatter3(locs(isnan(Y)==0,1),locs(isnan(Y)==0,2),locs(isnan(Y)==0,3),100,gs(Y(isnan(Y)==0),:));
 [~,I] = max(chull);
-scatter3(locs(I,1),locs(I,2),locs(I,3),100,gs(Y(I)),'filled');
+scatter3(locs(I,1),locs(I,2),locs(I,3),100,gs(Y(I),:),'filled');
 scatter3(locs(soz,1),locs(soz,2),locs(soz,3),'*','k');
 title('Volume of convex hull of influenced channels');
 
 
 all_con = chCh(:);
 con_col = log(all_con);
-gs = parula(max(con_col));
+gs = fh_map(round(max(con_col)));
 [Y,E] = discretize(con_col,size(gs,1));
 Y = reshape(Y,[size(chCh,1),size(chCh,1)]);
 
@@ -230,7 +250,7 @@ title('Connections between channels');
 
 %% Seq freq
 
-gs = parula(50);
+gs = fh_map(50);
 [Y,E] = discretize(log(seq_freq),size(gs,1));
 [~,most_freq] = max(seq_freq);
 
@@ -247,7 +267,7 @@ title('Sequence frequency');
 
 %% Leader freq
 
-gs = parula(50);
+gs = fh_map(50);
 [Y,E] = discretize(log(leader_freq),size(gs,1));
 [~,most_freq] = max(leader_freq);
 
@@ -287,7 +307,11 @@ fprintf('%1.1f percent of electrodes (%d of %d) outperformed our electrode\n',..
 all_times = floor(min(all_seq_cat(:,1))):ceil(max(all_seq_cat(:,end)));
 
 % Get spikes containing SOZ
-seq_w_soz = (isnan(all_seq_cat(soz,:))==0);
+if length(soz) > 1
+    seq_w_soz = any(isnan((all_seq_cat(soz,:)))==0,1);
+else
+    seq_w_soz = (isnan((all_seq_cat(soz,:)))==0);
+end
 times_w_soz = min(all_seq_cat(:,seq_w_soz));
 
 % Get spikes starting in the SOZ
@@ -302,21 +326,22 @@ seq_s_hull = (firstCh==I);
 times_s_hull = min(all_seq_cat(:,seq_s_hull));
 
 % Get spikes containing the hull
-seq_w_hull = isnan(all_seq_cat(I,:))==0;
+seq_w_hull = (isnan(all_seq_cat(I,:))==0);
 times_w_hull = min(all_seq_cat(:,seq_w_hull));
 
 
 % Plot scatter
 figure
-scatter(times_w_soz,ones(length(times_w_soz),1),100);
+s1=scatter(times_w_soz,4*ones(length(times_w_soz),1),100);
 hold on
-scatter(times_s_soz,2*ones(length(times_s_soz),1),100,'r');
-scatter(times_s_hull,3*ones(length(times_s_hull),1),100,'g');
-scatter(times_w_hull,4*ones(length(times_w_hull),1),100,'m');
+s2=scatter(times_s_soz,3*ones(length(times_s_soz),1),100,'r');
+s3=scatter(times_w_hull,2*ones(length(times_w_hull),1),100,'g');
+s4=scatter(times_s_hull,1*ones(length(times_s_hull),1),100,'m');
 yl = ylim;
 for j = 1:length(szTimes)
    plot([szTimes(j) szTimes(j)],yl,'k','LineWidth',2); 
 end
+legend([s1 s2 s3 s4],{'Contains SOZ','Started with SOZ','Contains max hull','Started max hull'});
 
 % Plot moving average of counts
 window = 3600;
@@ -345,6 +370,16 @@ end
 title('Number of sequences starting in SOZ')
 
 subplot(4,1,3)
+[counts,window_times] = movingSumCounts(times_w_hull,all_times,window);
+plot(window_times,counts);
+hold on
+yl = ylim;
+for j = 1:length(szTimes)
+   plot([szTimes(j) szTimes(j)],yl,'k','LineWidth',2); 
+end
+
+title('Number of sequences containing max connected electrode');
+subplot(4,1,4)
 [counts,window_times] = movingSumCounts(times_s_hull,all_times,window);
 plot(window_times,counts);
 hold on
@@ -354,14 +389,5 @@ for j = 1:length(szTimes)
 end
 title('Number of sequences starting in max connected electrode')
 
-subplot(4,1,4)
-[counts,window_times] = movingSumCounts(times_w_hull,all_times,window);
-plot(window_times,counts);
-hold on
-yl = ylim;
-for j = 1:length(szTimes)
-   plot([szTimes(j) szTimes(j)],yl,'k','LineWidth',2); 
-end
-title('Number of sequences containing max connected electrode');
 
 end
