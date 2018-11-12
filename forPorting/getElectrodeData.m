@@ -8,7 +8,8 @@ useErinIgnore = 2;
 overwrite =  0;
 
 %% File names
-newptfile = 'ptWithElectrodeData.mat';
+%newptfile = 'ptWithElectrodeData.mat';
+newptfile = 'newJsonElectrodes.mat';
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 %electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
@@ -16,7 +17,8 @@ addpath(p1);
 gdfFolder = [resultsFolder,'gdf/'];
 ptInfo = loadjson(jsonfile);
 ptnames = fieldnames(ptInfo.PATIENTS);
-timeFile = 'desiredTimes.mat';
+timeFile = 'new_json_data.mat';
+%timeFile = 'desiredTimes.mat';
 
 %% Load file with filenames and run times
 if overwrite == 0 && exist([resultsFolder,'ptStructs/',newptfile],'file') ~= 0
@@ -53,9 +55,11 @@ for i = 1:length(pt)
     end
     
     for j = 1:length(pt(i).sz)
+        %{
         if isfield(pt(i).sz(j),'runTimes') == 0
             continue
         end
+        %}
         
         %% Load EEG data info
         % calling this with 0 and 0 means I will just get basic info like sampling

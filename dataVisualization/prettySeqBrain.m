@@ -5,7 +5,7 @@ function prettySeqBrain(pt,whichPt,whichSz,whichSeq)
 p1 = genpath(scriptFolder);
 addpath(p1);
 
-destFolder = [resultsFolder,'pretty_plots/Fig1/'];
+destFolder = [resultsFolder,'pretty_plots/Fig2/'];
 
 if isempty(whichSz) ==1
     seq = pt(whichPt).seq_matrix(:,whichSeq);
@@ -13,6 +13,7 @@ else
     seq = pt(whichPt).sz(whichSz).seq_matrix(:,whichSeq);
 end
 
+seq = pt(whichPt).cluster.rep_seq{1}(:,2);
 
 % Get the non nan times for the sequence
 spike_chs = find(isnan(seq) == 0);
@@ -26,9 +27,10 @@ locs = pt(whichPt).electrodeData.locs(:,2:4);
 %% Make plot
 figure
 set(gcf,'Position',[200 200 800 550]);
-scatter3(locs(:,1),locs(:,2),locs(:,3),100,[0.6 0.6 0.6],'LineWidth',1.3);
+
+scatter3(locs(spike_chs,1),locs(spike_chs,2),locs(spike_chs,3),400,'b','filled');
 hold on
-scatter3(locs(spike_chs,1),locs(spike_chs,2),locs(spike_chs,3),100,'r','filled');
+scatter3(locs(:,1),locs(:,2),locs(:,3),400,'k','LineWidth',3); %[0.6 0.6 0.6]
 
 % Plot paths with arrows
 for i = 1:length(spike_times)-1
@@ -36,23 +38,27 @@ for i = 1:length(spike_times)-1
     finish = locs(spike_chs(i+1),:);
     dp = finish-start;
     quiver3([start(1)],[start(2)], [start(3)],...
-        dp(1), dp(2), dp(3),'Color',[0 0 0],'LineWidth',2,'MaxHeadSize',1.5);
+        dp(1), dp(2), dp(3),'Color',[0 0 0],'LineWidth',4,'MaxHeadSize',4);
     if i == 1
-       text(start(1),start(2)-12,start(3)-4,'Start','FontSize',25);
+      % text(start(1),start(2)-17,start(3)-6,'Start','FontSize',30);
     end
     
 end
 
 finish = locs(spike_chs(end),:);
-text(finish(1),finish(2)-5,finish(3)+5,'End','FontSize',25);
+%text(finish(1),finish(2)-6,finish(3)+5,'End','FontSize',30);
 xticklabels([]);
 yticklabels([]);
 zticklabels([]);
 
 view([0.7 0.2 0.2])
 
-print(gcf,[destFolder,'brainSeq'],'-depsc');
-eps2pdf([destFolder,'brainSeq.eps'])
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 1000/800*20 20];
+%print(gcf,[destFolder,'brainSeq3'],'-depsc');
+print(gcf,[destFolder,'brainSeq1'],'-dpng');
+%eps2pdf([destFolder,'brainSeq3.eps'])
 
 
 %% Get vector
@@ -61,7 +67,7 @@ xyChan = pt(whichPt).electrodeData;
 
 
 
-if 1 == 1
+if 1 == 0
 %% Make plot
 figure
 set(gcf,'Position',[200 200 800 550]);

@@ -1,6 +1,17 @@
 function prettyClusterDist(pt,whichPt)
 
+%% Get paths and load seizure info and channel info
+[electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
+p1 = genpath(scriptFolder);
+addpath(p1);
+
+destFolder = [resultsFolder,'pretty_plots/Fig2/'];
+
+s=20;
+sizey = 400;
+
 locs = pt(whichPt).electrodeData.locs(:,2:4);
+xyChan = pt(whichPt).electrodeData.locs;
 cluster_vec = pt(whichPt).cluster.cluster_vec;
 idx = pt(whichPt).cluster.idx;
 k = pt(whichPt).cluster.k;
@@ -15,11 +26,33 @@ end
 
 %% plots
 figure
-scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
+set(gcf,'position',[200 200 1000 800]);
+
+scatter3(locs(:,1),locs(:,2),locs(:,3),sizey,'k','linewidth',3);
+hold on
+scatter3(cluster_vec(:,1),cluster_vec(:,2),cluster_vec(:,3),...
+    sizey,c_idx,'filled');
+
 hold on
 
-scatter3(cluster_vec(:,1),cluster_vec(:,2),cluster_vec(:,3),...
-    100,c_idx,'filled');
+%% Re-plot a couple for the purpose of making the legend
+t = find(idx == 1);
+t = t(1);
+pl1 = scatter3(cluster_vec(t,1),cluster_vec(t,2),cluster_vec(t,3),...
+    sizey,c_idx(t,:),'filled');
+
+t = find(idx == 2);
+t = t(1);
+pl2 = scatter3(cluster_vec(t,1),cluster_vec(t,2),cluster_vec(t,3),...
+    sizey,c_idx(t,:),'filled');
+
+t = find(idx == 3);
+t = t(1);
+pl3 = scatter3(cluster_vec(t,1),cluster_vec(t,2),cluster_vec(t,3),...
+    sizey,c_idx(t,:),'filled');
+
+
+
 
 
 mean_vec = zeros(k,3);
@@ -28,19 +61,42 @@ for i = 1:k
        cluster_vec(idx==i,5),cluster_vec(idx==i,6)],1);
 end
     
+%% Add vectors
+didCh = zeros(size(locs,1),1);
+for i = 1:length(idx)
+    chLoc = cluster_vec(i,1:3);
+    for j = 1:size(xyChan,1)
+       if isequal(xyChan(j,2:4),chLoc) == 1
+           if didCh(xyChan(j,1)) == 1
+               continue
+           end
+           didCh(xyChan(j,1)) = 1;
+           whichClust = idx(i);
+           quiver3(xyChan(j,2),xyChan(j,3),xyChan(j,4),...
+               s*mean_vec(whichClust,1),s*mean_vec(whichClust,2),s*mean_vec(whichClust,3),...
+               'color',colors(whichClust,:),'linewidth',5,'maxheadsize',20);
+           
+       end
+        
+    end
+    
+end
+
+
+legend([pl1,pl2,pl3],{'Cluster 1','Cluster 2','Cluster 3'},'FontSize',50,...
+    'Location','southwest');
 
 xticklabels([])
 yticklabels([])
 zticklabels([])
 
 view([0.7 0.2 0.2])
-
-
-figure
-scatter3(cluster_vec(:,4),cluster_vec(:,5),cluster_vec(:,6),...
-    100,c_idx,'filled');
-
-figure
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 1000/800*20 20];
+print(gcf,[destFolder,'clustEx'],'-depsc');
+print(gcf,[destFolder,'clustEx'],'-dpng');
+eps2pdf([destFolder,'clustEx.eps'])
 
 
 end

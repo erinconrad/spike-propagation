@@ -22,6 +22,7 @@ map_text = 'jet';
 approach = 3;
 doBootstrap = 0;
 alpha = 99.9;
+newSOZ =1;
 
 
 %% Get sequences
@@ -52,11 +53,15 @@ fprintf(['%s had %d sequences (%1.2f of all sequences) deleted'...
 fh_map = str2func(map_text);
 
 %% Get SOZ channels
-soz = [];
-for j = 1:length(pt(whichPt).sz)
-    soz = [soz;pt(whichPt).sz(j).chs];
+if newSOZ == 0
+    soz = [];
+    for j = 1:length(pt(whichPt).sz)
+        soz = [soz;pt(whichPt).sz(j).chs];
+    end
+    soz = unique(soz);
+else
+   soz = pt(whichPt).newSOZChs; 
 end
-soz = unique(soz);
 
 %% Get sz times
 szTimes = zeros(length(pt(whichPt).sz),1);

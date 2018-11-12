@@ -169,7 +169,7 @@ end
        
  
 
-save([resultsFolder,'ptStructs/',outputFile],'pt');
+%save([resultsFolder,'ptStructs/',outputFile],'pt');
 
 
 

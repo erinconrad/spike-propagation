@@ -89,25 +89,25 @@ end
 
 %% Main cluster plot
 figure
-set(gcf,'Position',[50 100 1200 1200])
+set(gcf,'Position',[50 100 1200 700])
 
 % Sequence frequency
-subplot(4,1,1)
+subplot(3,1,1)
 [t_return,counts] = binCounts(all_times,window);
-plot(t_return/3600,counts,'k','LineWidth',2);
+plot(t_return/3600,counts,'k','LineWidth',3);
 hold on
 for j = 1:length(pt(whichPt).sz)
    yl = ylim; 
    szOnset = pt(whichPt).sz(j).onset;
-   sz = plot([szOnset szOnset]/3600,yl,'k--','LineWidth',3);
+   sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',3);
 end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 ylabel('Sequences per hour');
-title(sprintf('X, y, z coordinates of propagation vector for %s',pt(whichPt).name));
-set(gca,'FontSize',15);
+title(sprintf('Sequence frequency'));
+set(gca,'FontSize',20);
 
 % Plot of x, y, z coordinates of starting position over time
-subplot(4,1,2)
+subplot(3,1,2)
 toAdd = 0;
 %marker = {'x','o','>'};
 ttext = {'x','y','z'};
@@ -118,21 +118,24 @@ hold on
 ytick_locations(i) = toAdd+median(cluster_vec(:,i));
 %text(all_times(1)/3600-0.3,toAdd+median(cluster_vec(:,i)),sprintf('%s',ttext{i}),'FontSize',30);
 if i ~=3
-    toAdd = toAdd + 10+(max(cluster_vec(:,i)) - min(cluster_vec(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
+    toAdd = toAdd + 20+(max(cluster_vec(:,i)) - min(cluster_vec(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
 end
 end
+yl = ylim;
+ylim([min(cluster_vec(:,1)), yl(2)])
 for j = 1:length(pt(whichPt).sz)
    yl = ylim; 
    szOnset = pt(whichPt).sz(j).onset;
-   sz = plot([szOnset szOnset]/3600,yl,'k--','LineWidth',3);
+   sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',3);
 end
 yticks(ytick_locations)
 yticklabels({'X','Y','Z'})
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 ylabel('Coordinate');
-title(sprintf('X, y, z coordinates of spike leader for %s',pt(whichPt).name));
-set(gca,'FontSize',15);
+title(sprintf('X, Y, Z coordinates of spike leader'));
+set(gca,'FontSize',20);
 
+if 1 == 0
 % Plot of x, y, z coordinates of unit vector over time
 subplot(4,1,3)
 toAdd = 0;
@@ -147,6 +150,7 @@ for i = 4:6
         toAdd = toAdd + 3;%quantile(final_vecs(:,i),0.9999) - quantile(final_vecs(:,i+1),0.0001); 
     end
 end
+
 yticks(ytick_locations)
 yticklabels({'X','Y','Z'})
 for j = 1:length(pt(whichPt).sz)
@@ -158,6 +162,7 @@ xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 ylabel('Coordinate');
 title(sprintf('X, y, z coordinates of propagation vector for %s',pt(whichPt).name));
 set(gca,'FontSize',15);
+end
 
 
 % Plot cluster identities
@@ -186,11 +191,11 @@ for i = clusters
     totalSum = totalSum + sum_c(i,:);
 end
 
-subplot(4,1,4)
+subplot(3,1,3)
 
 pl = zeros(k,1);
 for i = clusters
-   pl(i)= plot(sum_times/3600,sum_c(i,:)./totalSum,'color',colors(i,:),'LineWidth',2);
+   pl(i)= plot(sum_times/3600,sum_c(i,:)./totalSum,'color',colors(i,:),'LineWidth',3);
 %plot(chunk_times,n_clusters_chunk(:,i),'color',colors(i,:),'LineWidth',2);
 hold on
 end
@@ -198,7 +203,7 @@ end
 for j = 1:length(pt(whichPt).sz)
    yl = ylim; 
    szOnset = pt(whichPt).sz(j).onset;
-   sz = plot([szOnset szOnset]/3600,yl,'k--','LineWidth',3);
+   sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',3);
 end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 
@@ -209,15 +214,16 @@ end
 
 legend([pl(pl~=0);sz],...
     [leg_text,'Seizures'],'Position',...
-    [0.87 0.9 0.1 0.05]);
+    [0.87 0.9 0.1 0.05],'FontSize',20);
 xlabel('Time (hours)');
-title(sprintf(['Proportion of sequences in given cluster, moving'...
-    ' average %d s, %s'],...
-    window,pt(whichPt).name));
-set(gca,'FontSize',15);
+title(sprintf(['Proportion of sequences in given cluster']));
+set(gca,'FontSize',20);
 
-saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
+%saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
 %close(gcf)
+destFolder = [resultsFolder,'pretty_plots/Fig2/'];
+print(gcf,[destFolder,'clustTime'],'-depsc');
+eps2pdf([destFolder,'clustTime.eps'])
 
 
 %% Plot locations of centroids 

@@ -53,7 +53,7 @@ n_clusters(27) = 4;
 n_clusters(30) = 5;
 
 
-clustOpt = 1;
+clustOpt = 0;
 doPlots = 1;
 doLongPlots = 1;
 leadOnly = 1;

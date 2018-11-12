@@ -125,14 +125,24 @@ elseif strcmp(name,'HUP107') == 1
     tmul = 13;
     absthresh = 300;
     dmin = 31;
-elseif strcmp(name,'HUP111') == 1
+elseif strcmp(name,'HUP111') == 1 || strcmp(name,'HUP111A') == 1
     ieeg_name = 'HUP111_phaseII_D01';
-    electrode_name = 'HUP111_T1_19990822_electrode_labels.csv';
+    electrode_name = 'HUP111A_T1_19990822_electrode_labels.csv';%'HUP111_T1_19990822_electrode_labels.csv';
     ignore = {"EKG1","EKG2"};
     tmul = 9;
     absthresh = 1000;
     dmin = 20;
     notes = 'no grids';
+elseif strcmp(name,'HUP111B') == 1
+    ieeg_name = 'HUP111_phaseII_D02';
+    electrode_name = 'HUP111B_T1_19990822_electrode_labels.csv';
+    ignore = {};
+    notes = 'wat';
+elseif strcmp(name,'HUP116') == 1
+    ieeg_name = 'HUP116_phaseII';
+    electrode_name = 'HUP116_T1_19991003_electrode_labels.csv';
+    ignore = {};
+    notes = '';
 elseif strcmp(name,'Study004') == 1
     ieeg_name = 'Study 004-2';
     electrode_name = 'Study004_electrode_labels.csv';
@@ -252,11 +262,17 @@ elseif strcmp(name,'CHOP47') == 1
     ieeg_name = [];
     electrode_name = 'CHOP47_electrode_labels.csv';
     ignore = {};
+else
+    fprintf('Warning, name %s not found.\n',name);
+    ieeg_name = [];
+    electrode_name = '';
+    ignore = {};
 end
     
 
 thresh.tmul = tmul;
 thresh.absthresh = absthresh;
+
     
     
 end
