@@ -26,12 +26,24 @@ newSOZ =1;
 
 
 %% Get sequences
-[all_seq_cat,all_times,~,~] = divideIntoSzChunksGen(pt,whichPt);
+%{
+
+%}
+all_times = pt(whichPt).cluster.all_times;
+all_seq_cat = pt(whichPt).cluster.all_seq_cat;
+bad_cluster = pt(whichPt).cluster.bad_cluster;
+idx = pt(whichPt).cluster.idx;
+bad_idx = find(ismember(idx,bad_cluster));
+all_times(bad_idx) = [];
+all_seq_cat(:,bad_idx) = [];
+
 locs = pt(whichPt).electrodeData.locs(:,2:4);
 nchs = size(locs,1);
 
 
-%% Remove sequences with too many ties
+%{
+%% Get sequences and Remove sequences with too many ties
+[all_seq_cat,all_times,~,~] = divideIntoSzChunksGen(pt,whichPt);
 keep = ones(size(all_seq_cat,2),1);
 for s = 1:size(all_seq_cat,2)
    curr_seq = all_seq_cat(:,s);
@@ -48,6 +60,7 @@ all_times(:,keep == 0) = [];
 fprintf(['%s had %d sequences (%1.2f of all sequences) deleted'...
     'for having >50 percent ties\n%d sequences remain\n'],...
     pt(whichPt).name,sum(keep == 0),sum(keep == 0)/length(keep),sum(keep==1));
+%}
 
 %% Get colormap
 fh_map = str2func(map_text);
