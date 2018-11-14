@@ -19,7 +19,7 @@ generalize, but probably not for focal seizures
 
 %% Parameters
 map_text = 'jet';
-approach = 3;
+approach = 1;
 doBootstrap = 0;
 alpha = 99.9;
 newSOZ =1;
