@@ -22,6 +22,9 @@ end
 % Remove space if present
 C = strrep(C,' ','');
 
+% Remove dash if present
+C = strrep(C,'-','');
+
 % Get the numbers
 numIdx = regexp(C,'\d');
 

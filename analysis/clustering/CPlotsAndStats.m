@@ -52,6 +52,7 @@ for i = 1:length(idx)
 end
 
 %% Get sz onset chs
+%{
 szChs = [];
 szIndex = [];
 for j = 1:length(pt(whichPt).sz)
@@ -62,6 +63,7 @@ szByCh = cell(max(szChs),1);
 for i = 1:length(szChs)
    szByCh{szChs(i)} = [szByCh{szChs(i)} szIndex(i)];
 end
+%}
 
 if 1 == 1
 %% Do plots
@@ -477,6 +479,7 @@ end
 
 
 %% Are the cluster leads close to the SOZ electrodes?
+if 1 == 0
 
 %% NEED TO DO SOMETHING TO DEAL WITH MULTIPLE MEASUREMENTS
 % Like, if you get to pick the best of n randomly placed channels, how
@@ -555,6 +558,7 @@ fprintf(['The mode cluster is\n %1.1f mm from the average SOZ electrode location
     '%1.2f (%d of %d) of all electrodes\n\n\n'],D_mode,perc,length(I) - I_min,length(I));
 
 
+end
 end
 
 

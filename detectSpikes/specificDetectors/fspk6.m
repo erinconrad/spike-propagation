@@ -68,11 +68,11 @@ for dd = 1:n_chans
     
     ch_type = electrodes(dd).type;
     
-    fr     = 30;  % high pass freq, used to be 20
+    fr     = 40;  % high pass freq, used to be 20
     lfr    = 7;   % low pass freq
     aftdur = 70;
     spikedur = 5;
-    fn_fr  = 1;
+    fn_fr  = 10;
     
     %{
     if strcmp(ch_type,'D') == 1
@@ -96,12 +96,15 @@ for dd = 1:n_chans
     % Break the data into time segments, 1 minute each, so that the
     % threshold we are using to see if the spike rises above the background
     % is based on just the one minute we are considering.
-    for tt = 1:num_segs-1
+    for tt = 1:num_segs
         time_points(1) = (tt-1)*window+1;
         time_points(2) = min(window*tt,size(eeg,1));
         
+        if time_points(2) - time_points(1) < 100
+            continue
+        end
         
-        if tt == num_segs-1
+        if tt == num_segs
            time_points(2) = size(eeg,1);
         end
         
@@ -110,6 +113,7 @@ for dd = 1:n_chans
         out     = [];
         data    = alldata(time_points(1):time_points(2),dd);
         
+  
         
         %% Skip spike detection if the amplitude is very low during the time period for that channel
         if sum(abs(data)) <= 1
@@ -138,6 +142,16 @@ for dd = 1:n_chans
             continue
         end
         
+        % Now filter
+        %{
+        f = designfilt('bandstopiir','FilterOrder',2, ...
+               'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
+               'DesignMethod','butter','SampleRate',srate);
+           
+        
+        data = filtfilt(f,data);   
+        %}
+        
         
         
         %% re-adjust the mean of the data to be zero (if there is a weird dc shift)
@@ -146,10 +160,7 @@ for dd = 1:n_chans
         %% Run the spike detector
         
 
-        lthresh = mean(abs(data));  % this is the smallest the initial part of the spike can be
-        thresh  = lthresh*tmul;     % this is the final threshold we want to impose
-        sthresh = lthresh*tmul/3;   % this is the first run threshold
-
+      
         spikes   = [];
         shspikes = [];
         fndata   = eegfilt(data, fn_fr, 'hp',srate);
@@ -163,7 +174,10 @@ for dd = 1:n_chans
         end
         %}
         
-        HFdata = data;
+        lthresh = mean(abs(HFdata));  % this is the smallest the initial part of the spike can be
+        thresh  = lthresh*tmul;     % this is the final threshold we want to impose
+        sthresh = lthresh*tmul/3;   % this is the first run threshold
+
        
         [spp,spv] = FindPeaks(HFdata);
 
@@ -176,10 +190,10 @@ for dd = 1:n_chans
             %spkmintic = spv(find(spv > startdx(i) & spv < startdx1(i)));  % find the valley that is between the two peaks
             spkmintic = spv((spv > startdx(i) & spv < startdx1(i)));
             %% commented out the second check
-            if HFdata(startdx1(i)) - HFdata(spkmintic) > sthresh %& HFdata(startdx(i)) - HFdata(spkmintic) > lthresh  %#ok<AND2> % see if the peaks are big enough
+            if abs(HFdata(startdx1(i)) - HFdata(spkmintic)) > sthresh %& HFdata(startdx(i)) - HFdata(spkmintic) > lthresh  %#ok<AND2> % see if the peaks are big enough
                 spikes(end+1,1) = spkmintic;                                  % add timestamp to the spike list
                 spikes(end,2)   = (startdx1(i)-startdx(i))*1000/rate;         % add spike duration to list
-                spikes(end,3)   = HFdata(startdx1(i)) - HFdata(spkmintic);    % add spike amplitude to list
+                spikes(end,3)   = abs(HFdata(startdx1(i)) - HFdata(spkmintic));    % add spike amplitude to list
             end
 
         end
@@ -233,7 +247,7 @@ for dd = 1:n_chans
                     % might be a spike so get the amplitude of the slow wave
                     spikes(i,4) = (a(2)-a(1))*1000/rate;       % add duration of afhp to the list
                     b = hyperv(find(hyperv > a(1) & hyperv < a(2))); % this is the valley
-                    spikes(i,5) = LFdata(a(1)) - LFdata(b);  % this is the amplitude of the afhp
+                    spikes(i,5) = abs(LFdata(a(1)) - LFdata(b));  % this is the amplitude of the afhp
                     if a(1) == olda    
                         % if this has the same afterhyperpolarization peak as the prev
                         %if strcmp(ch_type,'D') == 0
@@ -289,13 +303,16 @@ for dd = 1:n_chans
         all_spikes = [all_spikes;allout];
        
    
-    if dd == 27
-        plot_times = 1:2*srate;
-        plot(linspace(0,2,length(plot_times)),data(plot_times))
+    if 1== 0 && dd == 5
+        figure
+        plot_times = 1:15*srate;
+        plot(linspace(0,15,length(plot_times)),data(plot_times))
+        hold on
+        plot(linspace(0,15,length(plot_times)),HFdata(plot_times))
         error('look\n');
     end
-     %}   
-      
+       
+     
         
         
         
