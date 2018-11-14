@@ -8,8 +8,8 @@ useErinIgnore = 2;
 overwrite = 0;
 
 %% File names
-newptfile = 'newJsonElectrodes.mat';
-%newptfile = 'long_electrode_data.mat';
+%newptfile = 'newJsonElectrodes.mat';
+newptfile = 'long_electrode_data.mat';
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 %electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
@@ -17,8 +17,8 @@ addpath(p1);
 gdfFolder = [resultsFolder,'long_gdf/'];
 ptInfo = loadjson(jsonfile);
 ptnames = fieldnames(ptInfo.PATIENTS);
-%timeFile = 'long_times.mat';
-timeFile = 'new_json_data.mat';
+timeFile = 'long_times.mat';
+%timeFile = 'new_json_data.mat';
 
 %% Load file with filenames and run times
 if overwrite == 0 && exist([resultsFolder,'ptStructs/',newptfile],'file') ~= 0

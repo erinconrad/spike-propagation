@@ -303,7 +303,7 @@ for dd = 1:n_chans
         all_spikes = [all_spikes;allout];
        
    
-    if 1== 0 && dd == 5
+    if 1== 0 && dd == 1
         figure
         plot_times = 1:15*srate;
         plot(linspace(0,15,length(plot_times)),data(plot_times))
