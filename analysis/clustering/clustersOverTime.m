@@ -51,7 +51,7 @@ n_clusters(12) = 5;
 n_clusters(18) = 4;
 n_clusters(19) = 3;
 n_clusters(20) = 5;
-n_clusters(27) = 3;
+n_clusters(27) = 4;
 n_clusters(30) = 4;
 
 
