@@ -19,7 +19,7 @@ generalize, but probably not for focal seizures
 
 %% Parameters
 map_text = 'jet';
-approach = 1;
+approach = 3;
 doBootstrap = 0;
 alpha = 99.9;
 newSOZ =1;
@@ -74,6 +74,7 @@ if newSOZ == 0
     soz = unique(soz);
 else
    soz = pt(whichPt).newSOZChs; 
+   soz(soz==0)=[];
 end
 
 %% Get sz times
