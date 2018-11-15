@@ -43,6 +43,7 @@ n_clusters = ones(30,1)*3;
 %% Optimal cluster numbers
 n_clusters(3) = 4;
 n_clusters(4) = 5;
+n_clusters(7) = 4;
 n_clusters(8) = 3;
 n_clusters(11) = 4;
 n_clusters(12) = 5;
