@@ -1,4 +1,4 @@
-function chConnections(pt,whichPt)
+function chConnections(pt,whichPts)
 
 
 %% Other ideas
@@ -19,11 +19,22 @@ generalize, but probably not for focal seizures
 
 %% Parameters
 map_text = 'jet';
-approach = 3;
+approach = 2;
 doBootstrap = 0;
-alpha = 99.9;
-newSOZ =1;
+alpha1 = 95;
 
+oneway =0; %don't change
+
+
+[electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
+
+destFolder = [resultsFolder,'pretty_plots/Fig3/'];
+
+allHullDist = [];
+allFreqDist = [];
+allAllDist =[];
+
+for whichPt = whichPts
 
 %% Get sequences
 %{
@@ -45,16 +56,7 @@ nchs = size(locs,1);
 fh_map = str2func(map_text);
 
 %% Get SOZ channels
-if newSOZ == 0
-    soz = [];
-    for j = 1:length(pt(whichPt).sz)
-        soz = [soz;pt(whichPt).sz(j).chs];
-    end
-    soz = unique(soz);
-else
-   soz = pt(whichPt).newSOZChs; 
-   soz(soz==0)=[];
-end
+soz = pt(whichPt).newSOZChs; 
 
 %% Get sz times
 szTimes = zeros(length(pt(whichPt).sz),1);
@@ -105,12 +107,7 @@ for i = 1:size(all_seq_cat,2)
 end
 
 
-% Plot the pairwise connections
-if 1 == 0
-figure
-imagesc(chCh)
-colorbar
-end
+
 
 %% Get sequence number per channel
 seq_freq = nansum(all_seq_cat,2);
@@ -142,15 +139,15 @@ if doBootstrap == 1
 
     s_con = sort(chCh_all(:));
     %scatter(1:length(s_con),s_con)
-    perc = prctile(s_con,alpha);
+    perc = prctile(s_con,alpha1);
     minCount = perc;
     fprintf(['By permutation testing, the minimum number of counts for a\n'...
         'connection to be significant is\n'...
-        '%d for an alpha of %1.1fth percentile\n\n'],perc,alpha);
+        '%d for an alpha of %1.1fth percentile\n\n'],perc,alpha1);
     
     ncons = sum(sum(chCh));
     lambda = ncons/nchs^2;
-    X = poissinv(alpha/100,lambda);
+    X = poissinv(alpha1/100,lambda);
     fprintf(['By poisson assumption, the number of counts is:\n'...
         '%d\n\n'],X);
     
@@ -160,14 +157,59 @@ else
     
     ncons = sum(sum(chCh));
     lambda = ncons/nchs^2;
-    X = poissinv(alpha/100,lambda);
+    X = poissinv(alpha1/100,lambda);
     minCount = X;
     
     fprintf(['Not doing permutation test, assuming poisson distribution.\n'...
         'Doing so yields min count number for significance of\n'...
-        '%d for an alpha of %1.1fth percentile\n\n'],X,alpha);
+        '%d for an alpha1 of %1.1fth percentile\n\n'],X,alpha1);
 end
 
+
+% Plot the pairwise connections
+if 1 == 0
+figure
+set(gcf,'position',[200 200 1000 800]);
+imagesc(chCh)
+colorbar
+ylabel('Upstream electrode #')
+xlabel('Downstream electrode #')
+title('Number of upstream to downstream connections')
+set(gca,'fontsize',50)
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 1000/800*20 20];
+print(gcf,[destFolder,'numCon'],'-dpng');
+
+figure
+set(gcf,'position',[200 200 1000 800]);
+imagesc(chCh>minCount)
+colormap(flipud(gray))
+ylabel('Upstream electrode #')
+xlabel('Downstream electrode #')
+title('Significant upstream to downstream connections')
+set(gca,'fontsize',50)
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 1000/800*20 20];
+print(gcf,[destFolder,'sigCons'],'-dpng');
+end
+
+%% One way
+if 1==0
+sigCh = chCh >minCount;
+for i = 1:size(sigCh,1)
+   for j =1:size(sigCh,2) 
+      if sigCh(i,j) == 1 && sigCh(j,i) == 1
+          sigCh(i,j) = 0;
+          sigCh(j,i) = 0;
+      end
+   end
+end
+figure
+imagesc(sigCh)
+colormap(flipud(gray))
+end
 
 %% Get convex hull of the influence of each channel
 
@@ -176,8 +218,15 @@ chInfluence = cell(nchs,1);
 
 for i = 1:length(chInfluence)
     for j = 1:size(chCh,2)
-        if chCh(i,j) >= minCount 
-            chInfluence{i} = [chInfluence{i},j];
+        if oneway == 0
+            if chCh(i,j) >= minCount 
+                chInfluence{i} = [chInfluence{i},j];
+            end
+        else
+            if sigCh(i,j) == 1
+                chInfluence{i} = [chInfluence{i},j];
+            end
+                
         end
     end   
 end
@@ -193,6 +242,7 @@ for i = 1:nchs
    [K,V] = convhull(hull_locs(:,1),hull_locs(:,2),hull_locs(:,3));
    
    chull(i) = V;
+   
    
    %{
    figure
@@ -229,19 +279,21 @@ Y = reshape(Y,[size(chCh,1),size(chCh,1)]);
 subplot(2,2,2)
 scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
 hold on
-for i = 1:size(chCh,1)
+for i = I%1:size(chCh,1)
    for j = 1:size(chCh,2) 
        con = chCh(i,j);
        dp = locs(j,:) - locs(i,:);
        if con > minCount
            
+           %{
            quiver3(locs(i,1),locs(i,2),locs(i,3),dp(1), dp(2), dp(3),...
                'color',gs(Y(i,j),:));
-           %{
+           %}
+           
            
            quiver3(locs(i,1),locs(i,2),locs(i,3),dp(1), dp(2), dp(3),...
                'color',[0 0 0],'linewidth',0.5);
-               %}
+               
        end
    end
 end
@@ -249,6 +301,7 @@ scatter3(locs(soz,1),locs(soz,2),locs(soz,3),'*','k');
 title('Connections between channels');
 
 %% Seq freq
+
 
 gs = fh_map(50);
 [Y,E] = discretize(log(seq_freq),size(gs,1));
@@ -285,23 +338,108 @@ title('Leader frequency');
 
 %% Stats
 
-% Distance from max convex hull to  sz onset mean
+    
+% Distance from electrode with max volume of interest to its closest SOZ
 [~,I] = max(chull);
 hullLoc = (locs(I,:));
-szMeanLoc = mean(locs(soz,:),1);
-hullDist = sqrt(sum((hullLoc-szMeanLoc).^2));
+hullDist = min(vecnorm(hullLoc - locs(soz,:),2,2));
 
-% Distance from all electrodes to sz onset mean
-allCh = locs;
-allChDist = sqrt(sum((allCh - repmat(szMeanLoc,nchs,1)).^2,2));
+% Distance from electrode with max seq freq of interest to its closest SOZ
+[~,most_freq] = max(seq_freq);
+freqLoc = locs(most_freq,:);
+freqDist = min(vecnorm(freqLoc - locs(soz,:),2,2));
 
-better = sum((allChDist<hullDist));
-betterPerc = better/nchs*100;
+fprintf(['The electrode with the biggest volume of influence was\n',...
+    '%1.1f mm from the closest SOZ electrode.\n'],hullDist)
+
+fprintf(['The electrode with the most frequent spikes was\n',...
+    '%1.1f mm from the closest SOZ electrode.\n'],freqDist)
+
+allHullDist = [allHullDist,hullDist];
+allFreqDist = [allFreqDist,freqDist];
+
+% Distance from every electrode to its closest SOZ
+allLocs = zeros(size(locs,1),1);
+for i = 1:length(allLocs)
+    allLocs(i) = min(vecnorm(locs(i,:) - locs(soz,:),2,2));
+end
+
+allAllDist =[allAllDist;allLocs];
+
+better = length(find(allLocs<allHullDist));
+
 fprintf('%1.1f percent of electrodes (%d of %d) outperformed our electrode\n',...
-    betterPerc,better,nchs);
+    better/nchs*100,better,nchs);
 
+
+%% Make pretty plots
+
+if 1==0
+% Connections
+sizey = 400;
+figure
+set(gcf,'position',[200 200 1000 800]);
+scatter3(locs(:,1),locs(:,2),locs(:,3),sizey,'k','linewidth',4);
+hold on
+[~,I] = max(chull);
+for j = 1:size(chCh,2) 
+   con = chCh(I,j);
+   dp = locs(j,:) - locs(I,:);
+   if con > minCount
+
+       quiver3(locs(I,1),locs(I,2),locs(I,3),dp(1), dp(2), dp(3),...
+           'color','k','linewidth',4,'maxheadsize',0.4);
+
+   end
+end
+
+scatter3(locs(I,1),locs(I,2),locs(I,3),sizey,'r','filled');
+hull_chs = chInfluence{I};
+hull_locs = locs(hull_chs,:);
+hull_locs = [locs(i,:);hull_locs];
+DT = delaunayTriangulation(hull_locs);
+[C,v] = convexHull(DT);
+cv=trisurf(C,DT.Points(:,1),DT.Points(:,2),DT.Points(:,3), ...
+       'FaceColor','r');
+alpha(cv,0.05)   
+xticklabels([])
+yticklabels([])
+zticklabels([])
+title('Volume of influence of electrode #83')
+set(gca,'fontsize',50)
+
+view([0.7 0.2 0.2])
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 1000/800*20 20];
+print(gcf,[destFolder,'convhull'],'-dpng');
+end
+
+% Convex hull
+%{
+hull_chs = chInfluence{I};
+hull_locs = locs(hull_chs,:);
+hull_locs = [locs(i,:);hull_locs];
+DT = delaunayTriangulation(hull_locs);
+[C,v] = convexHull(DT);
+figure
+set(gcf,'position',[200 200 1000 800]);
+scatter3(locs(:,1),locs(:,2),locs(:,3),sizey,'k');
+hold on
+scatter3(locs(I,1),locs(I,2),locs(I,3),sizey,'r','filled');
+trisurf(C,DT.Points(:,1),DT.Points(:,2),DT.Points(:,3), ...
+       'FaceColor','cyan')
+%plot3(hull_locs(K,1),hull_locs(K,2),hull_locs(K,3));
+%text(locs(I,1)-5,locs(I,2)-5,locs(I,3)-5,sprintf('%1.1f', V),'fontsize',20)
+xticklabels([])
+yticklabels([])
+zticklabels([])
+alpha 0.5
+view([0.7 0.2 0.2])
+%}
 
 %% Plot SOZ seq freq and max hull seq freq over time
+if  1 == 0
 
 % Get time range
 all_times = floor(min(all_seq_cat(:,1))):ceil(max(all_seq_cat(:,end)));
@@ -388,6 +526,48 @@ for j = 1:length(szTimes)
    plot([szTimes(j) szTimes(j)],yl,'k','LineWidth',2); 
 end
 title('Number of sequences starting in max connected electrode')
+end
 
+end
+
+
+
+
+%mean(allHullDist)
+%mean(allFreqDist)
+
+%% Test whether the the max hull and max seq freq electrodes do significantly better than chance
+% I am looking across all patients, at 1) the electrode with the max volume
+% of interest and taking the distance from this to the closest SOZ
+% electrode, and 2) all electrodes and taking the distance from them to
+% their closest SOZ electrode
+
+%[h,p,ci,stats] = ttest2(allHullDist,allAllDist);
+
+% Compare across all patients the distance from the electrode with max
+% volume of interest to closest SOZ and the distance from all electrodes to
+% their closest SOZ
+[p,h,stats] = ranksum(allHullDist,allAllDist);
+[p2,h2,stats2] = ranksum(allFreqDist,allAllDist);
+[p3,h3,stats3] = ranksum(allFreqDist,allHullDist);
+
+%% Plot error bars of means 
+figure
+
+prices = [mean(allHullDist) mean(allFreqDist) mean(allAllDist)];
+bar(prices)
+title(sprintf(['Average distance across patients from electrode of interest\n to closest ',...
+    'seizure onset zone electrode']))
+ylabel(sprintf('Average distance (mm)'));
+
+xticklabels({sprintf('Electrode with max volume of influence'),...
+    'Electrode with max sequence frequency','All electrodes'})
+set(gca,'FontSize',20)
+fix_xticklabels(gca,0.1,{'FontSize',20});
+pause
+fig = gcf;
+fig.PaperUnits = 'inches';
+posnow = get(fig,'Position');
+print(gcf,[destFolder,'bargraph'],'-dpng');
 
 end

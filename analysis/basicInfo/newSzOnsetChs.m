@@ -20,7 +20,7 @@ for i = 1:length(pt)
             if Lia == 0
                 fprintf('Warning, could not find channel %s in the list of unignored channels for patient %s\n',...
                     szElecs{ich},pt(i).name);
-                error('');
+                error('look');
 
             end
             chnums(ich) = chIds;

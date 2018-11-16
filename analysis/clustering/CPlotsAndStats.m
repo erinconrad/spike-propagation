@@ -8,6 +8,10 @@ nboot = 1e4;
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
 
+allCounts = [];
+allPat = [];
+allChunk = [];
+
 for whichPt = whichPts
 
 fprintf('Doing %s\n',pt(whichPt).name);
@@ -19,6 +23,9 @@ xyChan = pt(whichPt).electrodeData.locs;
 saveFolder = [resultsFolder,'plots/',pt(whichPt).name,'/','clusters/'];
 mkdir(saveFolder)
 
+
+%% Get sz times
+szTimes = pt(whichPt).newSzTimes;
 
     
 %% Pull cluster info
@@ -125,9 +132,9 @@ end
 end
 yl = ylim;
 ylim([min(cluster_vec(:,1)), yl(2)])
-for j = 1:length(pt(whichPt).sz)
+for j = 1:size(szTimes,1)
    yl = ylim; 
-   szOnset = pt(whichPt).sz(j).onset;
+   szOnset = szTimes(j,1);
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',3);
 end
 yticks(ytick_locations)
@@ -155,10 +162,10 @@ end
 
 yticks(ytick_locations)
 yticklabels({'X','Y','Z'})
-for j = 1:length(pt(whichPt).sz)
+for j = 1:size(szTimes,1)
    yl = ylim; 
-   szOnset = pt(whichPt).sz(j).onset;
-   sz = plot([szOnset szOnset]/3600,yl,'k--','LineWidth',3);
+   szOnset = szTimes(j,1);
+   sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',3);
 end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
 ylabel('Coordinate');
@@ -202,9 +209,9 @@ for i = clusters
 hold on
 end
 
-for j = 1:length(pt(whichPt).sz)
+for j = 1:size(szTimes,1)
    yl = ylim; 
-   szOnset = pt(whichPt).sz(j).onset;
+   szOnset = szTimes(j,1);
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',3);
 end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
@@ -224,8 +231,8 @@ set(gca,'FontSize',20);
 %saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
 %close(gcf)
 destFolder = [resultsFolder,'pretty_plots/Fig2/'];
-print(gcf,[destFolder,'clustTime'],'-depsc');
-eps2pdf([destFolder,'clustTime.eps'])
+print(gcf,[destFolder,'clustTime_',sprintf('%s',pt(whichPt).name)],'-depsc');
+eps2pdf([destFolder,'clustTime_',sprintf('%s',pt(whichPt).name),'.eps'])
 
 
 %% Plot locations of centroids 
@@ -439,6 +446,9 @@ fprintf(['For %s, regarding whether the pre-ictal period\n has a different seque
     ' frequency from the interictal period,\n the p-value is %1.1e\n\n'],...
     pt(whichPt).name,p_freq);
 
+allCounts = [allCounts;count1/time1;count2/time2];
+allChunk = [allChunk;0;1];
+allPat = [allPat;whichPt; whichPt];
 
 %% Validate the chi2 with bootstrap
 if 1==0
@@ -560,6 +570,10 @@ fprintf(['The mode cluster is\n %1.1f mm from the average SOZ electrode location
 
 end
 end
+
+
+end
+
 
 
 end
