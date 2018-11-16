@@ -7,8 +7,8 @@ function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thre
 
 %% Parameters
 setChLimits = 1; % Should I toss out spikes that occur across too many channels at the same time
-multiChLimit = 0.8; % I will throw out spikes that occur in >80% of channels at the same time
-multiChTime = .025;
+multiChLimit = 0.8;%0.8; % I will throw out spikes that occur in >80% of channels at the same time
+multiChTime = 0.4; %.025;
 vtime = [-0.005,0.05]; %[-0.002,0.048]
 
 %% Load file paths, etc.
@@ -264,6 +264,16 @@ end
 %}
 
 
+
+
+%% limit spikes and values to those in the desired times
+% This is useful if I had to force lengthen the search time for detector 4
+% if I asked to look at less than 60 seconds of data
+values = values(1:oldStartEnd(2)-oldStartEnd(1),:);
+if isempty(gdf) == 0
+    gdf = gdf(gdf(:,2)<oldtimes(2)-oldtimes(1),:);
+end
+
 %% Toss spikes that occur across too high a percentage of channels at the same time
 if setChLimits == 1 && isempty(gdf) == 0
    maxChannels = multiChLimit * length(channels);
@@ -272,14 +282,6 @@ if setChLimits == 1 && isempty(gdf) == 0
         (size(gdf,1)-size(newgdf,1))/size(gdf,1)*100)
    gdf = newgdf;
     
-end
-
-%% limit spikes and values to those in the desired times
-% This is useful if I had to force lengthen the search time for detector 4
-% if I asked to look at less than 60 seconds of data
-values = values(1:oldStartEnd(2)-oldStartEnd(1),:);
-if isempty(gdf) == 0
-    gdf = gdf(gdf(:,2)<oldtimes(2)-oldtimes(1),:);
 end
 
 

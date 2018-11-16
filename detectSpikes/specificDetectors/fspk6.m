@@ -71,7 +71,7 @@ for dd = 1:n_chans
     fr     = 40;  % high pass freq, used to be 20
     lfr    = 7;   % low pass freq
     aftdur = 70;
-    spikedur = 5;
+    spikedur = 5;%5;
     fn_fr  = 10;
     
     %{

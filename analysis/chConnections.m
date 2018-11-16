@@ -41,27 +41,6 @@ locs = pt(whichPt).electrodeData.locs(:,2:4);
 nchs = size(locs,1);
 
 
-%{
-%% Get sequences and Remove sequences with too many ties
-[all_seq_cat,all_times,~,~] = divideIntoSzChunksGen(pt,whichPt);
-keep = ones(size(all_seq_cat,2),1);
-for s = 1:size(all_seq_cat,2)
-   curr_seq = all_seq_cat(:,s);
-   nonans = curr_seq(~isnan(curr_seq));
-   norepeats = unique(nonans);
-   if length(norepeats) < 0.5*length(nonans)
-       keep(s) = 0;
-   end
-end
-
-all_seq_cat(:,keep==0) = [];
-all_times(:,keep == 0) = [];
-
-fprintf(['%s had %d sequences (%1.2f of all sequences) deleted'...
-    'for having >50 percent ties\n%d sequences remain\n'],...
-    pt(whichPt).name,sum(keep == 0),sum(keep == 0)/length(keep),sum(keep==1));
-%}
-
 %% Get colormap
 fh_map = str2func(map_text);
 
@@ -127,7 +106,7 @@ end
 
 
 % Plot the pairwise connections
-if 1 == 1
+if 1 == 0
 figure
 imagesc(chCh)
 colorbar
@@ -197,7 +176,7 @@ chInfluence = cell(nchs,1);
 
 for i = 1:length(chInfluence)
     for j = 1:size(chCh,2)
-        if chCh(i,j) > minCount % get better threshold
+        if chCh(i,j) >= minCount 
             chInfluence{i} = [chInfluence{i},j];
         end
     end   
@@ -214,6 +193,7 @@ for i = 1:nchs
    [K,V] = convhull(hull_locs(:,1),hull_locs(:,2),hull_locs(:,3));
    
    chull(i) = V;
+   
    %{
    figure
    set(gcf,'Position',[200 200 800 550]);
@@ -221,6 +201,7 @@ for i = 1:nchs
    hold on
    scatter3(locs(i,1),locs(i,2),locs(i,3),100,'r');
    plot3(hull_locs(K,1),hull_locs(K,2),hull_locs(K,3));
+   text(locs(i,1)-5,locs(i,2)-5,locs(i,3)-5,sprintf('%1.1f', V),'fontsize',20)
    %}
 end
 
