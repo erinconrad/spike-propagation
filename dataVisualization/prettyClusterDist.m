@@ -62,6 +62,7 @@ for i = 1:k
 end
     
 %% Add vectors
+%{
 didCh = zeros(size(locs,1),1);
 for i = 1:length(idx)
     chLoc = cluster_vec(i,1:3);
@@ -81,10 +82,17 @@ for i = 1:length(idx)
     end
     
 end
+%}
 
+%% Plot SOZ channel
+soz = pt(whichPt).newSOZChs;
+scatter3(locs(soz,1),locs(soz,2),locs(soz,3),...
+    100,'k','filled');
 
+%{
 legend([pl1,pl2,pl3],{'Cluster 1','Cluster 2','Cluster 3'},'FontSize',50,...
-    'Location','southwest');
+    'Location','southeast');
+    %}
 
 xticklabels([])
 yticklabels([])
@@ -94,9 +102,9 @@ view([0.7 0.2 0.2])
 fig = gcf;
 fig.PaperUnits = 'inches';
 fig.PaperPosition = [0 0 1000/800*20 20];
-print(gcf,[destFolder,'clustEx'],'-depsc');
-print(gcf,[destFolder,'clustEx'],'-dpng');
-eps2pdf([destFolder,'clustEx.eps'])
+print(gcf,[destFolder,'clustEx111'],'-depsc');
+print(gcf,[destFolder,'clustEx111'],'-dpng');
+eps2pdf([destFolder,'clustEx111.eps'])
 
 
 end

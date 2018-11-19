@@ -57,7 +57,7 @@ n_clusters(30) = 4;
 
 clustOpt = 0;
 doPlots = 1;
-doLongPlots = 1;
+doLongPlots = 0;
 leadOnly = 1;
 
 % Save file location

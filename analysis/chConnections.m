@@ -44,6 +44,8 @@ all_times = pt(whichPt).cluster.all_times;
 all_seq_cat = pt(whichPt).cluster.all_seq_cat;
 bad_cluster = pt(whichPt).cluster.bad_cluster;
 idx = pt(whichPt).cluster.idx;
+
+% Remove clusters that I determined to be mostly artifact
 bad_idx = find(ismember(idx,bad_cluster));
 all_times(bad_idx) = [];
 all_seq_cat(:,bad_idx) = [];
@@ -233,6 +235,7 @@ end
 
 % Calculate convex hull volume 
 chull = zeros(nchs,1);
+maxdist = zeros(nchs,1);
 for i = 1:nchs
    if isempty(chInfluence{i}) == 1, continue; end
    hull_chs = chInfluence{i};
@@ -243,6 +246,29 @@ for i = 1:nchs
    
    chull(i) = V;
    
+   % Alternative approach that doesn't penalize flat surfaces is to take
+   % the distance between the two furthest locations
+   chs_group = [i,hull_chs]; % get all channels connected to channel 1
+   dist_group_matrix = zeros(length(chs_group),length(chs_group)); % matrix of ch-to-ch distances
+   for j = 1:length(chs_group)
+       for k = 1:length(chs_group)
+          dist_group_matrix(j,k) = vecnorm(locs(chs_group(j),:) - locs(chs_group(k),:),2);
+          % distance between 2 channels 
+       end
+    
+   end
+   
+   [max_dist,I] = max(dist_group_matrix(:));
+   %[I1,I2] = ind2sub(size(dist_group_matrix),I);
+   maxdist(i) = max_dist;
+   
+   %{
+   figure
+   scatter3(locs(:,1),locs(:,2),locs(:,3),110,'k');
+   hold on
+   scatter3(locs(chs_group(I1),1),locs(chs_group(I1),2),locs(chs_group(I1),3),100,'g','filled');
+   scatter3(locs(chs_group(I2),1),locs(chs_group(I2),2),locs(chs_group(I2),3),100,'r','filled');
+   %}
    
    %{
    figure
@@ -270,11 +296,25 @@ scatter3(locs(soz,1),locs(soz,2),locs(soz,3),'*','k');
 title('Volume of convex hull of influenced channels');
 
 
+gs = fh_map(50);
+[Y,E] = discretize(maxdist,size(gs,1));
+subplot(2,2,2)
+scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
+hold on
+scatter3(locs(isnan(Y)==0,1),locs(isnan(Y)==0,2),locs(isnan(Y)==0,3),100,gs(Y(isnan(Y)==0),:));
+[~,I] = max(maxdist);
+scatter3(locs(I,1),locs(I,2),locs(I,3),100,gs(Y(I),:),'filled');
+scatter3(locs(soz,1),locs(soz,2),locs(soz,3),'*','k');
+title('Max distance of connection of influenced channels');
+
+%{
 all_con = chCh(:);
 con_col = log(all_con);
 gs = fh_map(round(max(con_col)));
 [Y,E] = discretize(con_col,size(gs,1));
 Y = reshape(Y,[size(chCh,1),size(chCh,1)]);
+
+
 
 subplot(2,2,2)
 scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
@@ -299,6 +339,8 @@ for i = I%1:size(chCh,1)
 end
 scatter3(locs(soz,1),locs(soz,2),locs(soz,3),'*','k');
 title('Connections between channels');
+
+%}
 
 %% Seq freq
 
@@ -366,7 +408,7 @@ end
 
 allAllDist =[allAllDist;allLocs];
 
-better = length(find(allLocs<allHullDist));
+better = length(find(allLocs<hullDist));
 
 fprintf('%1.1f percent of electrodes (%d of %d) outperformed our electrode\n',...
     better/nchs*100,better,nchs);
@@ -413,6 +455,28 @@ fig = gcf;
 fig.PaperUnits = 'inches';
 fig.PaperPosition = [0 0 1000/800*20 20];
 print(gcf,[destFolder,'convhull'],'-dpng');
+end
+
+if 1 == 0
+% best channel
+sizey = 400;
+figure
+set(gcf,'position',[200 200 1000 800]);
+scatter3(locs(:,1),locs(:,2),locs(:,3),sizey,'k','linewidth',4);
+hold on
+[~,I] = max(chull);
+scatter3(locs(I,1),locs(I,2),locs(I,3),sizey,'g','filled');
+[~,most_freq] = max(seq_freq);
+scatter3(locs(most_freq,1),locs(most_freq,2),locs(most_freq,3),sizey,'r','filled');
+scatter3(locs(soz,1),locs(soz,2),locs(soz,3),100,'k','filled');
+xticklabels([])
+yticklabels([])
+zticklabels([])
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 1000/800*20 20];
+print(gcf,[destFolder,'ex_best_hull'],'-dpng');
+    
 end
 
 % Convex hull
@@ -552,6 +616,8 @@ end
 [p3,h3,stats3] = ranksum(allFreqDist,allHullDist);
 
 %% Plot error bars of means 
+
+if 1 == 0
 figure
 
 prices = [mean(allHullDist) mean(allFreqDist) mean(allAllDist)];
@@ -569,5 +635,6 @@ fig = gcf;
 fig.PaperUnits = 'inches';
 posnow = get(fig,'Position');
 print(gcf,[destFolder,'bargraph'],'-dpng');
+end
 
 end

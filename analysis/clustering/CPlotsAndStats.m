@@ -7,12 +7,17 @@ nboot = 1e4;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
+destFolder = [resultsFolder,'pretty_plots/Fig3/'];
 
 allCounts = [];
 allPat = [];
 allChunk = [];
+chi_tables = cell(max(whichPts),1);
+chi_tables2 = cell(max(whichPts),1);
+chi_tables_plot = cell(max(whichPts),1);
 
 for whichPt = whichPts
+    
 
 fprintf('Doing %s\n',pt(whichPt).name);
 if isempty(pt(whichPt).electrodeData) == 1
@@ -76,6 +81,7 @@ if 1 == 1
 %% Do plots
 
 %% Plot the clustering algorithm results 
+%{
 figure
 scatter3(cluster_vec(:,1),cluster_vec(:,2),cluster_vec(:,3),60,c_idx)
 hold on
@@ -84,7 +90,7 @@ for i = 1:size(C,1)
    scatter3(C(i,1),C(i,2),C(i,3),100,colors(i,:),'filled');
      
 end
-
+%}
 %{
 figure
 scatter3(cluster_vec(:,4),cluster_vec(:,5),cluster_vec(:,6),60,c_idx)
@@ -286,14 +292,19 @@ end
 %% Statistical tests
 
 % Get all seizure times
+if 1 == 0
 szAll = zeros(length(pt(whichPt).sz),1);
 for j = 1:length(pt(whichPt).sz)
    szAll(j) = pt(whichPt).sz(j).onset;
     
 end
+end
+szAll = szTimes(:,1);
+
 
 %% #1 does cluster distribution change over 60 minute chunks?
 
+% 60 minute chunks
 test_t = 3600;
 
 % Determine most popular cluster
@@ -311,8 +322,12 @@ most_num = zeros(n_chunks,1);
 
 for i = 1:n_chunks
    curr_times = [all_times(1)+(i-1)*test_t, min(all_times(1) + i*test_t,all_times(end))];
+   
+   % get the indices of the sequences in that time chunk
    curr_seqs = find(all_times >= curr_times(1) & all_times <= curr_times(2));
    prop_pop(i) = sum(idx(curr_seqs) == pop_c)/length(curr_seqs);
+   
+   % define the time chunk for those sequences
    which_chunk(curr_seqs) = i;
    times_pop(i) = curr_times(2);
    for j = 1:size(num_cluster,2)
@@ -336,6 +351,22 @@ end
 fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'...
     ' distributions,\n the p-value is %1.1e\n\n\n'],pt(whichPt).name,p_1);
 
+%% Same thing, but just 2 most popular clusters and first 24 chunks
+most_common = mode(idx);
+second_common = mode(idx(idx~=most_common));
+new_idx = idx(idx == most_common | idx == second_common);
+new_which_chunk = which_chunk(idx == most_common | idx == second_common);
+unique_chunks = unique(new_which_chunk);
+allowable_chunks = unique_chunks(1:24);
+new_idx = new_idx(ismember(new_which_chunk,allowable_chunks));
+new_which_chunk = new_which_chunk(ismember(new_which_chunk,allowable_chunks));
+
+[tbl_5,chi2_5,p_5,labels_5] = crosstab(new_which_chunk,new_idx);
+fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'...
+    ' distributions,\n when just taking first 2 clusters and '...
+    'first 24 hours,\nthe p-value is %1.1e\n\n\n'],pt(whichPt).name,p_1);
+
+chi_tables2{whichPt} = tbl_5;
 
 %% Validate the above method with bootstrap
 %{
@@ -362,36 +393,41 @@ fprintf('By bootstrap, the p value is %1.1e\n',boot_p_1);
 %% Do test to compare cluster distributions between pre-ictal and inter-ictal data
 
 % Get all the pre-ictal sequences
-preIcRange = [-40*60,-10*60];
+preIcRange = [-60*60,-1*60];
+%preIcRange = [-40*60,-10*60];
 preIcClustIdx = [];
 preIcIdx = [];
 preIcTimes = zeros(length(pt(whichPt).sz),2);
-for j = 1:length(pt(whichPt).sz)
-    szTime = pt(whichPt).sz(j).onset; 
+for j = 1:length(szAll)%1:length(pt(whichPt).sz)
+    %szTime = pt(whichPt).sz(j).onset;
+    
+    % Get the current seizure time
+    szTime = szAll(j);
+    
+    % Get the range of pre-ictal times (1 to 31 minutes before the seizure)
     preIcTime = szTime + preIcRange;
     preIcTimes(j,:) = preIcTime;
+    
+    % The cluster indices of the sequences falling within that range
     preIcClustIdx = [preIcClustIdx;idx(all_times >= preIcTime(1) & ...
         all_times <= preIcTime(2))];
+    
+    % the sequence numbers falling within that range
     preIcIdx = [preIcIdx;find(all_times >= preIcTime(1) & ...
         all_times <= preIcTime(2))'];
     
 end
 
-% The harder part: get random 30 minute chunks in the interictal period
-% equivalent to the number of pre-ictal chunks
-szTimes = zeros(length(pt(whichPt).sz),1);
-for j= 1:length(pt(whichPt).sz)
-    szTimes(j) = pt(whichPt).sz(j).onset; 
-end
+szTimes = szAll;
 
 
 
-% Alternate idea without randomness:
-n_chunks = length(pt(whichPt).sz);
+% Get inter-ictal sequences
+n_chunks = length(szAll);
 interIcTimes = [];
 for i = 1:n_chunks
     
-    % potential late_time is 4 hours before the pre-ictal period
+    % potential late_time is 3 hours before the pre-ictal period
    late_time = preIcTimes(i,1) - 3600*2;
    
    % potential early time is either the start of the run or an hour after
@@ -409,8 +445,8 @@ for i = 1:n_chunks
    interIcTimes = [interIcTimes;early_time late_time];
 
 end
- % add another time
- late_time = all_times(end);
+ % add time after last seizure
+ late_time = all_times(end)- 3600*2;
  early_time = szTimes(end) + 3600*1;
  if late_time>early_time
      interIcTimes = [interIcTimes;early_time late_time];
@@ -434,6 +470,25 @@ fprintf('For %s, there are\n %d pre-ictal and\n %d interictal sequences\n\n\n',.
     pt(whichPt).name,length(preIcClustIdx), length(interIcClustIdx));
 fprintf(['For %s, regarding whether the pre-ictal period\n has a different cluster'...
     ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
+
+chi_tables_plot{whichPt} = tbl_2;
+
+%% Get 2x2 table for just 2 most common clusters
+
+
+interIcClustIdx(interIcClustIdx~=most_common & interIcClustIdx~=second_common) = [];
+preIcClustIdx(preIcClustIdx~=most_common & preIcClustIdx~=second_common) = [];
+
+[tbl_3,chi2_3,p_3,labels_3] = crosstab([ones(size(preIcClustIdx));...
+    2*ones(size(interIcClustIdx))],[preIcClustIdx;interIcClustIdx]);
+
+fprintf('For %s, there are\n %d pre-ictal and\n %d interictal sequences\n\n\n',...
+    pt(whichPt).name,length(preIcClustIdx), length(interIcClustIdx));
+fprintf(['For %s, regarding whether the pre-ictal period\n has a different cluster'...
+    ' distribution from the interictal period,\n'...
+    'only taking into account 2 most common clusters,\nthe p-value is %1.1e\n\n'],pt(whichPt).name,p_3);
+
+chi_tables{whichPt} = tbl_3;
 
 %% Does sequence frequency predict sz?
 time1 = sum(interIcTimes(:,2) - interIcTimes(:,1));
@@ -574,6 +629,120 @@ end
 
 end
 
+%% Bar graphs
+figure
+[ha, pos] = tight_subplot(1,length(whichPts),[.01 .01],[.1 .08],[.02 .01]); 
+for j = 1:length(whichPts)
+    axes(ha(j));
+    tbl = chi_tables_plot{whichPts(j)};
+    new_tbl = tbl;
+    for k = 1:size(new_tbl,1)
+       new_tbl(k,:) = new_tbl(k,:)/sum(new_tbl(k,:));
+        
+    end
+    bar(new_tbl)
+    xticklabels({'Pre-ictal','Inter-ictal'});
+    
+    legend_names = cell(size(tbl,2),1);
+    for k = 1:length(legend_names)
+       legend_names{k} = sprintf('Cluster %d',k); 
+        
+    end
+    yticklabels([])
+    lgnd=legend(legend_names,'location','northwest');
+    set(lgnd,'color','none');
+    title(sprintf('%s',pt(whichPts(j)).name));
+    if j == 1
+        ylabel('Proportion of sequences');
+    end
+    set(gca,'FontSize',15)
+end
+pause
+fig = gcf;
+fig.PaperUnits = 'inches';
+posnow = get(fig,'Position');
+print(gcf,[destFolder,'chi2'],'-dpng');
+
+%% Get full table for chi_2 to put into R
+names = cell(length(whichPts)*4,1);
+cluster = cell(length(whichPts)*4,1);
+state = cell(length(whichPts)*4,1);
+counts = zeros(length(whichPts)*4,1);
+
+count = 1;
+for whichPt = whichPts
+    names{count} = pt(whichPt).name;
+    names{count+1} = pt(whichPt).name;
+    names{count+2} = pt(whichPt).name;
+    names{count+3} = pt(whichPt).name;
+    
+    cluster{count} = 'Cluster1';
+    cluster{count+1} = 'Cluster2';
+    cluster{count+2} = 'Cluster1';
+    cluster{count+3} = 'Cluster2';
+    
+    state{count} = 'Preic';
+    state{count+1} = 'Preic';
+    state{count+2} = 'Interic';
+    state{count+3} = 'Interic';
+    
+    
+    % Get appropriate table
+    tbl = chi_tables{whichPt};
+    clust1_preic = tbl(1,1);
+    clust2_preic = tbl(1,2);
+    clust1_interic = tbl(2,1);
+    clust2_interic = tbl(2,2);
+    
+    counts(count) = clust1_preic;
+    counts(count+1) = clust2_preic;
+    counts(count+2) = clust1_interic;
+    counts(count+3) = clust2_interic;
+    
+    count = count + 4;
+end
+
+T = table(names,state,cluster,counts);
+
+
+
+%% Get full table for chi_2 to put into R for cluster dist over time
+names = cell(length(whichPts)*48,1);
+cluster = cell(length(whichPts)*48,1);
+state = zeros(length(whichPts)*48,1);
+counts = zeros(length(whichPts)*48,1);
+
+
+count = 1;
+for whichPt = whichPts
+    for j = 0:47
+       names{count+j} = pt(whichPt).name; 
+    end
+    
+    for j = 0:2:46
+       cluster{count+j} = 'Cluster1'; 
+    end
+    for j = 1:2:47
+       cluster{count+j} = 'Cluster2'; 
+    end
+    
+    for j = 0:47
+       state(count+j) = floor((1+j+1)/2);
+    end
+    
+    tbl = chi_tables2{whichPt};
+    tbl = tbl';
+    tbl_single = tbl(:);
+    
+    for j = 0:47
+       counts(count+j) = tbl_single(j+1);
+    end
+    
+    count = count+48;
+    
+end
+
+T = table(names,state,cluster,counts);
 
 
 end
