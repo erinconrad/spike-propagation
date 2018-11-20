@@ -45,6 +45,7 @@ n_clusters(3) = 4;
 n_clusters(4) = 5;
 n_clusters(7) = 4;
 n_clusters(8) = 3;
+n_clusters(9) = 4;
 n_clusters(11) = 4;
 n_clusters(12) = 5;
 % Need to do beyond here
@@ -57,7 +58,7 @@ n_clusters(30) = 4;
 
 clustOpt = 0;
 doPlots = 1;
-doLongPlots = 0;
+doLongPlots = 1;
 leadOnly = 1;
 
 % Save file location
