@@ -48,7 +48,7 @@ n_clusters(8) = 3;
 n_clusters(9) = 4;
 n_clusters(11) = 4;
 n_clusters(12) = 5;
-% Need to do beyond here
+n_clusters(16) = 3;
 n_clusters(18) = 4;
 n_clusters(19) = 3;
 n_clusters(20) = 5;
