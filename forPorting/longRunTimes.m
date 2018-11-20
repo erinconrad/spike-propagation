@@ -15,6 +15,11 @@ p1 = genpath(scriptFolder);
 addpath(p1);
 ptInfo = loadjson(jsonfile);
 ptnames = fieldnames(ptInfo.PATIENTS);
+
+% Do trickery
+ptnames(strcmp(ptnames,'HUP111B')==1) = [];
+ptnames(strcmp(ptnames,'Study004')==1) = [];
+
 load([resultsFolder,'ptStructs/',outputFile])
 
 %% Desired times
@@ -102,7 +107,7 @@ for i = 1:length(ptnames)
     
     % If the time between seizures is less than 100 hours, run the whole time
     if pt(i).sz(end).offset -  pt(i).sz(1).onset < 3600*200
-        pt(i).allTimes = [pt(i).sz(1).onset - 3600*12,...
+        pt(i).allTimes = [max(0,pt(i).sz(1).onset - 3600*12),...
             pt(i).sz(end).offset + 3600*12];
     
     % If it's longer than this, then break into chunks
@@ -169,7 +174,7 @@ end
        
  
 
-%save([resultsFolder,'ptStructs/',outputFile],'pt');
+save([resultsFolder,'ptStructs/',outputFile],'pt');
 
 
 

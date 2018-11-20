@@ -33,6 +33,7 @@ destFolder = [resultsFolder,'pretty_plots/Fig3/'];
 allHullDist = [];
 allFreqDist = [];
 allAllDist =[];
+allSADist = [];
 
 for whichPt = whichPts
 
@@ -236,6 +237,7 @@ end
 % Calculate convex hull volume 
 chull = zeros(nchs,1);
 maxdist = zeros(nchs,1);
+sa = zeros(nchs,1);
 for i = 1:nchs
    if isempty(chInfluence{i}) == 1, continue; end
    hull_chs = chInfluence{i};
@@ -261,6 +263,25 @@ for i = 1:nchs
    [max_dist,I] = max(dist_group_matrix(:));
    %[I1,I2] = ind2sub(size(dist_group_matrix),I);
    maxdist(i) = max_dist;
+   
+   
+   % Alternative approach is to take the surface area.
+   
+   tri = delaunay(hull_locs(:,1),hull_locs(:,2));
+   P = [hull_locs(:,1),hull_locs(:,2),hull_locs(:,3)];
+   v1 = P(tri(:,2),:)-P(tri(:,1),:);
+   v2 = P(tri(:,3),:)-P(tri(:,2),:);
+   cp = 0.5*cross(v1,v2);
+   sa(i) = sum(sqrt(dot(cp,cp,2)));
+   
+   if i == 83 && 1 == 1
+   figure
+   scatter3(locs(:,1),locs(:,2),locs(:,3),110,'k');
+   hold on
+   cv=trisurf(tri,hull_locs(:,1),hull_locs(:,2),hull_locs(:,3),'facecolor','r');
+   alpha(cv,0.05) 
+   error('look\n');
+   end
    
    %{
    figure
@@ -297,15 +318,15 @@ title('Volume of convex hull of influenced channels');
 
 
 gs = fh_map(50);
-[Y,E] = discretize(maxdist,size(gs,1));
+[Y,E] = discretize(sa,size(gs,1));
 subplot(2,2,2)
 scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
 hold on
 scatter3(locs(isnan(Y)==0,1),locs(isnan(Y)==0,2),locs(isnan(Y)==0,3),100,gs(Y(isnan(Y)==0),:));
-[~,I] = max(maxdist);
+[~,I] = max(sa);
 scatter3(locs(I,1),locs(I,2),locs(I,3),100,gs(Y(I),:),'filled');
 scatter3(locs(soz,1),locs(soz,2),locs(soz,3),'*','k');
-title('Max distance of connection of influenced channels');
+title('Surface area of influenced channels');
 
 %{
 all_con = chCh(:);
@@ -386,6 +407,11 @@ title('Leader frequency');
 hullLoc = (locs(I,:));
 hullDist = min(vecnorm(hullLoc - locs(soz,:),2,2));
 
+% Distance from electrode with max SA of interest to closest SOZ
+[~,I] = max(sa);
+SALoc = locs(I,:);
+SADist = min(vecnorm(SALoc - locs(soz,:),2,2));
+
 % Distance from electrode with max seq freq of interest to its closest SOZ
 [~,most_freq] = max(seq_freq);
 freqLoc = locs(most_freq,:);
@@ -397,8 +423,12 @@ fprintf(['The electrode with the biggest volume of influence was\n',...
 fprintf(['The electrode with the most frequent spikes was\n',...
     '%1.1f mm from the closest SOZ electrode.\n'],freqDist)
 
+fprintf(['The electrode with the biggest SA of influence was\n',...
+    '%1.1f mm from the closest SOZ electrode.\n'],SADist)
+
 allHullDist = [allHullDist,hullDist];
 allFreqDist = [allFreqDist,freqDist];
+allSADist = [allSADist,SADist];
 
 % Distance from every electrode to its closest SOZ
 allLocs = zeros(size(locs,1),1);
@@ -614,27 +644,28 @@ end
 [p,h,stats] = ranksum(allHullDist,allAllDist);
 [p2,h2,stats2] = ranksum(allFreqDist,allAllDist);
 [p3,h3,stats3] = ranksum(allFreqDist,allHullDist);
+[p4,h4,stats4] = ranksum(allSADist,allAllDist);
 
 %% Plot error bars of means 
 
-if 1 == 0
+if 1 == 1
 figure
 
-prices = [mean(allHullDist) mean(allFreqDist) mean(allAllDist)];
+prices = [mean(allHullDist) mean(allFreqDist) mean(allAllDist) mean(allSADist)];
 bar(prices)
 title(sprintf(['Average distance across patients from electrode of interest\n to closest ',...
     'seizure onset zone electrode']))
 ylabel(sprintf('Average distance (mm)'));
 
 xticklabels({sprintf('Electrode with max volume of influence'),...
-    'Electrode with max sequence frequency','All electrodes'})
+    'Electrode with max sequence frequency','All electrodes','max SA'})
 set(gca,'FontSize',20)
 fix_xticklabels(gca,0.1,{'FontSize',20});
 pause
 fig = gcf;
 fig.PaperUnits = 'inches';
 posnow = get(fig,'Position');
-print(gcf,[destFolder,'bargraph'],'-dpng');
+%print(gcf,[destFolder,'bargraph'],'-dpng');
 end
 
 end

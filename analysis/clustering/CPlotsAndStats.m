@@ -310,6 +310,17 @@ test_t = 3600;
 % Determine most popular cluster
 pop_c = mode(idx);
 
+% Fix this to account for multiple time groups!!!!!!!!!
+%{
+totalTime = 0;
+chunk_times = [];
+for i = 1:size(pt(whichPt).allTimes,1)
+    totalTime = totalTime + pt(whichPt).allTimes(2) - pt(whichPt).allTimes(1);  
+end
+n_chunks = ceil(totalTime/test_t);
+%}
+
+
 % Divide run into 60 minute chunks
 n_chunks = ceil((all_times(end) - all_times(1))/test_t);
 

@@ -21,7 +21,7 @@ timeFile = 'long_times.mat';
 %timeFile = 'new_json_data.mat';
 
 %% Load file with filenames and run times
-if overwrite == 0 && exist([resultsFolder,'ptStructs/',newptfile],'file') ~= 0
+if overwrite == 1 && exist([resultsFolder,'ptStructs/',newptfile],'file') ~= 0
     load([resultsFolder,'ptStructs/',newptfile]);
 else
     load([resultsFolder,'ptStructs/',timeFile]);
@@ -122,7 +122,7 @@ for i = 1:length(pt)
         chnames = pt(i).sz(j).electrodes;
         chnums = zeros(length(chnames),1);
         for ich = 1:length(chnames)
-            for ich = 1:length(chnames)
+            
                 [Lia,chIds] = ismember(chnames{ich},pt(i).electrodeData.unignoredChs);
                 if Lia == 0
                     fprintf('Warning, could not find channel %s in the list of unignored channels for patient %s\n',...
@@ -131,7 +131,7 @@ for i = 1:length(pt)
 
                 end
                 chnums(ich) = chIds;
-            end
+           
 
 
 
