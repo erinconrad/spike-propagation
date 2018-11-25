@@ -45,6 +45,7 @@ absthresh = thresh.absthresh;
 %% get the data from those indices and channels (ignoring ignored channels)
 fprintf('Retrieving data for %s time %d...\n',pt(whichPt).name,times(1));
 tic
+if indices(1) == 0, indices=indices(2:end); end
 data = getiEEGData(dataName,channels,indices,pwfile);
 toc
 fprintf('Retrieved data\n');
@@ -205,6 +206,28 @@ elseif whichDetector == 7
     if isempty(removed) == 0
         removed(:,2:3) = removed(:,2:3)/data.fs;
     end
+    
+elseif whichDetector == 8
+    % THIS IS FOR SEIZURES!!!!!
+    window = 60*data.fs;
+
+    
+    
+    [gdf,noise,removed] = fspk7(data.values,tmul,absthresh,...
+        length(channels),data.fs,window,pt(whichPt).electrodeData,...
+pt(whichPt).name);
+
+    if isempty(gdf) == 1
+        fprintf('No spikes detected\n');
+    else
+        fprintf('Detected %d spikes\n',size(gdf,1));
+         % put it in seconds
+        gdf(:,2) = gdf(:,2)/data.fs;
+    end
+    
+    if isempty(removed) == 0
+        removed(:,2:3) = removed(:,2:3)/data.fs;
+    end
 
 end
 toc
@@ -275,13 +298,17 @@ if isempty(gdf) == 0
 end
 
 %% Toss spikes that occur across too high a percentage of channels at the same time
-if setChLimits == 1 && isempty(gdf) == 0
-   maxChannels = multiChLimit * length(channels);
-   newgdf = tooManyElectrodes(gdf,maxChannels,multiChTime);
-   fprintf('Percentage of spikes discarded for being across too many channels: %1.1f\n',...
-        (size(gdf,1)-size(newgdf,1))/size(gdf,1)*100)
-   gdf = newgdf;
-    
+if whichDetector == 8
+    fprintf('Using detector 8 and so NOT discarding spikes if on too many channels\n');
+else
+    if setChLimits == 1 && isempty(gdf) == 0
+       maxChannels = multiChLimit * length(channels);
+       newgdf = tooManyElectrodes(gdf,maxChannels,multiChTime);
+       fprintf('Percentage of spikes discarded for being across too many channels: %1.1f\n',...
+            (size(gdf,1)-size(newgdf,1))/size(gdf,1)*100)
+       gdf = newgdf;
+
+    end
 end
 
 

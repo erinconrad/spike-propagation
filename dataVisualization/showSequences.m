@@ -53,10 +53,7 @@ else
 end
 
 
-szTimes = [];
-for j = 1:length(P(pt).sz)
-    szTimes = [szTimes;P(pt).sz(j).onset P(pt).sz(j).offset];
-end
+szTimes = P(pt).newSzTimes;
 
 firstSpikes = min(allSeq,[],1);
 nonIctalSeq = allSeq(:,~any(firstSpikes >= szTimes(:,1) & ...

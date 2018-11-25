@@ -45,6 +45,7 @@ for i = 1:n_chunks
         plot(linspace(min_time,max_time,length(indices)),...
             pl_values(:,ch)+repmat(toAdd,length(pl_values(:,ch)),1));
         hold on
+        text(min_time-0.1,toAdd,pt(whichPt).electrodeData.unignoredChs{ch})
         
         if isempty(gdf) == 0
             ch_pl_spikes = pl_spikes(pl_spikes(:,1) == ch,2);
@@ -58,6 +59,7 @@ for i = 1:n_chunks
         
     end
     
+    yticklabels([])
     fprintf('Press any key\n');
     pause;
     close(gcf)

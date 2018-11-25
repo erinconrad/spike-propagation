@@ -10,7 +10,7 @@ seq_ic = ptIc(whichPt).seq_matrix;
 
 %% Remove interictal sequences that are during the seizure time
 
-%% Remove sequences with too many ties
+%% Remove sequences with too many ties???
 
 %% Group all sequences
 all_seq = [seq_inter,seq_ic];

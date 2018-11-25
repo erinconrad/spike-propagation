@@ -8,7 +8,6 @@ function data = getiEEGData(dataName,channels,indices,pwname)
 
 %% Unchanging parameters
 loginname = 'erinconr';
-%pwname = 'eri_ieeglogin.bin';
 
 n = 0;
 

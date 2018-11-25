@@ -15,9 +15,7 @@ clear
 
 % 5 is fspk4, which is like fspk3 but it uses different parameters if
 % looking at depth electrodes
-whichDetector = 6;
-absthresh = 800; 
-tmul = 10;
+whichDetector = 8;
 
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
@@ -32,7 +30,7 @@ merge = 1;
 %electrodeFile = [electrodeFolder,csvFile];
 p1 = genpath(scriptFolder);
 addpath(p1);
-timeFile = 'ptWithElectrodeData.mat'; 
+timeFile = 'long_electrode_data.mat'; 
 gdfFolder = [resultsFolder,'ictal_gdf/'];
 chLocationsFolder = 'chLocations/';
 newptfile = 'ptIctalGDF.mat';
@@ -46,8 +44,9 @@ else
 end
 
 %% Loop through patients, szs, run times
-for i = 3%1:length(pt)
+for i = [3,8]%1:length(pt)
     
+    [~,tmul,absthresh] = icChsToIgnore(pt(i).name);
     
     pt(i).ictal_thresh.whichDetector = whichDetector;
     
@@ -85,7 +84,7 @@ for i = 3%1:length(pt)
     end
     
     
-    for j = 1:length(pt(i).sz)
+    for j = 1:size(pt(i).newSzTimes,1)
        
 
             fprintf('Doing %s seizure %d\n',...
@@ -94,7 +93,7 @@ for i = 3%1:length(pt)
           
             % Define the desired times to be the seizure times
             % need to think about restricting further
-            desiredTimes = [pt(i).sz(j).onset,pt(i).sz(j).offset];
+            desiredTimes = [pt(i).newSzTimes(j,1) pt(i).newSzTimes(j,2)];
        
             filename = sprintf('%s_sz_%d_ictal.mat',...
                 pt(i).name,j);
@@ -108,9 +107,6 @@ for i = 3%1:length(pt)
                 end
             end
             
-            
-           
-            
             % Run the spike detector
             
             
@@ -119,11 +115,10 @@ for i = 3%1:length(pt)
             
           
                 
-            vanleer = extraOutput.vanleer;
-            removed = extraOutput.removed;
+        
             
             % Save gdf file
-            save([gdfFolder,pt(i).name,'/',filename],'gdf','vanleer','removed','thresh','desiredTimes');
+            save([gdfFolder,pt(i).name,'/',filename],'gdf','thresh','desiredTimes');
             
            
             % Resave pt file now that I have fs
