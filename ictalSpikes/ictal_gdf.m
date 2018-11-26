@@ -46,7 +46,12 @@ end
 %% Loop through patients, szs, run times
 for i = 1:length(pt)
     
-    [~,tmul,absthresh] = icChsToIgnore(pt(i).name);
+    try
+        [~,tmul,absthresh] = icChsToIgnore(pt(i).name);
+    catch
+        fprintf('Could not find %s, skipping\n',pt(i).name);
+        continue
+    end
     
     pt(i).ictal_thresh.whichDetector = whichDetector;
     
