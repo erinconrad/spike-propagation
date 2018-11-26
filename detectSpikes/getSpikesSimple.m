@@ -249,7 +249,8 @@ for i = 1:size(gdf,1)
     timesToLook = round([max(gdf(i,2)*fs-30*fs,1):min(gdf(i,2)*fs+30*fs,size(values,1))]);
     realignedValues = values - mean(values(timesToLook,gdf(i,1)));
     
-    snapshot = realignedValues(max(gdf(i,2)*fs+idxToPeak(1),1):gdf(i,2)*fs+idxToPeak(2),gdf(i,1));
+    snapshot = realignedValues(max(gdf(i,2)*fs+idxToPeak(1),1):...
+        min(gdf(i,2)*fs+idxToPeak(2),size(realignedValues,1)),gdf(i,1));
     %[~,I] = max(snapshot);
     [~,I] = max(abs(snapshot));
     new_gdf(i,2) = gdf(i,2) + timeToPeak(1) + I/fs;

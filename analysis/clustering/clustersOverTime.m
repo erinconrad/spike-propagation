@@ -43,23 +43,25 @@ n_clusters = ones(30,1)*3;
 %% Optimal cluster numbers
 n_clusters(3) = 4;
 n_clusters(4) = 5;
-n_clusters(7) = 4;
 n_clusters(8) = 3;
-n_clusters(9) = 4;
-n_clusters(11) = 4;
 n_clusters(12) = 5;
 n_clusters(16) = 3;
+n_clusters(17) = 3; 
 n_clusters(18) = 4;
 n_clusters(19) = 3;
 n_clusters(20) = 5;
+n_clusters(22) = 4; 
+n_clusters(24) = 3; 
+n_clusters(25) = 4; 
 n_clusters(27) = 4;
 n_clusters(30) = 4;
 
 
-clustOpt = 0;
+clustOpt = 1;
 doPlots = 1;
-doLongPlots = 1;
-leadOnly = 1;
+doLongPlots = 0;
+removeTies = 0;
+leadOnly = 1; %don't change
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -103,6 +105,7 @@ t = find(any(firstSp >= szTimes(:,1) & firstSp <= szTimes(:,2)));
 
 
 %% Remove sequences with too many ties??
+if removeTies == 1
 for s = 1:size(all_seq_cat_old,2)
    curr_seq = all_seq_cat_old(:,s);
    nonans = curr_seq(~isnan(curr_seq));
@@ -118,7 +121,7 @@ all_times(:,keep == 0) = [];
 fprintf(['%s had %d sequences (%1.2f of all sequences) deleted'...
     'for having >50 percent ties\n%d sequences remain\n'],...
     pt(whichPt).name,sum(keep == 0),sum(keep == 0)/length(keep),sum(keep==1));
-
+end
 
 %% Add these sequences to the pt Struct
 pt(whichPt).cluster.all_seq_cat = all_seq_cat;

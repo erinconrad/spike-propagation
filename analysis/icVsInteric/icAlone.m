@@ -2,7 +2,7 @@ function icAlone(pt,whichPts)
 
 %% Parameters
 doClustOp = 0;
-doLongPlots = 1;
+doLongPlots = 0;
 doPlots = 1;
 
 %% Ideal cluster numbers
@@ -27,12 +27,31 @@ for j = 1:length(pt(whichPt).sz)
     seq_matrix = [seq_matrix,pt(whichPt).sz(j).seq_matrix];    
 end
 
+%% Remove sequences with too many ties
+if 1 == 1
+keep = ones(size(seq_matrix,2),1);
+old_seq_matrix = seq_matrix;
+for s = 1:size(seq_matrix,2)
+   curr_seq = seq_matrix(:,s); 
+   curr_seq = curr_seq(~isnan(curr_seq));
+   norepeats = unique(curr_seq);
+   if length(norepeats) < 0.5*length(curr_seq)
+       keep(s) = 0;
+   end
+end
+
+seq_matrix(:,keep==0) = [];
+fprintf('Deleted %d (%1.1f of all sequences) for containing >50 percent ties\n',...
+    sum(keep==0),sum(keep==0)/length(keep));
+
+end
+
 %% Get lead channels and locations
 [all_times,lead] = min(seq_matrix,[],1);
 locs = pt(whichPt).electrodeData.locs(:,2:4);
 lead_locs = locs(lead,:);
 
-
+main_lead = mode(lead);
 
 %% Elbow method
 if doClustOp == 1
@@ -91,6 +110,107 @@ if doLongPlots == 1
     end
 end
 
+%% Break it down by seizure
+for j =1:length(pt(whichPt).sz)
+    
+    seqs = pt(whichPt).sz(j).seq_matrix;
+    [times,l] = min(seqs,[],1);
+    sz_lead = mode(l);
+    soz = pt(whichPt).sz(j).chs;
+    
+    % Discretize into 10 chunks to see how seizure changes
+    nchunks = 1;
+    [Y,~] = discretize(times,nchunks);
+    
+    figure
+    % darker means more
+    gs = (gray(50));
+    for t = 1:nchunks
+        
+        % Get sequences in that chunk
+        tseqs = seqs(:,find(Y==t));
+        
+        % Get average recruitment latency of each channel for that chunk
+        tlat = nanmean(tseqs - min(tseqs,[],1),2);
+        
+        % get number of sequences in that chunk for each channel
+        nseq = sum(~isnan(tseqs),2);
+        
+        
+        % Find channels that are involved in sequences enough
+        lambda = sum(sum(~isnan(tseqs)))/size(tseqs,1); 
+        %all spikes divided by channels gives the expected number of spikes
+        %per channel
+        
+        alpha1 = 99;
+        X = poissinv(alpha1/100,lambda);
+        sig_ch = find(nseq>X);
+        
+        % recruitment latency of significant channels
+        tlat_sig = tlat(sig_ch);
+        [Ylat,~] = discretize(tlat_sig,size(gs,1));
+        [~,earliest] = min(tlat_sig);
+        early_sig = sig_ch(earliest);
+        
+        % Not used
+        if 1 == 0
+        [~,most_common] = max(nseq); 
+        [~,cl] = min(tseqs,[],1);
+        chunk_lead = mode(cl);
+        [Ycol,~] = discretize(nseq,size(gs,1));
+        end
+        
+        scatter3(locs(:,1),locs(:,2),locs(:,3),60,'k')
+        hold on
+        scatter3(locs(sig_ch,1),locs(sig_ch,2),locs(sig_ch,3),...
+            60,gs(Ylat,:),'filled');
+        %scatter3(locs(Ylat(~isnan(Ylat)),1),locs(Ylat(~isnan(Ylat)),2),...
+        %    locs(Ylat(~isnan(Ylat)),3),60,gs(Ylat(~isnan(Ylat)),:),'filled');
+        %scatter3(locs(:,1),locs(:,2),locs(:,3),60,gs(Ycol,:),'filled');
+        %scatter3(locs(nseq>X,1),locs(nseq>X,2),locs(nseq>X,3),60,'r','filled');
+        %scatter3(locs(most_common,1),locs(most_common,2),locs(most_common,3),...
+        %    60,'b','filled');
+        
+        scatter3(locs(soz,1),locs(soz,2),locs(soz,3),200,'r+');
+        scatter3(locs(early_sig,1),locs(early_sig,2),locs(early_sig,3),...
+            100,'g+');
+        %{
+        if isnan(chunk_lead) == 0
+            scatter3(locs(chunk_lead,1),locs(chunk_lead,2),locs(chunk_lead,3),...
+        100,'g+')
+        end
+        %}
+            
+        
+        pause
+        hold off
+    end
+    
+    close(gcf)
+ end
+
+
+%% Investigate spike timing
+
+% Cluster spikes together
+t_clust = all_times(1);
+for i = 2:length(all_times)
+    if all_times(i) - t_clust(end) < 0.3
+        continue;
+    else
+        t_clust(end+1) = all_times(i);
+    end
+    
+end
+time_diff = diff(t_clust);
+time_diff = [0 time_diff];
+
+%plot(time_diff);
+if 1 == 0
+figure
+scatter(t_clust,time_diff)
+end
+
 %% Do plots
 
 % Get sz times
@@ -132,15 +252,25 @@ if doPlots == 1
     subplot(2,1,2)
     scatter3(locs(:,1),locs(:,2),locs(:,3),60,'k');
     hold on
+    if 1 == 1
     for k = 1:size(C,1)
     scatter3(C(k,1),C(k,2),C(k,3),60,colors(k,:),'filled');
     end
+    end
+    if 1 == 0
+    scatter3(locs(main_lead,1),locs(main_lead,2),locs(main_lead,3),...
+        60,'r','filled')
+    end
+    scatter3(locs(pt(whichPt).newSOZChs,1),locs(pt(whichPt).newSOZChs,2),...
+        locs(pt(whichPt).newSOZChs,3),20,'k','filled')
+     pause
+     close(gcf)
 end
     
 
 
 
-save([saveFolder,'ptClust.mat'],'pt');
+%save([saveFolder,'ptClust.mat'],'pt');
     
 end
 

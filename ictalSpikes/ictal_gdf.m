@@ -19,7 +19,7 @@ whichDetector = 8;
 
 % Should I re-run the spike detection and overwrite gdf file if it already
 % exists?
-overwrite = 1; 
+overwrite = 0; 
 
 % Should we try to merge the patient structure with an existing, incomplete
 % patient structure?
@@ -44,11 +44,15 @@ else
 end
 
 %% Loop through patients, szs, run times
-for i = [3,8]%1:length(pt)
+for i = 1:length(pt)
     
     [~,tmul,absthresh] = icChsToIgnore(pt(i).name);
     
     pt(i).ictal_thresh.whichDetector = whichDetector;
+    
+    if isempty(tmul) == 1 || isempty(absthresh) == 1
+        continue
+    end
     
     if isempty(tmul) == 0
     pt(i).ictal_thresh.tmul = tmul;

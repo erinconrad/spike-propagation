@@ -1,7 +1,7 @@
 function prettyShowSequences(pt,whichPt,sz,s)
 
 doColor = 0;
-surroundtime = 4;
+surroundtime = 1;
 dataName = pt(whichPt).ieeg_name;
 ptname = pt(whichPt).name;
 

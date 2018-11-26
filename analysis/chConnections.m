@@ -113,7 +113,8 @@ end
 
 
 %% Get sequence number per channel
-seq_freq = nansum(all_seq_cat,2);
+%seq_freq = nansum(all_seq_cat,2);
+seq_freq = sum(~isnan(all_seq_cat),2);
 leader_freq = sum(chCh,2);
 
 %% Get significant connections
@@ -274,7 +275,7 @@ for i = 1:nchs
    cp = 0.5*cross(v1,v2);
    sa(i) = sum(sqrt(dot(cp,cp,2)));
    
-   if i == 83 && 1 == 1
+   if i == 83 && 1 == 0
    figure
    scatter3(locs(:,1),locs(:,2),locs(:,3),110,'k');
    hold on
