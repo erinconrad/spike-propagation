@@ -4,6 +4,7 @@ for whichPt = whichPts
     
 seq_matrix = pt(whichPt).seq_matrix;    
 locs = pt(whichPt).electrodeData.locs(:,2:4);
+soz = pt(whichPt).newSOZChs;
 
 %% Remove sequences with too many ties
 if 1 == 1
@@ -29,7 +30,7 @@ end
 lat = nanmean(seq_matrix - min(seq_matrix,[],1),2);
 
 %% Get significant number of spikes and thus significant chs
-lambda = sum(sum(~isnan(seq_matrix)))/size(seqs,1);
+lambda = sum(sum(~isnan(seq_matrix)))/size(seq_matrix,1);
 alpha1 = 99;
 X = poissinv(alpha1/100,lambda);
 
@@ -43,9 +44,16 @@ lat_sig = lat(sig_ch);
 early_sig = sig_ch(earliest);
 
 %% Plot
+gs = (gray(50));
 figure
-scatter3(
-[Ylat,~] = discretize(lat_sig,
+scatter3(locs(:,1),locs(:,2),locs(:,3),60,'k');
+[Ylat,~] = discretize(lat_sig,size(gs,1));
+hold on
+scatter3(locs(sig_ch,1),locs(sig_ch,2),locs(sig_ch,3),...
+    60,gs(Ylat,:),'filled');
+scatter3(locs(soz,1),locs(soz,2),locs(soz,3),200,'r+');
+scatter3(locs(early_sig,1),locs(early_sig,2),locs(early_sig,3),...
+    100,'g+');
     
 end
 

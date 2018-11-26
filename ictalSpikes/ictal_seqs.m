@@ -37,9 +37,16 @@ for i = 1:length(pt)
     % Get electrode data
     electrodeData =  pt(i).electrodeData;
     
+    
     if isempty(pt(i).ictal_thresh) == 1
         continue;
     end
+    
+    if isfield(pt(i).ictal_thresh,'tmul') == 0
+        continue
+    end
+    
+    
     
     if isempty(pt(i).ictal_thresh.tmul) == 1
         continue
