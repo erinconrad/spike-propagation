@@ -1,12 +1,22 @@
 function icAlone(pt,whichPts)
 
+%{
+
+Could somehow align the soz with the earliest ones and see how good the
+alignment is? So it's not a single number??
+
+%}
+
 %% Parameters
 doClustOp = 0;
 doLongPlots = 0;
 doPlots = 1;
 
 %% Ideal cluster numbers
+ideal_k(1) = 3; %HUP064
+ideal_k(2) = 4; %HUP065
 ideal_k(3) = 3; %HUP068
+ideal_k(6) = 3; %HUP074
 ideal_k(8) = 4; %HUP078
 
 % Save file location
@@ -28,7 +38,7 @@ for j = 1:length(pt(whichPt).sz)
 end
 
 %% Remove sequences with too many ties
-if 1 == 1
+if 1 == 0
 keep = ones(size(seq_matrix,2),1);
 old_seq_matrix = seq_matrix;
 for s = 1:size(seq_matrix,2)
@@ -117,6 +127,10 @@ for j =1:length(pt(whichPt).sz)
     [times,l] = min(seqs,[],1);
     sz_lead = mode(l);
     soz = pt(whichPt).sz(j).chs;
+    if ismember(0,soz) == 1
+        fprintf('warning, could not find all soz electrodes\n');
+        soz(soz==0) = [];
+    end
     
     % Discretize into 10 chunks to see how seizure changes
     nchunks = 1;

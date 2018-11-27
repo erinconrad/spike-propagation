@@ -22,6 +22,12 @@ if exist('thresh','var') == 0
     thresh.absthresh = 300;
 end
 
+if isempty(thresh.tmul) == 1
+   fprintf('warning, no thresholds, using tmul 13 and absthresh 300\n');
+   thresh.tmul = 13;
+   thresh.absthresh = 300;
+end
+
 % Get the indices I want to look at
 fs = pt(whichPt).fs;
 oldtimes = times;
