@@ -44,6 +44,7 @@ n_clusters = ones(30,1)*3;
 n_clusters(3) = 4; %HUP68
 n_clusters(4) = 5; %HUP70
 n_clusters(8) = 3; %HUP78
+n_clusters(9) = 4;
 n_clusters(12) = 5; %HUP86
 n_clusters(17) = 3; %HUP106
 n_clusters(18) = 4; %HUP107

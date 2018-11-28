@@ -29,9 +29,10 @@ saveFolder = [resultsFolder,'plots/',pt(whichPt).name,'/','clusters/'];
 mkdir(saveFolder)
 
 
-%% Get sz times
+%% Get sz times and SOZ
+locs = xyChan(:,2:4);
 szTimes = pt(whichPt).newSzTimes;
-
+soz = pt(whichPt).newSOZChs;
     
 %% Pull cluster info
 all_times = pt(whichPt).cluster.all_times;
@@ -80,17 +81,19 @@ end
 if 1 == 1
 %% Do plots
 
-%% Plot the clustering algorithm results 
-%{
+%% Centroid locations compared to SOZ
+
 figure
-scatter3(cluster_vec(:,1),cluster_vec(:,2),cluster_vec(:,3),60,c_idx)
+scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
 hold on
+
 for i = 1:size(C,1)
    if i == bad_cluster, continue; end
    scatter3(C(i,1),C(i,2),C(i,3),100,colors(i,:),'filled');
      
 end
-%}
+scatter3(locs(soz,1),locs(soz,2),locs(soz,3),40,'k','filled')
+
 %{
 figure
 scatter3(cluster_vec(:,4),cluster_vec(:,5),cluster_vec(:,6),60,c_idx)
@@ -671,11 +674,11 @@ for j = 1:length(whichPts)
     end
     set(gca,'FontSize',23)
 end
-pause
+%pause
 fig = gcf;
 fig.PaperUnits = 'inches';
 posnow = get(fig,'Position');
-print(gcf,[destFolder,'chi2_new3'],'-dpng');
+%print(gcf,[destFolder,'chi2_new3'],'-dpng');
 
 %% Get full table for chi_2 to put into R
 names = cell(length(whichPts)*4,1);
