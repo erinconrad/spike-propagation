@@ -41,26 +41,25 @@ window = 3600;
 n_clusters = ones(30,1)*3;
 
 %% Optimal cluster numbers
-n_clusters(3) = 4;
-n_clusters(4) = 5;
-n_clusters(8) = 3;
-n_clusters(12) = 5;
-n_clusters(16) = 3;
-n_clusters(17) = 3; 
-n_clusters(18) = 4;
-n_clusters(19) = 3;
-n_clusters(20) = 5;
-n_clusters(22) = 4; 
-n_clusters(24) = 3; 
-n_clusters(25) = 4; 
-n_clusters(27) = 4;
-n_clusters(30) = 4;
+n_clusters(3) = 4; %HUP68
+n_clusters(4) = 5; %HUP70
+n_clusters(8) = 3; %HUP78
+n_clusters(12) = 5; %HUP86
+n_clusters(17) = 3; %HUP106
+n_clusters(18) = 4; %HUP107
+n_clusters(19) = 3; %HUP111A
+n_clusters(20) = 5; %HUP116
+n_clusters(22) = 3; %Study16
+n_clusters(24) = 3; %Study19
+n_clusters(25) = 4; %Study20
+n_clusters(27) = 4; %Study22
+n_clusters(30) = 4; %Study28
 
 
-clustOpt = 1;
+clustOpt = 0;
 doPlots = 1;
-doLongPlots = 0;
-removeTies = 0;
+doLongPlots = 1;
+removeTies = 1;
 leadOnly = 1; %don't change
 
 % Save file location

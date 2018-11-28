@@ -405,7 +405,6 @@ fprintf('By bootstrap, the p value is %1.1e\n',boot_p_1);
 
 % Get all the pre-ictal sequences
 preIcRange = [-60*60,-1*60];
-%preIcRange = [-40*60,-10*60];
 preIcClustIdx = [];
 preIcIdx = [];
 preIcTimes = zeros(length(pt(whichPt).sz),2);
@@ -415,7 +414,7 @@ for j = 1:length(szAll)%1:length(pt(whichPt).sz)
     % Get the current seizure time
     szTime = szAll(j);
     
-    % Get the range of pre-ictal times (1 to 31 minutes before the seizure)
+    % Get the range of pre-ictal times (1 to 60 minutes before the seizure)
     preIcTime = szTime + preIcRange;
     preIcTimes(j,:) = preIcTime;
     
@@ -438,7 +437,8 @@ n_chunks = length(szAll);
 interIcTimes = [];
 for i = 1:n_chunks
     
-    % potential late_time is 3 hours before the pre-ictal period
+    % potential late_time is 3 hours before the seizure (2 hours before
+    % pre-ictal period)
    late_time = preIcTimes(i,1) - 3600*2;
    
    % potential early time is either the start of the run or an hour after
@@ -456,7 +456,8 @@ for i = 1:n_chunks
    interIcTimes = [interIcTimes;early_time late_time];
 
 end
- % add time after last seizure
+ % add time after last seizure (excluding last 2 hours in case there was a
+ % seizure right after we stop recording)
  late_time = all_times(end)- 3600*2;
  early_time = szTimes(end) + 3600*1;
  if late_time>early_time
@@ -652,7 +653,7 @@ for j = 1:length(whichPts)
         
     end
     bar(new_tbl)
-    xticklabels({'Pre-ictal','Inter-ictal'});
+    xticklabels({'Pre-ic','Inter-ic'});
     
     legend_names = cell(size(tbl,2),1);
     for k = 1:length(legend_names)
@@ -660,19 +661,21 @@ for j = 1:length(whichPts)
         
     end
     yticklabels([])
-    lgnd=legend(legend_names,'location','northwest');
-    set(lgnd,'color','none');
+    if j == 4
+        lgnd=legend(legend_names,'location','northwest');
+        set(lgnd,'color','none');
+    end
     title(sprintf('%s',pt(whichPts(j)).name));
     if j == 1
         ylabel('Proportion of sequences');
     end
-    set(gca,'FontSize',15)
+    set(gca,'FontSize',23)
 end
 pause
 fig = gcf;
 fig.PaperUnits = 'inches';
 posnow = get(fig,'Position');
-print(gcf,[destFolder,'chi2'],'-dpng');
+print(gcf,[destFolder,'chi2_new3'],'-dpng');
 
 %% Get full table for chi_2 to put into R
 names = cell(length(whichPts)*4,1);

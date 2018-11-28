@@ -2,8 +2,26 @@ function icAlone(pt,whichPts)
 
 %{
 
-Could somehow align the soz with the earliest ones and see how good the
-alignment is? So it's not a single number??
+I want to compare ranked data with binary data. I will have a
+vector of all electrodes ranked by RL, where the earliest is #1 and those
+that are not significantly involved are all tied for last. And then a
+vector of all electrodes with 1 if in SOZ and 0 otherwise. This will check
+to see if the earliest RL are more likely to be in SOZ than any other
+electrodes, including both later RL as well as those electrodes that aren't
+involved.
+
+- One downside of this is that it may be getting a lot of its strength just
+by looking at which electrodes spike the most. I would expect that the
+electrodes that are spiking the most would be more likely to be within the
+SOZ, if only because they are in the seizure...
+
+Is there a way to combine the results of this for multiple
+seizures/multiple patients?
+- could I simply combine all the ranks for multiple seizures? So, for each
+seizure, I would get the ranks of the SOZ electrodes and the ranks of the
+non SOZ electrodes. I would lump all the SOZ ranks together across all
+seizures and lump all the non-SOZ ranks together, and I would compare them.
+There might be some independence issue but I can try it...
 
 %}
 
@@ -121,6 +139,8 @@ if doLongPlots == 1
 end
 
 %% Break it down by seizure
+inSOZ = [];
+outSOZ = [];
 for j =1:length(pt(whichPt).sz)
     
     seqs = pt(whichPt).sz(j).seq_matrix;
@@ -156,7 +176,7 @@ for j =1:length(pt(whichPt).sz)
         %all spikes divided by channels gives the expected number of spikes
         %per channel
         
-        alpha1 = 99;
+        alpha1 = 95;
         X = poissinv(alpha1/100,lambda);
         sig_ch = find(nseq>X);
         
@@ -194,15 +214,65 @@ for j =1:length(pt(whichPt).sz)
         100,'g+')
         end
         %}
-            
+        
+        %% Check alignment of recruitment latency with SOZ
+        tlat(nseq<X) = Inf;
+        [~,I] = sort(tlat);
+        r = 1:length(tlat);
+        r(I) = r;
+        r = r';
+        
+        % This is the rank of all electrodes by recruitment latency
+        r(r>sum(nseq>=X)) = sum(nseq>=X) + 1;
+        
+        issoz = zeros(size(locs,1),1);
+        issoz(soz) = 1;
+        
+        [p,h,stats] = ranksum(r(issoz==1),r(issoz==0));
+        fprintf('P value is %1.1e for RL\n',p);
+        
+        %{
+        inSOZ = [inSOZ;r(issoz==1)];
+        outSOZ = [outSOZ;r(issoz==0)];
+        %}
+        
+        
+        fake_r = zeros(size(locs,1),1);
+        fake_r(nseq>=X) = 1;
+        %[p2,h2,stats2] = ranksum(fake_r(issoz==1),fake_r(issoz==0));
+        %fprintf('P value is %1.1e for frequent spikes\n',p2);
+        
+        
+        inSOZ = [inSOZ;fake_r(issoz==1)];
+        outSOZ = [outSOZ;fake_r(issoz==0)];
+        
+        % Just look at the frequent spikers and re-run RL analysis
+        if 1 == 0
+        r_freq = r;
+        issoz_freq = issoz;
+        r_freq(nseq<X) = [];
+        issoz_freq(nseq<X) = [];
+        [p3,h3,stats3] = ranksum(r_freq(issoz_freq==1),r_freq(issoz_freq==0));
+        fprintf('P value is %1.1e for frequent spikes\n',p3);
+        end
+        
+        %% Do nearest SOZ analysis
+        % Get lowest rlat of significant channels
+        %minSOZ
         
         pause
-        hold off
+        close(gcf)
+       
     end
     
-    close(gcf)
- end
-
+   
+end
+ 
+%%  combining all seizures
+[p4,h4,stats4] = ranksum(inSOZ,outSOZ);
+fprintf(['When I lump together all seizures, the p value for whether\n'...
+    'SOZ electrodes have a different RL rank from non-SOZ electrodes is\n'...
+    'p = %1.1e.\n'],p4);
 
 %% Investigate spike timing
 

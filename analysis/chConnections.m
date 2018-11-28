@@ -171,15 +171,15 @@ end
 
 
 % Plot the pairwise connections
-if 1 == 0
+if 1 == 1
 figure
 set(gcf,'position',[200 200 1000 800]);
 imagesc(chCh)
 colorbar
 ylabel('Upstream electrode #')
 xlabel('Downstream electrode #')
-title('Number of upstream to downstream connections')
-set(gca,'fontsize',50)
+title('Upstream to downstream connections')
+set(gca,'fontsize',80)
 fig = gcf;
 fig.PaperUnits = 'inches';
 fig.PaperPosition = [0 0 1000/800*20 20];
@@ -191,8 +191,8 @@ imagesc(chCh>minCount)
 colormap(flipud(gray))
 ylabel('Upstream electrode #')
 xlabel('Downstream electrode #')
-title('Significant upstream to downstream connections')
-set(gca,'fontsize',50)
+title('Significant connections')
+set(gca,'fontsize',80)
 fig = gcf;
 fig.PaperUnits = 'inches';
 fig.PaperPosition = [0 0 1000/800*20 20];
@@ -479,7 +479,7 @@ xticklabels([])
 yticklabels([])
 zticklabels([])
 title('Volume of influence of electrode #83')
-set(gca,'fontsize',50)
+set(gca,'fontsize',80)
 
 view([0.7 0.2 0.2])
 fig = gcf;
