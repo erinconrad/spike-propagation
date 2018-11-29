@@ -242,6 +242,8 @@ fprintf('Finished detection\n');
 
 %% Re-align the spike to be the peak (positive or negative)
 values = data.values;
+if 1 == 0
+
 timeToPeak = [-.1,.15]; % Where to look for the peak
 idxToPeak = timeToPeak*fs;
 
@@ -262,6 +264,7 @@ for i = 1:size(gdf,1)
     new_gdf(i,2) = gdf(i,2) + timeToPeak(1) + I/fs;
 end
 gdf = new_gdf;
+end
 
 % Remove duplicates
 gdf = unique(gdf,'rows');

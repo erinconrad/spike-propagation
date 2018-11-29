@@ -291,6 +291,19 @@ for dd = 1:n_chans
 
         totalspikes(dd) =  totalspikes(dd) + length(out);  % keep track of total number of spikes so far
 
+        
+         %% Re-align spikes to peak of the spikey component
+         timeToPeak = [-.1,.15];
+         idxToPeak = timeToPeak*srate;
+         for i = 1:size(out,1)
+            currIdx = out(i,1);
+            idxToLook = round(currIdx+idxToPeak(1)):round(currIdx+idxToPeak(2));
+            snapshot = HFdata(idxToLook);
+            [~,I] = max(abs(snapshot));
+            out(i,1) = out(i,1) + idxToPeak(1) + I;
+         end
+        
+        
 
         if ~isempty(out)
             %error('look\n');
@@ -300,8 +313,9 @@ for dd = 1:n_chans
             allout = [allout; out];
         end
         
-        all_spikes = [all_spikes;allout];
+        
        
+       all_spikes = [all_spikes;allout];
    
     if 1== 0 && dd == 1
         figure
@@ -315,7 +329,7 @@ for dd = 1:n_chans
      
         
         
-        
+    
 
         
     end
