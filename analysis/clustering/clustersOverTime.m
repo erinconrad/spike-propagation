@@ -1,67 +1,49 @@
 function clustersOverTime(pt,whichPts)
 
-%% To do
-%{
-1) Get ideal number of clusters using "gap statistic" - using the elbow
-appproach, non ideal but eh
-2) Just remove artifact clusters [] (working on it)
-3) Correlate with SOZ, clinical info, number of spikes, location (temporal,
-vs other, grid, strip, depth)
-4) try more adult and CHOP
-5) classifier?
-6) talk to Taki
-7) validate chi2 with bootstrap [x] []
-8) ask radiology about getting DICOMs for chop folks (ask Tim Roberts)
-
-
-1) Think of other ways to validate
-2) Run over longer times
-3) Run on peds data
-4) Check out other clustering options
-5) Come up with some statistical tests
-      - does the sequence cluster vary over time (over 30 minute chunks,
-      perhaps) (the answer will be yes, kind of exciting)
-      - are seizures more likely during certain cluster distributions?
-      - does the cluster distribution change prior to seizures?
-6) run on ictal data
-7) Come up with nicer visualization for poster and to show Eric
-
-
-%}
-
-%% FYIs
-%{
-
-- I clip ten minutes before to ten minutes after the seizure in divideIntoSzChunks
-
-%}
-
 %% Parameters
+allSpikes = 1; % Instead of just lead spike, look at all spikes
+clustOpt = 1; % plot elbow plot
+doPlots = 1; % do main plots
+doLongPlots = 0; % do long plots
+removeTies = 1; %remove sequences containing too many ties
+leadOnly = 1; %don't change
 window = 3600;
-n_clusters = ones(30,1)*3;
+
 
 %% Optimal cluster numbers
-n_clusters(3) = 4; %HUP68
-n_clusters(4) = 5; %HUP70
-n_clusters(8) = 3; %HUP78
-n_clusters(9) = 4;
-n_clusters(12) = 5; %HUP86
-n_clusters(17) = 3; %HUP106
-n_clusters(18) = 4; %HUP107
-n_clusters(19) = 3; %HUP111A
-n_clusters(20) = 5; %HUP116
-n_clusters(22) = 3; %Study16
-n_clusters(24) = 3; %Study19
-n_clusters(25) = 4; %Study20
-n_clusters(27) = 4; %Study22
-n_clusters(30) = 4; %Study28
+%n_clusters = ones(30,1)*3;
+if allSpikes == 1
+    n_clusters(3) = 4; %HUP68
+    n_clusters(4) = 2; %HUP70
+    n_clusters(8) = 3; %HUP78
+    n_clusters(9) = 3; %HUP080
+    n_clusters(12) = 3; %HUP86
+    n_clusters(17) = 2; %HUP106
+    n_clusters(18) = 4; %HUP107
+    n_clusters(19) = 3; %HUP111A
+    n_clusters(20) = 3; %HUP116
+    n_clusters(22) = 4; %Study16
+    n_clusters(24) = 3; %Study19
+    n_clusters(25) = 4; %Study20
+    n_clusters(27) = 4; %Study22
+    n_clusters(30) = 4; %Study28
+else
+    n_clusters(3) = 4; %HUP68
+    n_clusters(4) = 5; %HUP70
+    n_clusters(8) = 3; %HUP78
+    n_clusters(9) = 4; %HUP080
+    n_clusters(12) = 5; %HUP86
+    n_clusters(17) = 3; %HUP106
+    n_clusters(18) = 4; %HUP107
+    n_clusters(19) = 3; %HUP111A
+    n_clusters(20) = 5; %HUP116
+    n_clusters(22) = 3; %Study16
+    n_clusters(24) = 3; %Study19
+    n_clusters(25) = 4; %Study20
+    n_clusters(27) = 4; %Study22
+    n_clusters(30) = 4; %Study28
+end
 
-
-clustOpt = 0;
-doPlots = 1;
-doLongPlots = 1;
-removeTies = 1;
-leadOnly = 1; %don't change
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -75,36 +57,29 @@ if isempty(pt(whichPt).electrodeData) == 1
 end
 
 xyChan = pt(whichPt).electrodeData.locs;
-saveFolder = [resultsFolder,'cluster_validation/',pt(whichPt).name,'/'];
+saveFolder = [resultsFolder,'cluster_validation_all/',pt(whichPt).name,'/'];
 mkdir(saveFolder)
 
 %% Get all sequences
-%{
-if isfield(pt(whichPt),'seq_matrix') == 0
-    [all_seq_cat,all_times] = divideIntoSzChunks(pt,whichPt);
-else
-    all_seq_cat = pt(whichPt).seq_matrix;
-    
-    
-    all_times = min(all_seq_cat,[],1);
-end
-%}
+
 [all_seq_cat,all_times,~,~] = divideIntoSzChunksGen(pt,whichPt);
 
 all_seq_cat_old = all_seq_cat;
-keep = ones(size(all_seq_cat,2),1);
 
 % Test that I removed all ictal and periictal sequences
+%{
 szTimes = zeros(length(pt(whichPt).sz),2);
 for j = 1:length(pt(whichPt).sz)
-    szTimes(j,:) = [pt(whichPt).sz(j).onset - 600 pt(whichPt).sz(j).offset + 600];
+    szTimes(j,:) = [pt(whichPt).sz(j).onset - 60 pt(whichPt).sz(j).offset + 60];
 end
 
 firstSp = min(all_seq_cat,[],1);
 t = find(any(firstSp >= szTimes(:,1) & firstSp <= szTimes(:,2)));
+%}
 
 
 %% Remove sequences with too many ties??
+keep = ones(size(all_seq_cat,2),1);
 if removeTies == 1
 for s = 1:size(all_seq_cat_old,2)
    curr_seq = all_seq_cat_old(:,s);
@@ -154,6 +129,21 @@ pt(whichPt).cluster.firstChs = firstChs;
 pt(whichPt).cluster.unit_vecs = unit_vecs;
 pt(whichPt).cluster.k = n_clusters(whichPt);
 
+%% Get all spikes
+all_spikes = [];
+all_times_all = [];
+seq_index = [];
+for i = 1:size(all_seq_cat,2)
+    nonan = find(~isnan(all_seq_cat(:,i)));
+    all_spikes = [all_spikes;nonan];
+    all_times_all = [all_times_all;all_seq_cat(nonan,i)];
+    seq_index = [seq_index;i*ones(length(nonan),1)];
+end
+all_locs = xyChan(all_spikes,2:4);
+pt(whichPt).cluster.all_spikes = all_spikes;
+pt(whichPt).cluster.all_locs = all_locs;
+pt(whichPt).cluster.all_times_all = all_times_all;
+
 %% Determine optimal number of clusters
 
 
@@ -164,7 +154,10 @@ for k = 1:10
     
     SSE_temp = zeros(30,1);
     for j = 1:30
-        if leadOnly == 0
+        if allSpikes == 1
+            [idx_test,C_test] = ...
+                kmeans(all_locs,k);
+        elseif leadOnly == 0
             [idx_test,C_test] = ...
                 kmeans(cluster_vec,k);
         else
@@ -174,7 +167,10 @@ for k = 1:10
 
         % Get SSE
         for i = 1:k
-            if leadOnly == 0
+            if allSpikes == 1
+                SSE_temp(j) = SSE_temp(j) + sum(sum((all_locs(idx_test == i,:) - ...
+                   repmat(C_test(i,:),size(all_locs(idx_test == i,:),1),1)).^2));
+            elseif leadOnly == 0
                SSE_temp(j) = SSE_temp(j) + sum(sum((cluster_vec(idx_test == i,:) - ...
                    repmat(C_test(i,:),size(cluster_vec(idx_test == i,:),1),1)).^2));
             else
@@ -202,10 +198,10 @@ plot(1:10,SSE)
 end
 
 % Silhouette method
-if 1 == 0
-E = evalclusters(cluster_vec,'kmeans','silhouette','klist',[1:10]);
-E
-gscatter(cluster_vec(:,1),cluster_vec(:,2),E.OptimalY,'rbg','xod')
+if 1 == 1
+E = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
+pt(whichPt).cluster.optimalKSilhouette = E.OptimalK; 
+%gscatter(cluster_vec(:,1),cluster_vec(:,2),E.OptimalY,'rbg','xod')
 end
 
 %{
@@ -221,16 +217,19 @@ eva
 
 % Gap method
 if 1 == 0
-eva = evalclusters([firstChs,final_vecs],'kmeans','gap','KList',[1:20]);
+eva = evalclusters([firstChs],'kmeans','gap','KList',[1:20]);
 end
 
 %% Do clustering algorithm
 
 cluster_approach = 1;
 if cluster_approach == 1
-
+    % K means
     for i = 1:30
-        if leadOnly == 0
+        if allSpikes == 1
+        [idx_all{i},C_all{i},sumd_all{i},D_all{i}] = ...
+        kmeans([all_locs],n_clusters(whichPt));
+        elseif leadOnly == 0
     [idx_all{i},C_all{i},sumd_all{i},D_all{i}] = ...
         kmeans([firstChs,final_vecs],n_clusters(whichPt));
         else
@@ -261,7 +260,15 @@ pt(whichPt).cluster.D = D;
 
 for i = 1:n_clusters(whichPt)
     [sortedD,I] = sort(D(:,i));
-    rep_seq{i} = all_seq_cat(:,I(1:12));
+    
+    if allSpikes == 1
+        % I want to find the sequence that the spike came from.
+        whichSeqs = seq_index(I(1:12));
+        rep_seq{i} = all_seq_cat(:,whichSeqs);
+    else
+        rep_seq{i} = all_seq_cat(:,I(1:12));
+    end
+
     info(i).outputFile = [saveFolder,'cluster_',sprintf('%d',i),'.gif'];
     info(i).cluster = i;
     info(i).name = pt(whichPt).name;
@@ -284,6 +291,7 @@ if doLongPlots == 1
 end
 
 
+
 %% Assign each sequence a color based on what cluster index it it
 colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
 c_idx = zeros(size(idx,1),3);
@@ -297,16 +305,25 @@ figure
 set(gcf,'Position',[50 100 1200 1200])
 
 % Plot of x, y, z coordinates of starting position over time
-subplot(4,1,1)
+subplot(3,1,1)
 toAdd = 0;
 %marker = {'x','o','>'};
 ttext = {'x','y','z'};
+
+if allSpikes == 1
+    plot_thing = all_locs;
+    plot_times = all_times_all;
+else
+    plot_thing = firstChs;
+    plot_times = all_times;
+end
+
 for i = 1:3
-scatter(all_times/3600,firstChs(:,i)+repmat(toAdd,size(firstChs,1),1),20,c_idx)
+scatter(plot_times/3600,plot_thing(:,i)+repmat(toAdd,size(plot_thing,1),1),20,c_idx)
 hold on
-text(all_times(1)/3600-0.3,toAdd+median(firstChs(:,i)),sprintf('%s',ttext{i}),'FontSize',30);
+text(plot_times(1)/3600-0.3,toAdd+median(plot_thing(:,i)),sprintf('%s',ttext{i}),'FontSize',30);
 if i ~=3
-    toAdd = toAdd + 10+(max(firstChs(:,i)) - min(firstChs(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
+    toAdd = toAdd + 10+(max(plot_thing(:,i)) - min(plot_thing(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
 end
 end
 for j = 1:length(pt(whichPt).sz)
@@ -315,11 +332,11 @@ for j = 1:length(pt(whichPt).sz)
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
 end
 set(gca,'ytick',[]);
-xlim([all_times(1)/3600-1 all_times(end)/3600+1])
+xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
 title(sprintf('X, y, z coordinates of spike leader for %s',pt(whichPt).name));
 set(gca,'FontSize',15);
 
-if 1 == 1
+if 1 == 0
 % Plot of x, y, z coordinates of unit vector over time
 subplot(4,1,2)
 toAdd = 0;
@@ -360,17 +377,17 @@ title(sprintf('Cluster identities for %s',pt(whichPt).name));
 %% Plot proportion of sequences in a given cluster over a moving window
 % Moving sum
 for i = 1:n_clusters(whichPt)
-clust{i} = all_times(idx == i);
+clust{i} = plot_times(idx == i);
 end
 
-[sum_c,sum_times] = movingSumCounts(clust,all_times,window);
+[sum_c,sum_times] = movingSumCounts(clust,plot_times,window);
 
 totalSum = zeros(1,size(sum_times,2));
 for i = 1:n_clusters(whichPt)
     totalSum = totalSum + sum_c(i,:);
 end
 
-subplot(4,1,3)
+subplot(3,1,2)
 
 pl = zeros(n_clusters(whichPt),1);
 for i = 1:n_clusters(whichPt)
@@ -384,7 +401,7 @@ for j = 1:length(pt(whichPt).sz)
    szOnset = pt(whichPt).sz(j).onset;
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',2);
 end
-xlim([all_times(1)/3600-1 all_times(end)/3600+1])
+xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
 
 leg_text = {};
 for i = 1:length(pl)
@@ -405,7 +422,7 @@ set(gca,'FontSize',15);
 % Plot locations of centroids 
 
 
-subplot(4,1,4)
+subplot(3,1,3)
 scatter3(xyChan(:,2),xyChan(:,3),xyChan(:,4),60,'k');
 hold on
 
@@ -431,7 +448,7 @@ end
 
 
 
-
+%{
 
 %% Statistical tests
 
@@ -620,12 +637,18 @@ end
 %% #2 Are 60 minute chunks containing seizures more likely to have certain cluster distributions
 %[tbl_2,chi2_2,p_2,labels_2] = crosstab(sz_chunk,most_num);
 
+%}
 
-save([saveFolder,'ptClust.mat'],'pt');
+%% Save new pt struct
+if allSpikes == 1
+    save([saveFolder,'ptClustAll.mat'],'pt');
+else
+    save([saveFolder,'ptClust.mat'],'pt');
+end
 
 end
 
-%% Save new pt struct
+
 
 
 end

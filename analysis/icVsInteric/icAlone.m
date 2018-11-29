@@ -2,6 +2,8 @@ function icAlone(pt,whichPts)
 
 %{
 
+NOTE NOW I AM LOOKING AT ALL SPIKES IN SEQUENCES!!!
+
 I want to compare ranked data with binary data. I will have a
 vector of all electrodes ranked by RL, where the earliest is #1 and those
 that are not significantly involved are all tied for last. And then a
@@ -26,16 +28,30 @@ There might be some independence issue but I can try it...
 %}
 
 %% Parameters
+doAllSpikes = 1;
 doClustOp = 0;
 doLongPlots = 0;
 doPlots = 1;
 
 %% Ideal cluster numbers
-ideal_k(1) = 3; %HUP064
-ideal_k(2) = 4; %HUP065
-ideal_k(3) = 3; %HUP068
-ideal_k(6) = 3; %HUP074
-ideal_k(8) = 4; %HUP078
+%ideal_k(1:20) = 4;
+if doAllSpikes == 1
+    ideal_k(1) = 3; %HUP064
+    ideal_k(2) = 4; %HUP065
+    ideal_k(3) = 3; %HUP068
+    ideal_k(6) = 3; %HUP074
+    ideal_k(8) = 2; %HUP078
+    ideal_k(9) = 5; %HUP080
+    ideal_k(12) = 4; %HUP086
+else
+    ideal_k(1) = 3; %HUP064
+    ideal_k(2) = 4; %HUP065
+    ideal_k(3) = 3; %HUP068
+    ideal_k(6) = 3; %HUP074
+    ideal_k(8) = 4; %HUP078
+    ideal_k(9) = 5; %HUP080
+    ideal_k(12) = 4; %HUP086
+end
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -107,6 +123,22 @@ plot(1:10,SSE)
 end
 
 %% Do clustering algorithm
+
+% try doing all spikes
+all_spikes = [];
+all_times_all = [];
+for i = 1:size(seq_matrix,2)
+    nonan = find(~isnan(seq_matrix(:,i)));
+    all_spikes = [all_spikes;nonan];
+    all_times_all = [all_times_all;seq_matrix(nonan,i)];
+end
+all_locs = locs(all_spikes,:);
+
+if doAllSpikes == 1
+    lead_locs = all_locs; % CHANGE
+    all_times = all_times_all; % CHANGE
+end
+
 metric = zeros(30,1);
 for i = 1:30
     [idx_all{i},C_all{i},sumd_all{i},D_all{i}] = ...
@@ -124,7 +156,7 @@ pt(whichPt).cluster.C = C;
 pt(whichPt).cluster.D = D;
 
 %% Get and plot representative sequences
-
+%{
 for i = 1:ideal_k(whichPt)
     [~,I] = sort(D(:,i));
     rep_seq{i} = seq_matrix(:,I(1:12));
@@ -137,7 +169,9 @@ if doLongPlots == 1
         icShowSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
     end
 end
+%}
 
+if 1 == 0
 %% Break it down by seizure
 inSOZ = [];
 outSOZ = [];
@@ -236,24 +270,25 @@ for j =1:length(pt(whichPt).sz)
         outSOZ = [outSOZ;r(issoz==0)];
         %}
         
-        
+        %{
         fake_r = zeros(size(locs,1),1);
         fake_r(nseq>=X) = 1;
         %[p2,h2,stats2] = ranksum(fake_r(issoz==1),fake_r(issoz==0));
         %fprintf('P value is %1.1e for frequent spikes\n',p2);
+        %}
         
-        
-        inSOZ = [inSOZ;fake_r(issoz==1)];
-        outSOZ = [outSOZ;fake_r(issoz==0)];
         
         % Just look at the frequent spikers and re-run RL analysis
-        if 1 == 0
+        if 1 == 1
         r_freq = r;
         issoz_freq = issoz;
         r_freq(nseq<X) = [];
         issoz_freq(nseq<X) = [];
-        [p3,h3,stats3] = ranksum(r_freq(issoz_freq==1),r_freq(issoz_freq==0));
-        fprintf('P value is %1.1e for frequent spikes\n',p3);
+        inSOZ = [inSOZ;r_freq(issoz_freq==1)];
+        outSOZ = [outSOZ;r_freq(issoz_freq==0)];
+        
+        %[p3,h3,stats3] = ranksum(r_freq(issoz_freq==1),r_freq(issoz_freq==0));
+        %fprintf('P value is %1.1e for frequent spikes\n',p3);
         end
         
         %% Do nearest SOZ analysis
@@ -269,30 +304,41 @@ for j =1:length(pt(whichPt).sz)
 end
  
 %%  combining all seizures
+%{
 [p4,h4,stats4] = ranksum(inSOZ,outSOZ);
 fprintf(['When I lump together all seizures, the p value for whether\n'...
     'SOZ electrodes have a different RL rank from non-SOZ electrodes is\n'...
     'p = %1.1e.\n'],p4);
+%}
+
+end
 
 %% Investigate spike timing
-
-% Cluster spikes together
-t_clust = all_times(1);
-for i = 2:length(all_times)
-    if all_times(i) - t_clust(end) < 0.3
-        continue;
-    else
-        t_clust(end+1) = all_times(i);
-    end
+for j = 1:length(pt(whichPt).sz)
+    seqs_sz = pt(whichPt).sz(j).seq_matrix;
+    time_sz = min(seqs_sz,[],1);
     
-end
-time_diff = diff(t_clust);
-time_diff = [0 time_diff];
+    % Cluster spikes together
+    t_clust = time_sz(1);
+    for i = 2:length(time_sz)
+        if time_sz(i) - t_clust(end) < 0.3
+            continue;
+        else
+            t_clust(end+1) = time_sz(i);
+        end
 
-%plot(time_diff);
-if 1 == 0
-figure
-scatter(t_clust,time_diff)
+    end
+    time_diff = diff(t_clust);
+    time_diff = [0 time_diff];
+
+    %plot(time_diff);
+    if 1 == 1
+    figure
+    scatter(t_clust,time_diff)
+    pause
+    close(gcf)
+    end
+
 end
 
 %% Do plots
@@ -345,8 +391,10 @@ if doPlots == 1
     scatter3(locs(main_lead,1),locs(main_lead,2),locs(main_lead,3),...
         60,'r','filled')
     end
-    scatter3(locs(pt(whichPt).newSOZChs,1),locs(pt(whichPt).newSOZChs,2),...
-        locs(pt(whichPt).newSOZChs,3),20,'k','filled')
+    sozchs = pt(whichPt).newSOZChs;
+    sozchs(sozchs==0) = [];
+    scatter3(locs(sozchs,1),locs(sozchs,2),...
+        locs(sozchs,3),20,'k','filled')
      pause
      close(gcf)
 end

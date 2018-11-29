@@ -171,7 +171,7 @@ end
 
 
 % Plot the pairwise connections
-if 1 == 1
+if 1 == 0
 figure
 set(gcf,'position',[200 200 1000 800]);
 imagesc(chCh)
@@ -251,6 +251,7 @@ for i = 1:nchs
    
    % Alternative approach that doesn't penalize flat surfaces is to take
    % the distance between the two furthest locations
+   %{
    chs_group = [i,hull_chs]; % get all channels connected to channel 1
    dist_group_matrix = zeros(length(chs_group),length(chs_group)); % matrix of ch-to-ch distances
    for j = 1:length(chs_group)
@@ -264,6 +265,7 @@ for i = 1:nchs
    [max_dist,I] = max(dist_group_matrix(:));
    %[I1,I2] = ind2sub(size(dist_group_matrix),I);
    maxdist(i) = max_dist;
+   %}
    
    
    % Alternative approach is to take the surface area.
@@ -623,6 +625,10 @@ end
 title('Number of sequences starting in max connected electrode')
 end
 
+
+
+pause
+close(gcf)
 end
 
 
@@ -646,6 +652,9 @@ end
 [p2,h2,stats2] = ranksum(allFreqDist,allAllDist);
 [p3,h3,stats3] = ranksum(allFreqDist,allHullDist);
 [p4,h4,stats4] = ranksum(allSADist,allAllDist);
+
+fprintf(['P-value comparing distance to nearest SOZ electrode\nfor patients with max SA'...
+    'compared to all electrodes:\np=%1.1e\n'],p4);
 
 %% Plot error bars of means 
 
