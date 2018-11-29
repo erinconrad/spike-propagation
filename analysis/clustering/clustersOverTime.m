@@ -2,7 +2,7 @@ function clustersOverTime(pt,whichPts)
 
 %% Parameters
 allSpikes = 1; % Instead of just lead spike, look at all spikes
-clustOpt = 1; % plot elbow plot
+clustOpt = 0; % plot elbow plot
 doPlots = 1; % do main plots
 doLongPlots = 0; % do long plots
 removeTies = 1; %remove sequences containing too many ties
@@ -13,7 +13,7 @@ window = 3600;
 %% Optimal cluster numbers
 %n_clusters = ones(30,1)*3;
 if allSpikes == 1
-    n_clusters(3) = 4; %HUP68
+    n_clusters(3) = 4; %HUP68, 2 by silhouette
     n_clusters(4) = 2; %HUP70
     n_clusters(8) = 3; %HUP78
     n_clusters(9) = 3; %HUP080
@@ -198,7 +198,7 @@ plot(1:10,SSE)
 end
 
 % Silhouette method
-if 1 == 1
+if 1 == 0
 E = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
 pt(whichPt).cluster.optimalKSilhouette = E.OptimalK; 
 %gscatter(cluster_vec(:,1),cluster_vec(:,2),E.OptimalY,'rbg','xod')
