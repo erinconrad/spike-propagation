@@ -23,7 +23,7 @@ load([resultsFolder,'ptStructs/',ptWithFs]);
 
 
 %% Loop through patients and seizures
-for i = 1:length(pt)
+for i = 31%i = 1:length(pt)
     
     % Get electrode data
     electrodeData =  pt(i).electrodeData;
