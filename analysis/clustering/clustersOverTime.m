@@ -279,7 +279,7 @@ pt(whichPt).cluster.rep_seq = rep_seq;
 %% Plot representative sequences
 if doLongPlots == 1
     for i = 1:n_clusters(whichPt)
-        outputFile = sprintf('seqs_cluster_%d',i);
+        outputFile = [saveFolder,sprintf('seqs_cluster_%d',i),'.png'];
         showSpecificSequences(pt,whichPt,rep_seq{i},1,outputFile)
     end
 
