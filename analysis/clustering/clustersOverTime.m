@@ -4,7 +4,7 @@ function clustersOverTime(pt,whichPts)
 allSpikes = 1; % Instead of just lead spike, look at all spikes
 clustOpt = 0; % plot elbow plot
 doPlots = 1; % do main plots
-doLongPlots = 0; % do long plots
+doLongPlots = 1; % do long plots
 removeTies = 1; %remove sequences containing too many ties
 leadOnly = 1; %don't change
 window = 3600;
