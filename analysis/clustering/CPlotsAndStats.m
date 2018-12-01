@@ -8,7 +8,8 @@ nboot = 1e4;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
-destFolder = [resultsFolder,'pretty_plots/Fig3/'];
+destFolder = [resultsFolder,'clustering/'];
+mkdir(destFolder);
 
 allCounts = [];
 allPat = [];
@@ -259,7 +260,6 @@ set(gca,'FontSize',20);
 
 %saveas(gcf,[saveFolder,pt(whichPt).name,'cluster.png']);
 %close(gcf)
-destFolder = [resultsFolder,'pretty_plots/Fig2/'];
 print(gcf,[destFolder,'clustTime_',sprintf('%s',pt(whichPt).name)],'-depsc');
 eps2pdf([destFolder,'clustTime_',sprintf('%s',pt(whichPt).name),'.eps'])
 
