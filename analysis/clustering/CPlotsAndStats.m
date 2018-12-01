@@ -707,7 +707,7 @@ end
 fig = gcf;
 fig.PaperUnits = 'inches';
 posnow = get(fig,'Position');
-%print(gcf,[destFolder,'chi2_new3'],'-dpng');
+print(gcf,[destFolder,'chi2_allspikes'],'-dpng');
 
 %{
 %% Get full table for chi_2 to put into R
