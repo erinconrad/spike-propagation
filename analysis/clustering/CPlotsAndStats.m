@@ -1,7 +1,8 @@
 
-function CPlotsAndStats(pt,whichPts)
+function pt = CPlotsAndStats(pt,whichPts)
 
 %% Parameters
+allSpikes =1;
 window = 3600;
 nboot = 1e4;
 
@@ -43,11 +44,22 @@ idx = pt(whichPt).cluster.idx;
 C = pt(whichPt).cluster.C;
 bad_cluster = pt(whichPt).cluster.bad_cluster;
 
+
 %% Remove bad clusters
 bad_idx = find(ismember(idx,bad_cluster));
-all_times(bad_idx) = [];
-all_seq_cat(:,bad_idx) = [];
-cluster_vec(bad_idx,:) = [];
+if allSpikes == 1
+    all_times_all = pt(whichPt).cluster.all_times_all;
+    all_spikes = pt(whichPt).cluster.all_spikes;
+    all_locs = pt(whichPt).cluster.all_locs;
+    all_times_all(bad_idx) = [];
+    all_locs(bad_idx,:) = [];
+    all_spikes(bad_idx) = [];
+    
+else
+    all_times(bad_idx) = [];
+    all_seq_cat(:,bad_idx) = [];
+    cluster_vec(bad_idx,:) = [];
+end
 idx(bad_idx) = [];
 clusters = 1:k; clusters(bad_cluster) = [];
 
@@ -106,17 +118,25 @@ end
 %}
 
 %% Main cluster plot
+if allSpikes == 1
+   plot_thing = all_locs;
+   plot_times = all_times_all;
+else
+   plot_thing = cluster_vec;
+   plot_times = all_times;
+end
+
 figure
 set(gcf,'Position',[50 100 1200 700])
 
 % Sequence frequency
 subplot(3,1,1)
-[t_return,counts] = binCounts(all_times,window);
+[t_return,counts] = binCounts(plot_times,window);
 plot(t_return/3600,counts,'k','LineWidth',3);
 hold on
-for j = 1:length(pt(whichPt).sz)
+for j = 1:size(szTimes,1)
    yl = ylim; 
-   szOnset = pt(whichPt).sz(j).onset;
+   szOnset = szTimes(j,1);
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',3);
 end
 xlim([all_times(1)/3600-1 all_times(end)/3600+1])
@@ -131,16 +151,16 @@ toAdd = 0;
 ttext = {'x','y','z'};
 ytick_locations = zeros(3,1);
 for i = 1:3
-scatter(all_times/3600,cluster_vec(:,i)+repmat(toAdd,size(cluster_vec,1),1),20,c_idx)
+scatter(plot_times/3600,plot_thing(:,i)+repmat(toAdd,size(plot_thing,1),1),20,c_idx)
 hold on
-ytick_locations(i) = toAdd+median(cluster_vec(:,i));
+ytick_locations(i) = toAdd+median(plot_thing(:,i));
 %text(all_times(1)/3600-0.3,toAdd+median(cluster_vec(:,i)),sprintf('%s',ttext{i}),'FontSize',30);
 if i ~=3
-    toAdd = toAdd + 20+(max(cluster_vec(:,i)) - min(cluster_vec(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
+    toAdd = toAdd + 20+(max(plot_thing(:,i)) - min(plot_thing(:,i+1)));%quantile(firstChs(:,i),0.95) - quantile(firstChs(:,i+1),0.05);
 end
 end
 yl = ylim;
-ylim([min(cluster_vec(:,1)), yl(2)])
+ylim([min(plot_thing(:,1)), yl(2)])
 for j = 1:size(szTimes,1)
    yl = ylim; 
    szOnset = szTimes(j,1);
@@ -148,7 +168,7 @@ for j = 1:size(szTimes,1)
 end
 yticks(ytick_locations)
 yticklabels({'X','Y','Z'})
-xlim([all_times(1)/3600-1 all_times(end)/3600+1])
+xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
 ylabel('Coordinate');
 title(sprintf('X, Y, Z coordinates of spike leader'));
 set(gca,'FontSize',20);
@@ -160,7 +180,7 @@ toAdd = 0;
 %marker = {'x','o','>'};
 ytick_locations = zeros(3,1);
 for i = 4:6
-    scatter(all_times/3600,cluster_vec(:,i)+repmat(toAdd,size(cluster_vec,1),1),20,c_idx)
+    scatter(plot_times/3600,cluster_vec(:,i)+repmat(toAdd,size(cluster_vec,1),1),20,c_idx)
     hold on
     ytick_locations(i-3) = toAdd;
     %text(all_times(1)/3600-0.3,toAdd,sprintf('%s',ttext{i-3}),'FontSize',30);
@@ -176,7 +196,7 @@ for j = 1:size(szTimes,1)
    szOnset = szTimes(j,1);
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',3);
 end
-xlim([all_times(1)/3600-1 all_times(end)/3600+1])
+xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
 ylabel('Coordinate');
 title(sprintf('X, y, z coordinates of propagation vector for %s',pt(whichPt).name));
 set(gca,'FontSize',15);
@@ -199,10 +219,10 @@ title(sprintf('Cluster identities for %s',pt(whichPt).name));
 %% Plot proportion of sequences in a given cluster over a moving window
 % Moving sum
 for i = clusters
-clust{i} = all_times(idx == i);
+clust{i} = plot_times(idx == i);
 end
 
-[sum_c,sum_times] = movingSumCounts(clust,all_times,window);
+[sum_c,sum_times] = movingSumCounts(clust,plot_times,window);
 
 totalSum = zeros(1,size(sum_times,2));
 for i = clusters
@@ -223,7 +243,7 @@ for j = 1:size(szTimes,1)
    szOnset = szTimes(j,1);
    sz = plot([szOnset szOnset]/3600,yl,'k','LineWidth',3);
 end
-xlim([all_times(1)/3600-1 all_times(end)/3600+1])
+xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
 
 leg_text = {};
 for i = clusters
@@ -295,13 +315,6 @@ end
 %% Statistical tests
 
 % Get all seizure times
-if 1 == 0
-szAll = zeros(length(pt(whichPt).sz),1);
-for j = 1:length(pt(whichPt).sz)
-   szAll(j) = pt(whichPt).sz(j).onset;
-    
-end
-end
 szAll = szTimes(:,1);
 
 
@@ -325,7 +338,7 @@ n_chunks = ceil(totalTime/test_t);
 
 
 % Divide run into 60 minute chunks
-n_chunks = ceil((all_times(end) - all_times(1))/test_t);
+n_chunks = ceil((plot_times(end) - plot_times(1))/test_t);
 
 prop_pop = zeros(n_chunks,1);
 times_pop = zeros(n_chunks,1);
@@ -335,10 +348,10 @@ sz_chunk = zeros(n_chunks,1);
 most_num = zeros(n_chunks,1);
 
 for i = 1:n_chunks
-   curr_times = [all_times(1)+(i-1)*test_t, min(all_times(1) + i*test_t,all_times(end))];
+   curr_times = [plot_times(1)+(i-1)*test_t, min(plot_times(1) + i*test_t,plot_times(end))];
    
    % get the indices of the sequences in that time chunk
-   curr_seqs = find(all_times >= curr_times(1) & all_times <= curr_times(2));
+   curr_seqs = find(plot_times >= curr_times(1) & plot_times <= curr_times(2));
    prop_pop(i) = sum(idx(curr_seqs) == pop_c)/length(curr_seqs);
    
    % define the time chunk for those sequences
@@ -365,7 +378,10 @@ end
 fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'...
     ' distributions,\n the p-value is %1.1e\n\n\n'],pt(whichPt).name,p_1);
 
+pt(whichPt).cluster.changetime.p = p_1;
+
 %% Same thing, but just 2 most popular clusters and first 24 chunks
+%{
 most_common = mode(idx);
 second_common = mode(idx(idx~=most_common));
 new_idx = idx(idx == most_common | idx == second_common);
@@ -381,6 +397,7 @@ fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'..
     'first 24 hours,\nthe p-value is %1.1e\n\n\n'],pt(whichPt).name,p_1);
 
 chi_tables2{whichPt} = tbl_5;
+%}
 
 %% Validate the above method with bootstrap
 %{
@@ -422,12 +439,17 @@ for j = 1:length(szAll)%1:length(pt(whichPt).sz)
     preIcTimes(j,:) = preIcTime;
     
     % The cluster indices of the sequences falling within that range
-    preIcClustIdx = [preIcClustIdx;idx(all_times >= preIcTime(1) & ...
-        all_times <= preIcTime(2))];
+    preIcClustIdx = [preIcClustIdx;idx(plot_times >= preIcTime(1) & ...
+        plot_times <= preIcTime(2))];
     
     % the sequence numbers falling within that range
-    preIcIdx = [preIcIdx;find(all_times >= preIcTime(1) & ...
-        all_times <= preIcTime(2))'];
+    if allSpikes == 1
+        preIcIdx = [preIcIdx;find(plot_times >= preIcTime(1) & ...
+        plot_times <= preIcTime(2))];
+    else
+        preIcIdx = [preIcIdx;find(plot_times >= preIcTime(1) & ...
+            plot_times <= preIcTime(2))'];
+    end
     
 end
 
@@ -447,7 +469,7 @@ for i = 1:n_chunks
    % potential early time is either the start of the run or an hour after
    % the last seizure
    if i ==1
-       early_time = all_times(1);
+       early_time = plot_times(1);
    else
        early_time = szTimes(i-1) + 3600*1;
    end
@@ -461,7 +483,7 @@ for i = 1:n_chunks
 end
  % add time after last seizure (excluding last 2 hours in case there was a
  % seizure right after we stop recording)
- late_time = all_times(end)- 3600*2;
+ late_time = plot_times(end)- 3600*2;
  early_time = szTimes(end) + 3600*1;
  if late_time>early_time
      interIcTimes = [interIcTimes;early_time late_time];
@@ -470,11 +492,16 @@ end
 interIcClustIdx = [];
 interIcIdx = [];
 for i = 1:size(interIcTimes,1)
-    interIcClustIdx = [interIcClustIdx;idx(all_times >= interIcTimes(i,1) & ...
-        all_times <= interIcTimes(i,2))];
-    interIcIdx = [interIcIdx;find(all_times >= interIcTimes(i,1) & ...
-        all_times <= interIcTimes(i,2))'];
-
+    interIcClustIdx = [interIcClustIdx;idx(plot_times >= interIcTimes(i,1) & ...
+        plot_times <= interIcTimes(i,2))];
+    if allSpikes == 1
+        interIcIdx = [interIcIdx;find(plot_times >= interIcTimes(i,1) & ...
+        plot_times <= interIcTimes(i,2))];
+    else
+        
+        interIcIdx = [interIcIdx;find(plot_times >= interIcTimes(i,1) & ...
+            plot_times <= interIcTimes(i,2))'];
+    end
     
 end
 
@@ -487,10 +514,11 @@ fprintf(['For %s, regarding whether the pre-ictal period\n has a different clust
     ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
 
 chi_tables_plot{whichPt} = tbl_2;
+pt(whichPt).cluster.pre_ic.p = p_2;
 
 %% Get 2x2 table for just 2 most common clusters
 
-
+%{
 interIcClustIdx(interIcClustIdx~=most_common & interIcClustIdx~=second_common) = [];
 preIcClustIdx(preIcClustIdx~=most_common & preIcClustIdx~=second_common) = [];
 
@@ -504,6 +532,7 @@ fprintf(['For %s, regarding whether the pre-ictal period\n has a different clust
     'only taking into account 2 most common clusters,\nthe p-value is %1.1e\n\n'],pt(whichPt).name,p_3);
 
 chi_tables{whichPt} = tbl_3;
+%}
 
 %% Does sequence frequency predict sz?
 time1 = sum(interIcTimes(:,2) - interIcTimes(:,1));
@@ -680,6 +709,7 @@ fig.PaperUnits = 'inches';
 posnow = get(fig,'Position');
 %print(gcf,[destFolder,'chi2_new3'],'-dpng');
 
+%{
 %% Get full table for chi_2 to put into R
 names = cell(length(whichPts)*4,1);
 cluster = cell(length(whichPts)*4,1);
@@ -760,6 +790,7 @@ for whichPt = whichPts
 end
 
 T = table(names,state,cluster,counts);
+%}
 
 
 end
