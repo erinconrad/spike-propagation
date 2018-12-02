@@ -22,7 +22,7 @@ if allSpikes == 1
     n_clusters(18) = 4; %HUP107
     n_clusters(19) = 3; %HUP111A
     n_clusters(20) = 3; %HUP116
-    n_clusters(22) = 4; %Study16
+    n_clusters(22) = 3; %Study16
     n_clusters(24) = 3; %Study19
     n_clusters(25) = 4; %Study20
     n_clusters(27) = 4; %Study22
