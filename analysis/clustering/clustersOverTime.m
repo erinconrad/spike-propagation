@@ -9,6 +9,8 @@ removeTies = 1; %remove sequences containing too many ties
 leadOnly = 1; %don't change
 window = 3600;
 
+randSeq = 1; % instead of most representative sequences, random sequences
+
 
 %% Optimal cluster numbers
 %n_clusters = ones(30,1)*3;
@@ -264,10 +266,18 @@ for i = 1:n_clusters(whichPt)
     
     if allSpikes == 1
         % I want to find the sequence that the spike came from.
-        whichSeqs = seq_index(I(1:12));
+        if randSeq == 1
+            whichSeqs = seq_index(I(randperm(length(I),12)));
+        else
+            whichSeqs = seq_index(I(1:12));
+        end
         rep_seq{i} = all_seq_cat(:,whichSeqs);
     else
-        rep_seq{i} = all_seq_cat(:,I(1:12));
+        if randSeq == 1
+            rep_seq{i} = all_seq_cat(:,I(randperm(length(I),12)));
+        else
+            rep_seq{i} = all_seq_cat(:,I(1:12));
+        end
     end
 
     info(i).outputFile = [saveFolder,'cluster_',sprintf('%d',i),'.gif'];
