@@ -27,6 +27,7 @@ if allSpikes == 1
     n_clusters(25) = 4; %Study20
     n_clusters(27) = 3; %Study22
     n_clusters(30) = 4; %Study28
+    n_clusters(31) = 3; %Study29
 else
     n_clusters(3) = 4; %HUP68
     n_clusters(4) = 5; %HUP70
