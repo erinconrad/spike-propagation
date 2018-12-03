@@ -3,53 +3,34 @@
 function [gdf,noise,removed] = fspk6(eeg,tmul,absthresh,n_chans,...
     srate,window,electrodes)
 
-%% I CHANGED A BUNCH OF THINGS
-
-%{
-This program is the non-GUI version of the spike detection algorithm fspk.
-It was broken down to run over the CHOP network remotely, not over Matlab.
-USAGE:  out = fspk2('patient_num',tmul,absthresh)
-INPUT:  'patient_num' <string>  -- Number of Patient to be analyzed
-        tmul                       -- Threshold Multiplier
-        absthresh                  -- Absolute Threshold
-Outputs: .gdf files in same file as EEG -- array of [channel | tick ]
-%}
-
 % Check function input
 if ~exist('tmul')
-    fprintf('warning, no tmul entered, using 13\n');
-    tmul=13;
+    error('no tmul\n')
 end
 
 if ~exist('absthresh')
-    fprintf('warning, no absthresh entered, using 13\n');
-    absthresh=300;
+    error('no absthresh\n')
 end
 
 % Initialize parameters
 rate   = srate;
 chan   = 1:n_chans;
 
-%% Depth electrodes are spikier
-%fr     = 20;                 % high pass freq: probably don't have to change
-%lfr    = 7;                  % low pass freq: probably don't have to change
-
-
 spkdur = 220;                % spike duration must be less than this
 spkdur = spkdur*rate/1000;   % convert to points;
-
-%sharpdur = 200;  % duration of sharp wave
-%sharpdur = sharpdur*rate/1000; % convert to points;
-
+fr     = 40;  % high pass freq
+lfr    = 7;   % low pass freq
+aftdur = 70;
+aftdur   = aftdur*rate/1000;   % convert to points;
+spikedur = 5; % minimum spike duration in points
+fn_fr  = 10;
 
 num_segs = ceil(size(eeg,1)/window);
 
 % Initialize things
 all_spikes  = [];
 allout      = [];
-overlap     = rate;
 totalspikes = zeros(1, length(chan));
-inc         = 0;
 removed     = [];
 
 % Read in eeg data
@@ -57,41 +38,14 @@ alldata     = eeg;            % timepnts x chans
 
 % Check that it's enough time
 if size(alldata,1) < window
-    fprintf('Warning: should run spike detector on at least 60 seconds of data.\n');
+    error('Warning: should run spike detector on at least 60 seconds of data.\n');
 end
 
 % Initialize a noise matrix
 noise = zeros(num_segs-1,n_chans);
 
 % Iterate channels and detect spikes
-for dd = 1:n_chans
-    
-    ch_type = electrodes(dd).type;
-    
-    fr     = 40;  % high pass freq, used to be 20
-    lfr    = 7;   % low pass freq
-    aftdur = 70;
-    spikedur = 5;%5;
-    fn_fr  = 10;
-    
-    %{
-    if strcmp(ch_type,'D') == 1
-        fr     = 30;%30;  % high pass freq, used to be 20
-        lfr    = 7;   % low pass freq
-        aftdur   = 70;%70;   % afterhyperpolarization wave must be longer than this
-        spikedur = 10;%10;
-        fn_fr = 1;
-
-    else
-        fr     = 20;  % high pass freq, used to be 20
-        lfr    = 7;   % low pass freq
-        aftdur = 150;
-        spikedur = 20;
-        fn_fr  = 1;
-    end
-    %}
-    
-    aftdur   = aftdur*rate/1000;   % convert to points;
+for dd = 1:n_chans    
     
     % Break the data into time segments, 1 minute each, so that the
     % threshold we are using to see if the spike rises above the background
@@ -100,10 +54,12 @@ for dd = 1:n_chans
         time_points(1) = (tt-1)*window+1;
         time_points(2) = min(window*tt,size(eeg,1));
         
+        % Skip if it's a very short segment
         if time_points(2) - time_points(1) < 100
             continue
         end
         
+        % Redundant check on the maximum size of the eeg
         if tt == num_segs
            time_points(2) = size(eeg,1);
         end
@@ -117,6 +73,8 @@ for dd = 1:n_chans
         
         %% Skip spike detection if the amplitude is very low during the time period for that channel
         if sum(abs(data)) <= 1
+            % Either extend the time we are removing for the channel or add
+            % a new set of times we're removing for the channel
             if isempty(removed) == 0 && removed(end,4) == 0 && removed(end,1) == dd
                 removed(end,3) = time_points(2);
             else
@@ -142,37 +100,18 @@ for dd = 1:n_chans
             continue
         end
         
-        % Now filter
-        %{
-        f = designfilt('bandstopiir','FilterOrder',2, ...
-               'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
-               'DesignMethod','butter','SampleRate',srate);
-           
-        
-        data = filtfilt(f,data);   
-        %}
-        
-        
-        
+            
         %% re-adjust the mean of the data to be zero (if there is a weird dc shift)
         data = data - mean(data);
         
         %% Run the spike detector
-        
-
-      
+             
         spikes   = [];
-        shspikes = [];
-        fndata   = eegfilt(data, fn_fr, 'hp',srate);
-
+        
         % first look at the high frequency data for the 'spike' component
+        fndata   = eegfilt(data, fn_fr, 'hp',srate);
         HFdata    = eegfilt(fndata, fr, 'lp',srate);
        
-        %{
-        if strcmp(ch_type,'D') == 1
-            HFdata = data;
-        end
-        %}
         
         lthresh = mean(abs(HFdata));  % this is the smallest the initial part of the spike can be
         thresh  = lthresh*tmul;     % this is the final threshold we want to impose
@@ -187,10 +126,9 @@ for dd = 1:n_chans
 
         % check the amplitude of the waves of appropriate duration
         for i = 1:length(startdx)
-            %spkmintic = spv(find(spv > startdx(i) & spv < startdx1(i)));  % find the valley that is between the two peaks
-            spkmintic = spv((spv > startdx(i) & spv < startdx1(i)));
+            spkmintic = spv((spv > startdx(i) & spv < startdx1(i))); % find the valley that is between the two peaks
             %% commented out the second check
-            if abs(HFdata(startdx1(i)) - HFdata(spkmintic)) > sthresh %& HFdata(startdx(i)) - HFdata(spkmintic) > lthresh  %#ok<AND2> % see if the peaks are big enough
+            if abs(HFdata(startdx1(i)) - HFdata(spkmintic)) > sthresh %& HFdata(startdx(i)) - HFdata(spkmintic) > lthresh   % see if the peaks are big enough
                 spikes(end+1,1) = spkmintic;                                  % add timestamp to the spike list
                 spikes(end,2)   = (startdx1(i)-startdx(i))*1000/rate;         % add spike duration to list
                 spikes(end,3)   = abs(HFdata(startdx1(i)) - HFdata(spkmintic));    % add spike amplitude to list
@@ -250,9 +188,8 @@ for dd = 1:n_chans
                     spikes(i,5) = abs(LFdata(a(1)) - LFdata(b));  % this is the amplitude of the afhp
                     if a(1) == olda    
                         % if this has the same afterhyperpolarization peak as the prev
-                        %if strcmp(ch_type,'D') == 0
                             dellist(end+1) = i-1;           % spike then the prev spike should be deleted
-                        %end
+                        
                     end
                 end
                 olda = a(1);
@@ -310,7 +247,6 @@ for dd = 1:n_chans
         if ~isempty(out)
             %error('look\n');
             out(:,2) = dd;
-            out(:,1) = out(:,1);
             out(:,1) = out(:,1)+time_points(1)-1;
             allout = [allout; out];
         end

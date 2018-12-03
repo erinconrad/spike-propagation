@@ -5,7 +5,7 @@ for i = 1:length(pt)
     for j = 1:length(pt(i).sz)
 
         for k = 1:length(pt(i).sz(j).electrodes)
-                szElecs = [szElecs,pt(i).sz(j).electrodes{k}];
+            szElecs = [szElecs,pt(i).sz(j).electrodes{k}];
         end
     end
     

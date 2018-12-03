@@ -118,6 +118,7 @@ for i = 1:length(pt)
     pt(i).channels = channels;
     
     % Get sz onset zone electrodes
+    pt(i).newSOZChs = [];
     for j = 1:length(pt(i).sz)
         chnames = pt(i).sz(j).electrodes;
         chnums = zeros(length(chnames),1);
@@ -137,9 +138,10 @@ for i = 1:length(pt)
 
         end
         pt(i).sz(j).chs = chnums;
-
+        pt(i).newSOZChs = [pt(i).newSOZChs;chnums];
     end
-
+     pt(i).newSOZChs = unique(pt(i).newSOZChs);
+   
 
 
     % Save chLocations file

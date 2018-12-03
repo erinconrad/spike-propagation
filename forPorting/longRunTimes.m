@@ -20,7 +20,7 @@ ptnames = fieldnames(ptInfo.PATIENTS);
 ptnames(strcmp(ptnames,'HUP111B')==1) = [];
 ptnames(strcmp(ptnames,'Study004')==1) = [];
 
-load([resultsFolder,'ptStructs/',outputFile])
+%load([resultsFolder,'ptStructs/',outputFile])
 
 %% Desired times
 % Look 12 hours before the sz and 12 hours after
@@ -136,10 +136,18 @@ for i = 1:length(ptnames)
            allTimes = [allTimes;initialTime finalTime];
          end
          pt(i).allTimes = allTimes;
+         
     end
 end
 
 for i = 1:length(pt)
+    
+   % Get sz times 
+   pt(i).newSzTimes = [];
+   for j = 1:length(pt(i).sz)
+       pt(i).newSzTimes(j,:) = [pt(i).sz(j).onset,pt(i).sz(j).offset];
+   end 
+    
    if isempty(pt(i).allTimes) == 1, continue; end
    
    pt(i).runTimes = [];

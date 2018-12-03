@@ -64,14 +64,14 @@ else
     remove = zeros(size(gdf,1),1);
     for i = 1:size(gdf,1)
         index_time = gdf(i,2);
-        n_close = length(find(gdf(:,2)<index_time+multiChTime & ...
-            gdf(:,2) > index_time));
+        I = find(gdf(:,2)<index_time+multiChTime & ...
+            gdf(:,2) >= index_time);
+        n_close = length(I);
         if n_close > maxChannels
-            remove(i:i+n_close) = ones(length(i:i+n_close),1);
+            remove(I) = ones(length(I),1);
         end
     end
     gdf(remove==1,:) = [];
-
 end
 
 end

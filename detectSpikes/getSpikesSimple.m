@@ -3,42 +3,45 @@ function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thre
 % This is my basic spike detector file which can call one of a number of
 % specific detectors
 
-% Need to uncomment lines 192 and 200 to get vanleer back
-
 %% Parameters
-setChLimits = 1; % Should I toss out spikes that occur across too many channels at the same time
-multiChLimit = 0.8;%0.8; % I will throw out spikes that occur in >80% of channels at the same time
-multiChTime = 0.4; %.025;
-vtime = [-0.005,0.05]; %[-0.002,0.048]
+
+% Should I toss out spikes that occur across too many channels at the same
+% time?
+setChLimits = 1; 
+
+% I will throw out spikes that occur in >80% of channels at the same time
+multiChLimit = 0.8;
+
+% "At the same time" means within 400 ms of each other
+multiChTime = 0.4; 
+
+% Vanleer time to take snapshot (5 ms before to 50 ms after)
+vtime = [-0.005,0.05];
 
 %% Load file paths, etc.
 [~,~,~,~,pwfile] = fileLocations;
 dataName = pt(whichPt).ieeg_name;
 
-% If no thresh, use a default
 if exist('thresh','var') == 0
-    error('Warning, no thresholds entered, using tmul 13 and absthresh 300\n');
-    thresh.tmul = 13;
-    thresh.absthresh = 300;
+   error('Error, no thresholds entered\n');
 end
 
 if isempty(thresh.tmul) == 1
-   fprintf('warning, no thresholds, using tmul 13 and absthresh 300\n');
-   thresh.tmul = 13;
-   thresh.absthresh = 300;
+   error('Error, no thresholds entered\n');
 end
 
-% Get the indices I want to look at
 fs = pt(whichPt).fs;
+
+% This is to get the final shorter times if I am requesting less than 60
+% seconds of data
 oldtimes = times;
 oldStartEnd = oldtimes*fs;
 
-% chLocs
+% channel locations
 chLocs = pt(whichPt).electrodeData.locs;
 
-% Force it to look at least 60 seconds if detector 4
-if (whichDetector == 4 || whichDetector == 5) && times(2)-times(1)<60
-    fprintf('Warning, need at least 60 seconds to use detector 4. Running with 60 s of data.');
+% Force it to look at least 60 seconds
+if times(2)-times(1)<60
     times(2) = times(1)+60;
 end
 
@@ -59,7 +62,6 @@ fprintf('Retrieved data\n');
 % remove nans
 data.values(isnan(data.values)) = 0;
 
-old_values = data.values;
 %% Notch filter to remove 60 Hz noise
 f = designfilt('bandstopiir','FilterOrder',2, ...
                'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
@@ -194,8 +196,7 @@ elseif whichDetector == 6
     end
 
 elseif whichDetector == 7
-    % just like fspk3 (detector 4) except I am changing fr and I have the ability to
-    % change parameters based on if depth
+    
     window = 60*data.fs;
 
     [gdf,noise,removed] = fspk6(data.values,tmul,absthresh,...
@@ -242,6 +243,7 @@ fprintf('Finished detection\n');
 
 %% Re-align the spike to be the peak (positive or negative)
 values = data.values;
+%{
 if 1 == 0
 
 timeToPeak = [-.1,.15]; % Where to look for the peak
@@ -265,11 +267,10 @@ for i = 1:size(gdf,1)
 end
 gdf = new_gdf;
 end
+%}
 
 % Remove duplicates
 gdf = unique(gdf,'rows');
-
-
 
 % Re-sort spike times
 if isempty(gdf) == 0
@@ -300,7 +301,7 @@ end
 
 
 %% limit spikes and values to those in the desired times
-% This is useful if I had to force lengthen the search time for detector 4
+% This is useful if I had to force lengthen the search time 
 % if I asked to look at less than 60 seconds of data
 values = values(1:oldStartEnd(2)-oldStartEnd(1),:);
 if isempty(gdf) == 0
