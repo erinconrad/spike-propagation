@@ -1,15 +1,22 @@
-function showSequences(P,pts,whichSeq,nseq,ic,save_plots)
+function showSequences(P,pts,whichSeq,nseq,ic,out_folder)
 % This is another function to plot sequences, using the spike times from
 % the inputted structure
 
+save_plots = 1;
+
 if isempty(whichSeq) == 0
     %ignore nseq
-    nseq = length(whichSeq);
+    nseq = size(whichSeq,2);
 end
 
-%% Parameters
+%% Figure out how many figures I need
+nfigs = ceil(nseq/10);
+seq_fig = cell(nfigs,1);
+for i = 1:length(seq_fig)
+    seq_fig{i} = (i-1)*10+1:min(i*10,nseq);
+end
 prows = 2;
-columns =  nseq/prows;
+columns =  5;
 surroundtime = 2;
 
 %% Get paths and load seizure info and channel info
@@ -22,7 +29,10 @@ ptInfo = loadjson(jsonfile);
 
 for pt = pts
 
-mkdir([resultsFolder,'plots/',P(pt).name,'/exampleSeqs/']);
+if isempty(out_folder) ==1
+    out_folder = [resultsFolder,'plots/',P(pt).name,'/exampleSeqs/'];
+end
+mkdir(out_folder);
 
 if isfield(P(pt),'sz') == 0
     continue
@@ -87,7 +97,7 @@ if isempty(whichSeq) == 1
         seqs = ictalSeq(:,y);
     end
 else
-    seqs = nonIctalSeq(:,whichSeq);
+    seqs = whichSeq;
     
 end
 
@@ -120,7 +130,7 @@ for i = 1:size(seqs,2)
     %% Get the data for these times
     thresh.tmul = P(pt).thresh.tmul;
     thresh.absthresh = P(pt).thresh.absthresh;
-    [gdf,extraoutput] = getSpikesSimple(P,pt,times,4,thresh,0);
+    [gdf,extraoutput] = getSpikesSimple(P,pt,times,7,thresh,0);
     values = extraoutput.values;
     unignoredChLabels = P(pt).electrodeData.unignoredChs;
     plottimes =  [1:size(values,1)]/fs;
@@ -148,135 +158,175 @@ colors = {'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m',...
     'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m',...
     'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m',...
     'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m'};
-figure
-set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.95, 0.8]);
+for k = 1:length(seq_fig)
+    figure
+    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.95, 0.8]);
 
-for s = 1:nseq
-    whichcol = ceil(s/2);
-    whichrow = mod(s+1,2)+1;
-    subplot('Position',[(whichcol-1)*1/columns (prows-whichrow)*1/prows 1/columns 1/prows])
-    range = 0;
-    pl = zeros(length(seq(s).whichCh),1);
-    for i = 1:length(seq(s).whichCh)
-        ch = seq(s).whichCh(i);
-        amps = seq(s).values(:,ch) - mean(seq(s).values(:,ch)) - range;
-        pl(i) = plot(seq(s).plottimes,amps,colors{i});
-        hold on
-
-
-        % find the times of the spikes with the desired channel
-        spiketimes = seq(s).spikes(seq(s).spikes(:,1) == ch,2)-seq(s).time_col(1)+surroundtime;
-
-        spikeamp = amps(round(fs*spiketimes));
-        %spikeamp = ones(size(spiketimes,1),1)*max(seq(s).values(:,ch))-range;
-
-        scatter(spiketimes,spikeamp,80,colors{i},'filled');
-        range = range + max(seq(s).values(:,ch)) - min(seq(s).values(:,ch));
-    end
-    legnames = unignoredChLabels(seq(s).whichCh);
-    legend(pl,legnames,'Location','northeast');
-    xlabel('Time (s)');
-    %ylabel('Amplitude');
-    set(gca,'YTickLabel',[]);
-
-    %{
-    text(0.1,0.1,sprintf('Sequence %d %d s',seq(s).seq,...
-        seq(s).time_col(1)),'units','normalized','FontSize',15);
-    %}
     
-    text(0.1,0.1,sprintf('Plot starts at %d s',seq(s).time_col(1)-surroundtime),...
-        'units','normalized','FontSize',15);
-    
-    set(gca,'fontsize',15);
-    xticks = 1:2:surroundtime*2-1;
-    yl = ylim;
-    yloc = yl(1)+(yl(2)-yl(1))*0.05;
-    for t = 1:length(xticks)
-       tt = text(xticks(t),yloc,sprintf('%d s',xticks(t)),'FontSize',15); 
+    for s = seq_fig{k}
+        whichcol = mod(floor((s-1)/2)+1,5);
+        whichcol(whichcol==0) = 5;
+        whichrow = mod(s+1,2)+1;
+        subplot('Position',[(whichcol-1)*1/columns (prows-whichrow)*1/prows 1/columns 1/prows])
+        range = 0;
+        pl = zeros(length(seq(s).whichCh),1);
+        for i = 1:length(seq(s).whichCh)
+            ch = seq(s).whichCh(i);
+            amps = seq(s).values(:,ch) - mean(seq(s).values(:,ch)) - range;
+            pl(i) = plot(seq(s).plottimes,amps,colors{i});
+            hold on
+
+
+            % find the times of the spikes with the desired channel
+            spiketimes = seq(s).spikes(seq(s).spikes(:,1) == ch,2)-seq(s).time_col(1)+surroundtime;
+
+            spikeamp = amps(round(fs*spiketimes));
+            %spikeamp = ones(size(spiketimes,1),1)*max(seq(s).values(:,ch))-range;
+
+            scatter(spiketimes,spikeamp,80,colors{i},'filled');
+            range = range + max(seq(s).values(:,ch)) - min(seq(s).values(:,ch));
+        end
+        legnames = unignoredChLabels(seq(s).whichCh);
+        legend(pl,legnames,'Location','northeast');
+        xlabel('Time (s)');
+        %ylabel('Amplitude');
+        set(gca,'YTickLabel',[]);
+
+        %{
+        text(0.1,0.1,sprintf('Sequence %d %d s',seq(s).seq,...
+            seq(s).time_col(1)),'units','normalized','FontSize',15);
+        %}
+
+        text(0.1,0.1,sprintf('Plot starts at %d s',seq(s).time_col(1)-surroundtime),...
+            'units','normalized','FontSize',15);
+
+        set(gca,'fontsize',10);
+        xticks = 1:2:surroundtime*2-1;
+        yl = ylim;
+        yloc = yl(1)+(yl(2)-yl(1))*0.05;
+        for t = 1:length(xticks)
+           tt = text(xticks(t),yloc,sprintf('%d s',xticks(t)),'FontSize',15); 
+        end
+
     end
 
-end
 
 
-
-if isempty(whichSeq) == 0
-    outputFile = [ptname,'_sequences'];
-elseif isempty(whichSeq) == 1
-    if ic == 1
-        outputFile = [ptname,sprintf('_sequences_ic_%d_%d',P(pt).thresh.tmul,...
-            P(pt).thresh.absthresh)];
-    elseif ic == 0
-        outputFile = [ptname,sprintf('_sequences_inter_%d_%d',P(pt).thresh.tmul,...
-            P(pt).thresh.absthresh)];
+    if isempty(whichSeq) == 0
+        outputFile = [ptname,sprintf('_%d_%d_%d_%d-%d',...
+                P(pt).thresh.whichDetector,...
+                P(pt).thresh.tmul,...
+                P(pt).thresh.absthresh,...
+                seq_fig{k}(1),seq_fig{k}(end))];
+    elseif isempty(whichSeq) == 1
+        if ic == 1
+            outputFile = [ptname,sprintf('_ic_%d_%d_%d_%d-%d',...
+                P(pt).thresh.whichDetector,...
+                P(pt).thresh.tmul,...
+                P(pt).thresh.absthresh,...
+                seq_fig{k}(1),seq_fig{k}(end))];
+        elseif ic == 0
+            outputFile = [ptname,sprintf('_inter_%d_%d_%d_%d-%d',...
+                P(pt).thresh.whichDetector,...
+                P(pt).thresh.tmul,...
+                P(pt).thresh.absthresh,...
+                seq_fig{k}(1),seq_fig{k}(end))];
+        end
     end
-end
 
-if save_plots == 1
-saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/exampleSeqs/',outputFile,'.png'])
+    if save_plots == 1
+    saveas(gcf,[out_folder,outputFile,'.png'])
+    end
+
 end
 
 
 %% Plot again but make it pretty
-figure
-set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.95, 0.8]);
+for k = 1:length(seq_fig)
+    figure
+    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.95, 0.8]);
 
-for s = 1:nseq
-    whichcol = ceil(s/2);
-    whichrow = mod(s+1,2)+1;
-    subplot('Position',[(whichcol-1)*1/columns (prows-whichrow)*1/prows 1/columns 1/prows])
-    range = 0;
-    pl = zeros(length(seq(s).whichCh),1);
-    for i = 1:length(seq(s).whichCh)
-        ch = seq(s).whichCh(i);
-        amps = seq(s).values(:,ch) - range;
-        pl(i) = plot(seq(s).plottimes,amps,'k');
-        hold on
+    for s = seq_fig{k}
+        whichcol = mod(floor((s-1)/2)+1,5);
+        whichcol(whichcol==0) = 5;
+        whichrow = mod(s+1,2)+1;
+        subplot('Position',[(whichcol-1)*1/columns (prows-whichrow)*1/prows 1/columns 1/prows])
+        range = 0;
+        pl = zeros(length(seq(s).whichCh),1);
+        for i = 1:length(seq(s).whichCh)
+            ch = seq(s).whichCh(i);
+            amps = seq(s).values(:,ch) - range;
+            pl(i) = plot(seq(s).plottimes,amps,'k');
+            hold on
 
 
-        % find the times of the spikes with the desired channel
-        spiketimes = seq(s).spikes(seq(s).spikes(:,1) == ch,2)-seq(s).time_col(1)+surroundtime;
+            % find the times of the spikes with the desired channel
+            spiketimes = seq(s).spikes(seq(s).spikes(:,1) == ch,2)-seq(s).time_col(1)+surroundtime;
 
-        spikeamp = amps(round(fs*spiketimes));
+            spikeamp = amps(round(fs*spiketimes));
 
-        scatter(spiketimes,spikeamp,80,'k','filled');
-        range = range + max(seq(s).values(:,ch)) - min(seq(s).values(:,ch));
+            scatter(spiketimes,spikeamp,80,'k','filled');
+            range = range + max(seq(s).values(:,ch)) - min(seq(s).values(:,ch));
+        end
+        legnames = unignoredChLabels(seq(s).whichCh);
+        %legend(pl,legnames,'Location','northeast');
+        xlabel('Time (s)');
+        %ylabel('Amplitude');
+        set(gca,'YTickLabel',[]);
+
+        %{
+        text(0.1,0.1,sprintf('Sequence %d %d s',seq(s).seq,...
+            seq(s).time_col(1)),'units','normalized','FontSize',15);
+        %}
+
+        %text(0.1,0.1,sprintf('Plot starts at %d s',seq(s).time_col(1)-surroundtime),...
+        %    'units','normalized','FontSize',15);
+
+        set(gca,'fontsize',15);
+        xticks = 1:2:surroundtime*2-1;
+        yl = ylim;
+        yloc = yl(1)+(yl(2)-yl(1))*0.05;
+        %{
+        for t = 1:length(xticks)
+           tt = text(xticks(t),yloc,sprintf('%d s',xticks(t)),'FontSize',15); 
+        end
+        %}
+
     end
-    legnames = unignoredChLabels(seq(s).whichCh);
-    %legend(pl,legnames,'Location','northeast');
-    xlabel('Time (s)');
-    %ylabel('Amplitude');
-    set(gca,'YTickLabel',[]);
 
-    %{
-    text(0.1,0.1,sprintf('Sequence %d %d s',seq(s).seq,...
-        seq(s).time_col(1)),'units','normalized','FontSize',15);
-    %}
-    
-    %text(0.1,0.1,sprintf('Plot starts at %d s',seq(s).time_col(1)-surroundtime),...
-    %    'units','normalized','FontSize',15);
-    
-    set(gca,'fontsize',15);
-    xticks = 1:2:surroundtime*2-1;
-    yl = ylim;
-    yloc = yl(1)+(yl(2)-yl(1))*0.05;
-    %{
-    for t = 1:length(xticks)
-       tt = text(xticks(t),yloc,sprintf('%d s',xticks(t)),'FontSize',15); 
+
+
+
+    if isempty(whichSeq) == 0
+        outputFile = [ptname,sprintf('_%d_%d_%d_%d-%d_pretty',...
+                P(pt).thresh.whichDetector,...
+                P(pt).thresh.tmul,...
+                P(pt).thresh.absthresh,...
+                seq_fig{k}(1),seq_fig{k}(end))];
+    elseif isempty(whichSeq) == 1
+        if ic == 1
+            outputFile = [ptname,sprintf('_ic_%d_%d_%d_%d-%d_pretty',...
+                P(pt).thresh.whichDetector,...
+                P(pt).thresh.tmul,...
+                P(pt).thresh.absthresh,...
+                seq_fig{k}(1),seq_fig{k}(end))];
+        elseif ic == 0
+            outputFile = [ptname,sprintf('_inter_%d_%d_%d_%d-%d_pretty',...
+                P(pt).thresh.whichDetector,...
+                P(pt).thresh.tmul,...
+                P(pt).thresh.absthresh,...
+                seq_fig{k}(1),seq_fig{k}(end))];
+        end
     end
-    %}
+
+    if save_plots == 1
+    saveas(gcf,[out_folder,outputFile,'.png'])
+    end
 
 end
 
 
 
-
-outputFile = [outputFile,'_pretty'];
-
-if save_plots == 1
-saveas(gcf,[resultsFolder,'plots/',P(pt).name,'/exampleSeqs/',outputFile,'.png'])
 end
-
-end
-
 
 end
