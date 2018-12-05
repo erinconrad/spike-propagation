@@ -44,7 +44,7 @@ for whichPt = whichPts
             % subtract mean
             X = X - mean(X);
             
-            plot(X)
+            
             
             % Calculate fft
             Y = fft(X);
