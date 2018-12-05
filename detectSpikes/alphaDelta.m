@@ -21,6 +21,7 @@ for whichPt = whichPts
     
     %  Loop over run times
     for tt = 1:size(pt(whichPt).runTimes,1)
+        fprintf('Doing chunk %d of %d\n',tt,size(pt(whichPt).runTimes,1));
         
         % Get the desired indices
         desiredTimes = pt(whichPt).runTimes(tt,:);
