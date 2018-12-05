@@ -6,11 +6,11 @@ clustOpt = 0; % plot elbow plot
 doPlots = 1; % do main plots
 doLongPlots = 1; % do long plots
 removeTies = 1; %remove sequences containing too many ties
-leadOnly = 1; %don't change
+randSeq = 1; % instead of most representative sequences, random sequences
 window = 3600;
 
-randSeq = 1; % instead of most representative sequences, random sequences
 
+leadOnly = 1; %don't change
 
 %% Optimal cluster numbers
 %n_clusters = ones(30,1)*3;
@@ -263,11 +263,12 @@ pt(whichPt).cluster.D = D;
 
 for i = 1:n_clusters(whichPt)
     [sortedD,I] = sort(D(:,i));
+    spike_clust = find(idx==i);
     
     if allSpikes == 1
         % I want to find the sequence that the spike came from.
         if randSeq == 1
-            whichSeqs = seq_index(I(randperm(length(I),12)));
+            whichSeqs = seq_index(spike_clust(randperm(length(spike_clust),12)));
         else
             whichSeqs = seq_index(I(1:12));
         end
@@ -287,7 +288,7 @@ end
 
 pt(whichPt).cluster.rep_seq = rep_seq;
 
-%% Plot representative sequences
+%% Plot representative sequences/sequences with representative spikes
 if doLongPlots == 1
     for i = 1:n_clusters(whichPt)
         outputFolder = [saveFolder,sprintf('seqs_cluster_%d',i),'/'];
