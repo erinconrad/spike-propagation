@@ -18,6 +18,7 @@ for whichPt = whichPts
     
     ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
     all_p = zeros(nch,nbands,size(pt(whichPt).runTimes,1));
+    times_out = mean(pt(whichPt).runTimes,1);
     
     %  Loop over run times
     for tt = 1:size(pt(whichPt).runTimes,1)
@@ -25,6 +26,7 @@ for whichPt = whichPts
         
         % Get the desired indices
         desiredTimes = pt(whichPt).runTimes(tt,:);
+        
         %desiredTimes = desiredTimesFake(tt,:);
         indices = round(desiredTimes(1)*fs):round(desiredTimes(2)*fs);
         
@@ -82,6 +84,7 @@ for whichPt = whichPts
     
     power(whichPt).all_p = all_p;
     power(whichPt).ad_rat = ad_rat;
+    power(whichPt).times = times_out;
 end
 
 
