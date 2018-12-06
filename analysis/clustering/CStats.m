@@ -1,4 +1,11 @@
-function pt = CStats(pt,whichPts)
+function stats = CStats(pt,whichPts)
+
+%{ 
+
+CStats
+This is my cleaned up file for getting statistics on the cluster data 
+
+%}
 
 % Parameters
 plotQI = 0;
@@ -116,10 +123,10 @@ for whichPt = whichPts
     [tbl_1,chi2_1,p_1,labels_1] = crosstab(which_chunk,idx);
     
     % Save information into patient struct
-    pt(whichPt).stats.cluster.hour.tbl = tbl_1;
-    pt(whichPt).stats.cluster.hour.chi2 = chi2_1;
-    pt(whichPt).stats.cluster.hour.p = p_1;
-    pt(whichPt).stats.cluster.hour.labels = labels_1;
+    stats(whichPt).cluster.hour.tbl = tbl_1;
+    stats(whichPt).cluster.hour.chi2 = chi2_1;
+    stats(whichPt).cluster.hour.p = p_1;
+    stats(whichPt).cluster.hour.labels = labels_1;
     
     fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'...
     ' distributions,\n the p-value is %1.1e\n\n\n'],pt(whichPt).name,p_1);
@@ -236,10 +243,10 @@ for whichPt = whichPts
         2*ones(size(interIcClustIdx))],[preIcClustIdx;interIcClustIdx]);
     
     % Save information into patient struct
-    pt(whichPt).stats.cluster.preic.tbl = tbl_2;
-    pt(whichPt).stats.cluster.preic.chi2 = chi2_2;
-    pt(whichPt).stats.cluster.preic.p = p_2;
-    pt(whichPt).stats.cluster.preic.labels = labels_2;
+    stats(whichPt).cluster.preic.tbl = tbl_2;
+    stats(whichPt).cluster.preic.chi2 = chi2_2;
+    stats(whichPt).cluster.preic.p = p_2;
+    stats(whichPt).cluster.preic.labels = labels_2;
     
     chi_tables_plot{whichPt} = tbl_2;
     p_plot(whichPt) = p_2;
@@ -294,6 +301,8 @@ for j = 1:length(whichPts)
     
     
 end
+
+save([destFolder,'stats.mat','stats');
 
 
 end
