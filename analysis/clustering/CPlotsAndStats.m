@@ -689,8 +689,7 @@ for j = 1:length(whichPts)
     
     legend_names = cell(size(tbl,2),1);
     for k = 1:length(legend_names)
-       legend_names{k} = sprintf('Cluster %d',k); 
-        
+       legend_names{k} = sprintf('Cluster %d',k);  
     end
     yticklabels([])
     if j == 4
