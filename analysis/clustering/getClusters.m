@@ -4,26 +4,26 @@ function cluster = getClusters(pt,whichPts)
 allSpikes = 1;
 clustOpt = 0; % get optimal cluster numbers
 doPlots = 0;
-doLongPlots = 0;
-removeTies = 1;
+doLongPlots = 1;
+removeTies = 0;
 
 
 % Optimal cluster numbers
-n_clusters(3) = 4; %HUP68, 2 by silhouette
-n_clusters(4) = 2; %HUP70
-n_clusters(8) = 3; %HUP78
-n_clusters(9) = 3; %HUP080
-n_clusters(12) = 3; %HUP86
-n_clusters(17) = 2;%2; %HUP106
-n_clusters(18) = 4; %HUP107
-n_clusters(19) = 3; %HUP111A
-n_clusters(20) = 3; %HUP116
-n_clusters(22) = 4; %Study16
-n_clusters(24) = 3; %Study19
-n_clusters(25) = 4; %Study20
-n_clusters(27) = 3; %Study22
-n_clusters(30) = 4; %Study28
-n_clusters(31) = 3; %Study29
+n_clusters(3) = 4; %4; %HUP68, 2 by silhouette
+n_clusters(4) = 3; %2; %HUP70
+n_clusters(8) = 2; %3; %HUP78
+n_clusters(9) = 6; %3; %HUP080
+n_clusters(12) = 3; %3; %HUP86
+n_clusters(17) = 2; %2; %HUP106
+n_clusters(18) = 2; %4; %HUP107
+n_clusters(19) = 2; %3; %HUP111A
+n_clusters(20) = 4; %3; %HUP116
+n_clusters(22) = 4; %4; %Study16
+n_clusters(24) = 3; %3; %Study19
+n_clusters(25) = 4; %4; %Study20
+n_clusters(27) = 4; %3; %Study22
+n_clusters(30) = 3; %4; %Study28
+n_clusters(31) = 3; %3; %Study29
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -200,7 +200,7 @@ for whichPt = whichPts
                 spike_clust = find(idx==i); 
 
                 % Take 50 of these indices randomly
-                whichSpikes = spike_clust(randperm(length(spike_clust),1));
+                whichSpikes = spike_clust(randperm(length(spike_clust),50));
 
                 % Get the sequences these spikes belong to
                 whichSeqs = seq_index(whichSpikes);
@@ -284,7 +284,7 @@ for whichPt = whichPts
         window = 3600;
         
         % NEED TO CHECK THIS SCRIPT - ALSO IT's SUUUPER SLOW
-        
+        %{
         [sum_c,sum_times] = movingSumCounts(clust,plot_times,window);
         totalSum = zeros(1,size(sum_times,2));
         for i = 1:n_clusters(whichPt)
@@ -307,8 +307,8 @@ for whichPt = whichPts
             end
         end
         new_prop = new_counts./sum(new_counts,2);
-        %sum_times = new_times;
-        %prop_c = new_prop';
+        sum_times = new_times;
+        prop_c = new_prop';
         
         subplot(3,1,2)
         pl = zeros(n_clusters(whichPt),1);
