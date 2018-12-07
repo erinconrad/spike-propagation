@@ -7,7 +7,7 @@ merge = 1;
 allSpikes = 1;
 clustOpt = 0; % get optimal cluster numbers
 doPlots = 0;
-doLongPlots = 1;
+doLongPlots = 0;
 removeTies = 0;
 
 
