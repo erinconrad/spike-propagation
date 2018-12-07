@@ -1,6 +1,9 @@
-function cluster = getClusters(pt,whichPts)
+function cluster = getClusters(pt,whichPts,cluster)
 
-% Parameters
+%% Parameters
+% Should we skip patients that are already done and merge the new patients
+% with the existing cluster?
+merge = 1; 
 allSpikes = 1;
 clustOpt = 0; % get optimal cluster numbers
 doPlots = 0;
@@ -8,7 +11,7 @@ doLongPlots = 1;
 removeTies = 0;
 
 
-% Optimal cluster numbers
+%% Optimal cluster numbers
 n_clusters(3) = 4; %4; %HUP68, 2 by silhouette
 n_clusters(4) = 3; %2; %HUP70
 n_clusters(8) = 2; %3; %HUP78
@@ -32,7 +35,26 @@ mkdir(destFolder)
 
 for whichPt = whichPts
     
+    % I can skip doing a patient if I already did them
+    if merge == 1 && isempty(cluster) == 0
+        skipFlag = 0;
+        for i = 1:length(cluster)
+            if strcmp(pt(whichPt).name,cluster(i).name) == 1
+                fprintf('Already did %s, skipping\n',...
+                    cluster(i).name);
+                skipFlag = 1;
+                break
+            end
+        end
+        if skipFlag == 1
+            continue
+        end
+    end
+    
+    
+    cluster(whichPt).name = pt(whichPt).name;
     cluster(whichPt).allSpikes = allSpikes;
+    
     
     % Patient parameters
     fprintf('Doing %s\n',pt(whichPt).name);
