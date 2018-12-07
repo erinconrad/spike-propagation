@@ -29,7 +29,9 @@ n_clusters(30) = 3; %4; %Study28
 n_clusters(31) = 3; %3; %Study29
 
 % Save file location
-[~,~,~,resultsFolder,~] = fileLocations;
+[~,~,scriptFolder,resultsFolder,~] = fileLocations;
+p1 = genpath(scriptFolder);
+addpath(p1);
 destFolder = [resultsFolder,'clustering/validation/'];
 mkdir(destFolder)
 
