@@ -1,4 +1,4 @@
-function movieSeqs(seqs,locs,info)
+function movieSeqs(seqs,locs,C,info)
 
 %% Parameters
 circleSize = 60;
@@ -29,7 +29,7 @@ n_frames = curr_max;
 fig = figure;
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.95, 0.8]);
 
-suptitle(sprintf('%d most representative sequences for cluster %d, %s',...
+suptitle(sprintf('%d random sequences for cluster %d, %s',...
     nseqs,info.cluster,info.name));
 set(gca,'FontSize',15);
 
@@ -39,6 +39,8 @@ for s = 1:nseqs
     subplot('Position',[(whichcol-1)*1/columns (prows-whichrow)*1/prows 1/columns 1/prows])
     scatter3(x,y,z,circleSize,'markeredgecolor','k');
     hold on
+    % Plot the centroid
+        scatter3(C(1),C(2),C(3),circleSize*1.3,'g','filled');
     grid off
     axis off
     
@@ -64,7 +66,8 @@ for s = 1:nseqs
         chs = find(seq_plot_order==i);
         scatter3(locs(chs,1),locs(chs,2),locs(chs,3),circleSize,'r','filled');
        
-        
+        % Plot the centroid
+        scatter3(C(1),C(2),C(3),circleSize*1.3,'g','filled');
     end
     
     grid off

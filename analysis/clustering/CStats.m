@@ -1,4 +1,4 @@
-function stats = CStats(pt,whichPts)
+function stats = CStats(pt,cluster,whichPts)
 
 %{ 
 
@@ -27,7 +27,7 @@ for whichPt = whichPts
     fprintf('Doing %s\n',pt(whichPt).name);
     
     % Get patient parameters
-    locs = pt(whichPt).electrodeData.locs;
+    locs = pt(whichPt).electrodeData.locs(:,2:4);
     szTimes = pt(whichPt).newSzTimes;
     soz = pt(whichPt).newSOZChs;
     
@@ -59,6 +59,7 @@ for whichPt = whichPts
     end
     
     % Pull cluster info
+    %{
     all_times_all = pt(whichPt).cluster.all_times_all; % all spike times
     all_spikes = pt(whichPt).cluster.all_spikes; % all spike channels
     all_locs = pt(whichPt).cluster.all_locs;
@@ -66,6 +67,15 @@ for whichPt = whichPts
     idx = pt(whichPt).cluster.idx; % the cluster index for every spike
     C = pt(whichPt).cluster.C; % the centroids of the clusters
     bad_cluster = pt(whichPt).cluster.bad_cluster; % which clusters are bad
+    %}
+    
+    all_times_all = cluster(whichPt).all_times_all; % all spike times
+    all_spikes = cluster(whichPt).all_spikes; % all spike channels
+    all_locs = cluster(whichPt).all_locs;
+    k = cluster(whichPt).k; % the number of clusters
+    idx = cluster(whichPt).idx; % the cluster index for every spike
+    C = cluster(whichPt).C; % the centroids of the clusters
+    bad_cluster = cluster(whichPt).bad_cluster; % which clusters are bad
     
     % Confirm that I do not have any ictal spikes
     t = find(any(all_times_all >= szTimes(:,1)' & all_times_all <= szTimes(:,2)',2));
@@ -78,8 +88,6 @@ for whichPt = whichPts
     end
     
 
-    % CHANGE CLUSTERING FILE SO ORDERED BY TIME????
-    
     % Remove bad clusters
     bad_idx = find(ismember(idx,bad_cluster));
     all_times_all(bad_idx) = [];
@@ -302,7 +310,7 @@ for j = 1:length(whichPts)
     
 end
 
-save([destFolder,'stats.mat','stats');
+save([destFolder,'stats.mat','stats']);
 
 
 end

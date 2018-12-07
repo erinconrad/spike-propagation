@@ -1,11 +1,11 @@
 function clustersOverTime(pt,whichPts)
 
 %% Parameters
-allSpikes = 1; % Instead of just lead spike, look at all spikes
-clustOpt = 1; % plot elbow plot
+allSpikes = 0; % Instead of just lead spike, look at all spikes
+clustOpt = 0; % plot elbow plot
 doPlots = 1; % do main plots
-doLongPlots = 1; % do long plots
-removeTies = 0; %remove sequences containing too many ties
+doLongPlots = 0; % do long plots
+removeTies = 1; %remove sequences containing too many ties
 randSeq = 1; % instead of most representative sequences, random sequences
 window = 3600;
 
@@ -138,6 +138,12 @@ all_times_all = [];
 seq_index = [];
 for i = 1:size(all_seq_cat,2)
     nonan = find(~isnan(all_seq_cat(:,i)));
+    
+    % Resort
+    times = all_seq_cat(nonan,i);
+    [~,I] = sort(times);
+    nonan = nonan(I);
+    
     all_spikes = [all_spikes;nonan];
     all_times_all = [all_times_all;all_seq_cat(nonan,i)];
     seq_index = [seq_index;i*ones(length(nonan),1)];
