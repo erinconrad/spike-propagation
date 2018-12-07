@@ -252,21 +252,44 @@ for whichPt = whichPts
 end
 
 %% Does SA do better than chance?
-[p3,h3,stats3] = ranksum(allFreqDist,allSADist);
-[p4,h4,stats4] = ranksum(allSADist,allAllDist);
+[pFreqSA,h3,stats3] = ranksum(allFreqDist,allSADist);
+pFreqSA
+[pAllSA,h4,stats4] = ranksum(allSADist,allAllDist);
+pAllSA
 
 %% Plot bars of means
 figure
-prices = [mean(allSADist) mean(allFreqDist) mean(allAllDist)];
+prices = [mean(allAllDist) mean(allSADist) mean(allFreqDist)];
 bar(prices)
 title(sprintf(['Average distance across patients from electrode of interest\n to closest ',...
     'seizure onset zone electrode']))
 ylabel(sprintf('Average distance (mm)'));
 
-xticklabels({'max SA','Electrode with max sequence frequency',...
-    'All electrodes'})
+xticklabels({'All electrodes','max SA','Electrode with max sequence frequency'})
 set(gca,'FontSize',15)
 fix_xticklabels(gca,0.1,{'FontSize',15});
+
+% Plot p-values
+if pFreqSA < 0.001
+    textFreqSA = 'p < 0.001';
+else
+    textFreqSA = sprintf('p = %1.3f',pFreqSA);
+end
+hold on
+plot([2 3], [max(prices) max(prices)],'k')
+text(2.5,max(prices)+1,textFreqSA,'HorizontalAlignment','center',...
+        'fontsize',15);
+    
+if pAllSA < 0.001
+    textAllSA = 'p < 0.001';
+else
+    textAllSA = sprintf('p = %1.3f',pAllSA);
+end
+hold on
+plot([1 2], [max(prices) max(prices)],'k')
+text(1.5,max(prices)+1,textAllSA,'HorizontalAlignment','center',...
+        'fontsize',15);
+
 
 
 end
