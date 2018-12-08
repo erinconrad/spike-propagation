@@ -236,6 +236,7 @@ for k = 1:length(seq_fig)
 
     if save_plots == 1
     saveas(gcf,[out_folder,outputFile,'.png'])
+    close(gcf)
     end
 
 end
@@ -321,6 +322,7 @@ for k = 1:length(seq_fig)
 
     if save_plots == 1
     saveas(gcf,[out_folder,outputFile,'.png'])
+    close(gcf)
     end
 
 end
