@@ -167,6 +167,7 @@ elseif strcmp(name,'HUP116') == 1
     ignore = {};
     notes = '';
     tmul = 13;
+    dmin = 20;
     absthresh = 300;
     whichDetector = 7;
 elseif strcmp(name,'Study004') == 1

@@ -16,7 +16,7 @@ W = nansum(wij(:));
 
 op = xdmean' * xdmean;
 if sum(size(op)) == 2
-    error('Warning, I think you need to take the transpose of rl\n');
+    error('Warning, I think you need to take the transpose of rl/n');
 end
 
 I = N/W*nansum(nansum(wij.*op))/...

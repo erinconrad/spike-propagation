@@ -4,6 +4,14 @@ function showSequences(P,pts,whichSeq,nseq,ic,out_folder)
 
 save_plots = 1;
 
+if isempty(pts) == 1
+    for i = 1:length(P)
+        if isempty(P(i).seq_matrix) == 0
+            pts = [pts,i];
+        end
+    end
+end
+
 if isempty(whichSeq) == 0
     %ignore nseq
     nseq = size(whichSeq,2);

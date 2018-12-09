@@ -5,14 +5,15 @@ function influence(pt,whichPts)
 
 
 % Parameters
+doPlots = 1;
+plotConn = 1;
 removeTies = 1;
-doPlots = 0;
-doBootstrap = 0;
+doBootstrap = 1;
 alpha1 = 95;
 map_text = 'jet';
 fh_map = str2func(map_text);
 
-[scriptFolder,resultsFolder] = fileLocations;
+[~,~,scriptFolder,resultsFolder,~] = fileLocations;
 p1 = genpath(scriptFolder);
 addpath(p1);
 
@@ -51,6 +52,7 @@ for whichPt = whichPts
     %% Get all sequences
     seq_matrix = pt(whichPt).seq_matrix;
     
+    %% Remove ties
     if removeTies == 1
         keep = ones(size(seq_matrix,2),1);
         for s = 1:size(seq_matrix,2)
@@ -75,7 +77,7 @@ for whichPt = whichPts
     seq_matrix(:,t) = [];
     fprintf('Removed %d ictal spikes \n',sum(t));
     
-    %% Remove ties
+    
     
     %% Construct a matrix of channel connections
     chCh = zeros(nchs,nchs);
@@ -99,6 +101,18 @@ for whichPt = whichPts
         
     end
     
+    if plotConn == 1
+        figure
+        imagesc(chCh)
+        colorbar
+    end
+    
+    %% Do a test of symmetry
+    % If spikes are randomly oriented, then chCh should be symmetric, which
+    % is to say that for all i and j, chCh(i,j) ~= chCh(j,i)
+    
+    
+    
     %% Get significant connections
     if doBootstrap == 1
         
@@ -109,6 +123,7 @@ for whichPt = whichPts
         nboot = 1e3;
         max_size = nchs*nchs;
         chCh_all = zeros(nboot,nchs,nchs);
+        chCh_diff_all = zeros(nboot,nchs,nchs);
         for ib = 1:nboot
             if mod(ib,100) == 0
                 fprintf('Doing %d of %d\n', ib,nboot);
@@ -118,22 +133,35 @@ for whichPt = whichPts
                chCh_f(randi(max_size)) = chCh_f(randi(max_size)) + 1;
             end
             chCh_all(ib,:,:) = chCh_f;
+            
+            % Also calculate the difference between i,j and j,i
+            for i = 1:size(chCh_f,1)
+                for j = 1:size(chCh_f,2)
+                    chCh_diff(i,j) = chCh_f(i,j) - chCh_f(j,i);
+                end
+            end
+            chCh_diff_all(ib,:,:) = chCh_diff;
+            
         end
         
-        if 1 == 0
+        if 1 == 1
             figure
-            imagesc(squeeze(mean(chCh_all,1)))
+            imagesc(squeeze(mean(chCh_diff_all,1)))
             colorbar
         end
         
         % Get the 95% of number of connections
         s_con = sort(chCh_all(:));
         perc = prctile(s_con,alpha1);
-        
-        
+       
+           
         fprintf(['By permutation testing, the minimum number of counts for a\n'...
         'connection to be significant is\n'...
         '%d for an alpha of %1.1fth percentile\n\n'],perc,alpha1);
+    
+        % Get the 95% of differences 
+        s_diff = sort(chCh_diff_all(:));
+        perc_diff = prctile(s_diff,alpha1);
         
     end
     
@@ -206,11 +234,13 @@ for whichPt = whichPts
         [~,I] = max(sa);
         scatter3(locs(I,1),locs(I,2),locs(I,3),100,'g','filled');
         downstream = chInfluence{I};
+        %{
         for j = 1:length(downstream)
             dp = locs(downstream(j),:) - locs(I,:);
             quiver3(locs(I,1),locs(I,2),locs(I,3),dp(1), dp(2), dp(3),...
                 'color','k');
         end
+        %}
         downstream = [I,downstream];
         down_locs = locs(downstream,:);
         
@@ -276,7 +306,7 @@ else
     textFreqSA = sprintf('p = %1.3f',pFreqSA);
 end
 hold on
-plot([2 3], [max(prices) max(prices)],'k')
+plot([2.1 3], [max(prices) max(prices)],'k')
 text(2.5,max(prices)+1,textFreqSA,'HorizontalAlignment','center',...
         'fontsize',15);
     
@@ -286,7 +316,7 @@ else
     textAllSA = sprintf('p = %1.3f',pAllSA);
 end
 hold on
-plot([1 2], [max(prices) max(prices)],'k')
+plot([1 1.9], [max(prices) max(prices)],'k')
 text(1.5,max(prices)+1,textAllSA,'HorizontalAlignment','center',...
         'fontsize',15);
 

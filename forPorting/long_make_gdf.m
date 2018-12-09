@@ -90,11 +90,13 @@ for i = [3 4 8 9 12 17 18 19 20 22 24 25 27 30 31]
 
         % Run the spike detector
         tic
-        [gdf,~] = getSpikesSimple(pt,i,desiredTimes,thresh.whichDetector,thresh,0);
+        [gdf,extraOutput] = getSpikesSimple(pt,i,desiredTimes,thresh.whichDetector,thresh,0);
         toc
 
         % Save gdf file
-        save([gdfFolder,pt(i).name,'/',pt(i).chunkFiles{k}],'gdf','thresh');
+        removed = extraOutput.removed;
+        save([gdfFolder,pt(i).name,'/',pt(i).chunkFiles{k}],...
+            'gdf','thresh','removed');
 
         % Resave pt file now that I have fs
         save([resultsFolder,'ptStructs/',newptfile],'pt');

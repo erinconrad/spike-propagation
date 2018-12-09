@@ -1,6 +1,6 @@
-function wij = getwij(xyChan,dmin)
+function wij = getwij(locs,dmin)
 
-nChannels = size(xyChan,1);
+nChannels = size(locs,1);
 
 % Calculate dij, distances between channels and weights wij
 dij = nan(nChannels,nChannels);
@@ -12,7 +12,7 @@ for iChannel = 1:nChannels
            wij(iChannel,jChannel) = 0;
        else
            % calculate Euclidean distance between the two channels
-           dij(iChannel,jChannel) =  sqrt(sum((xyChan(iChannel,2:end) - xyChan(jChannel,2:end)).^2));
+           dij(iChannel,jChannel) =  sqrt(sum((locs(iChannel,:) - locs(jChannel,:)).^2));
            
            % if this distance is less than a minimum distance
            if dij(iChannel,jChannel) <= dmin
