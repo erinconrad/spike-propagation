@@ -38,7 +38,7 @@ ptInfo = loadjson(jsonfile);
 for pt = pts
 
 if isempty(out_folder) ==1
-    out_folder = [resultsFolder,'plots/',P(pt).name,'/exampleSeqs/'];
+    out_folder = [resultsFolder,'plots/exampleSeqs/',P(pt).name,'/'];
 end
 mkdir(out_folder);
 
