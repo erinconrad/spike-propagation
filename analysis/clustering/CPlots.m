@@ -12,6 +12,15 @@ This is my cleaned up file for getting plots on the cluster data
 destFolder = [resultsFolder,'clustering/plots/'];
 mkdir(destFolder);
 
+
+if isempty(whichPts) == 1
+    for i = 1:length(pt)
+        if isempty(pt(i).seq_matrix) == 0
+            whichPts = [whichPts,i];
+        end
+    end
+end
+
 allCounts = [];
 allPat = [];
 allChunk = [];
@@ -20,6 +29,9 @@ allChunk = [];
 for whichPt = whichPts
     
     fprintf('Doing %s\n',pt(whichPt).name);
+    
+    saveFolder = [destFolder,pt(whichPt).name,'/'];
+    mkdir(saveFolder);
     
     % Get patient parameters
     locs = pt(whichPt).electrodeData.locs(:,2:4);
@@ -204,7 +216,9 @@ for whichPt = whichPts
     set(gca,'yticklabel',[])
     set(gca,'zticklabel',[])
     
-    
+    print(gcf,[saveFolder,'clustTime_',sprintf('%s',pt(whichPt).name)],'-depsc');
+    eps2pdf([saveFolder,'clustTime_',sprintf('%s',pt(whichPt).name),'.eps'])
+    close(gcf)
 end
 
 end

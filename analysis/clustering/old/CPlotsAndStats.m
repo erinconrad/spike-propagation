@@ -399,7 +399,7 @@ fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'..
 chi_tables2{whichPt} = tbl_5;
 %}
 
-%% Validate the above method with bootstrap
+%% Validate the above method with permutation
 %{
 % Randomly shuffle which chunk each sequence is in and recheck
 chi2_1_test = zeros(nboot,1);

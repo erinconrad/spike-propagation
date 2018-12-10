@@ -243,7 +243,7 @@ for whichPt = whichPts
             info(i).cluster = i;
             info(i).name = pt(whichPt).name;
             info(i).outputFile = [outputFolder,'cluster_',sprintf('%d',i),'.gif'];
-            movieSeqs(rep_seq{i},locs,C(i,:),info(i));
+            movieSeqs(rep_seq{i}(:,1:10),locs,C(i,:),info(i));
         end
     end
     
