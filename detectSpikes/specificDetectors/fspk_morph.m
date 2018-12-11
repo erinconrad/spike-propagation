@@ -218,7 +218,7 @@ for dd = 1:n_chans
             if sum(spikes(i,[3 5])) > thresh && sum(spikes(i,[3 5])) > absthresh            % both parts together are bigger than thresh: so have some flexibility in relative sizes
                 if spikes(i,2) > spikedur     % spike wave cannot be too sharp: then it is either too small or noise
                     out(end+1,1) = spikes(i,1);         % add timestamp of spike to output list
-                    out(end,3) = (spikes(i,3));
+                    out(end,3) = sum(spikes(i,[3 5]));
                     out(end,4) = spikes(i,2);
                 else
                     toosharp(end+1) = spikes(i,1);

@@ -258,8 +258,6 @@ elseif whichDetector == 9
         removed(:,2:3) = removed(:,2:3)/data.fs;
     end
     
-    extraOutput.morph.height = gdf(:,3);
-    extraOutput.morph.width = gdf(:,4);
 end
 toc
 fprintf('Finished detection\n');
@@ -302,7 +300,16 @@ if isempty(gdf) == 0
     chs = gdf(:,1);
     [times_t,I] = sort(times_t);
     chs = chs(I);
-    gdf = [chs,times_t];
+    
+    if size(gdf,2) > 2
+        height = gdf(:,3);
+        width = gdf(:,4);
+        height = height(I);
+        width = width(I);
+        gdf = [chs,times_t,height,width];
+    else
+        gdf = [chs,times_t];
+    end
 end
 
 
