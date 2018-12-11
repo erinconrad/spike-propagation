@@ -37,8 +37,22 @@ mkdir(destFolder)
 
 for whichPt = whichPts
     
+    
+    
+    
+    cluster(whichPt).name = pt(whichPt).name;
+    cluster(whichPt).allSpikes = allSpikes;
+    
+    
+    % Patient parameters
+    fprintf('Doing %s\n',pt(whichPt).name);
+    locs = pt(whichPt).electrodeData.locs(:,2:4);
+    szTimes = pt(whichPt).newSzTimes;
+    saveFolder = [destFolder,pt(whichPt).name,'/'];
+    
+    
     % I can skip doing a patient if I already did them
-    if merge == 1 && isempty(cluster) == 0
+    if merge == 1 && exist(saveFolder,'dir') == 7
         skipFlag = 0;
         for i = 1:length(cluster)
             if strcmp(pt(whichPt).name,cluster(i).name) == 1
@@ -53,16 +67,6 @@ for whichPt = whichPts
         end
     end
     
-    
-    cluster(whichPt).name = pt(whichPt).name;
-    cluster(whichPt).allSpikes = allSpikes;
-    
-    
-    % Patient parameters
-    fprintf('Doing %s\n',pt(whichPt).name);
-    locs = pt(whichPt).electrodeData.locs(:,2:4);
-    szTimes = pt(whichPt).newSzTimes;
-    saveFolder = [destFolder,pt(whichPt).name,'/'];
     mkdir(saveFolder);
     
     %% Get spike times and locations

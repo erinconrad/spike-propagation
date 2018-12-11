@@ -2,7 +2,7 @@
 function pt = CPlotsAndStats(pt,whichPts)
 
 %% Parameters
-allSpikes =1;
+allSpikes =0;
 window = 3600;
 nboot = 1e4;
 
@@ -234,6 +234,8 @@ subplot(3,1,3)
 
 pl = zeros(k,1);
 for i = clusters
+   %pl(i)= plot(sum_times/3600,sum_c(i,:),'color',colors(i,:),'LineWidth',3);
+
    pl(i)= plot(sum_times/3600,sum_c(i,:)./totalSum,'color',colors(i,:),'LineWidth',3);
 %plot(chunk_times,n_clusters_chunk(:,i),'color',colors(i,:),'LineWidth',2);
 hold on

@@ -216,9 +216,9 @@ for whichPt = whichPts
     set(gca,'yticklabel',[])
     set(gca,'zticklabel',[])
     
-    print(gcf,[saveFolder,'clustTime_',sprintf('%s',pt(whichPt).name)],'-depsc');
-    eps2pdf([saveFolder,'clustTime_',sprintf('%s',pt(whichPt).name),'.eps'])
-    close(gcf)
+    %print(gcf,[saveFolder,'clustTime_',sprintf('%s',pt(whichPt).name)],'-depsc');
+    %eps2pdf([saveFolder,'clustTime_',sprintf('%s',pt(whichPt).name),'.eps'])
+    %close(gcf)
 end
 
 end

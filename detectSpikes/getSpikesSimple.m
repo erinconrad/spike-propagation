@@ -235,7 +235,31 @@ pt(whichPt).name);
     if isempty(removed) == 0
         removed(:,2:3) = removed(:,2:3)/data.fs;
     end
+    
+elseif whichDetector == 9
+    % returns spike morphology features
+    window = 60*data.fs;
 
+    
+    
+    [gdf,noise,removed] = fspk_morph(data.values,tmul,absthresh,...
+        length(channels),data.fs,window,pt(whichPt).electrodeData.electrodes);
+
+
+    if isempty(gdf) == 1
+        fprintf('No spikes detected\n');
+    else
+        fprintf('Detected %d spikes\n',size(gdf,1));
+         % put it in seconds
+        gdf(:,2) = gdf(:,2)/data.fs;
+    end
+    
+    if isempty(removed) == 0
+        removed(:,2:3) = removed(:,2:3)/data.fs;
+    end
+    
+    extraOutput.morph.height = gdf(:,3);
+    extraOutput.morph.width = gdf(:,4);
 end
 toc
 fprintf('Finished detection\n');
