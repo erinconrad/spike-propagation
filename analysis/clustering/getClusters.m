@@ -1,4 +1,4 @@
-function cluster = getClusters(pt,whichPts,cluster)
+function cluster = getClusters(pt,whichPts)
 
 %% Parameters
 % Should we skip patients that are already done and merge the new patients
@@ -34,6 +34,11 @@ p1 = genpath(scriptFolder);
 addpath(p1);
 destFolder = [resultsFolder,'clustering/validation/'];
 mkdir(destFolder)
+
+if merge == 1
+    temp = load([destFolder,'cluster.mat']);
+    cluster = temp.cluster;
+end
 
 for whichPt = whichPts
     

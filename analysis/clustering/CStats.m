@@ -15,6 +15,15 @@ plotQI = 0;
 destFolder = [resultsFolder,'clustering/stats/'];
 mkdir(destFolder);
 
+
+if isempty(whichPts) == 1
+    for i = 1:length(pt)
+        if isempty(pt(i).seq_matrix) == 0
+            whichPts = [whichPts,i];
+        end
+    end
+end
+
 allCounts = [];
 allPat = [];
 allChunk = [];
@@ -264,6 +273,15 @@ for whichPt = whichPts
     ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
     %}
 end
+
+%% Fisher's method to combine p values
+all_p = [];
+for whichPt = whichPts
+   all_p = [all_p;p_plot(whichPt)]; 
+end
+
+X_2 = -2 * sum(log(all_p));
+sum_p = chi2cdf(X_2,2*length(all_p));
 
 %% Bar graphs
 figure

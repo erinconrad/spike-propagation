@@ -2,7 +2,7 @@ function showSequences(P,pts,whichSeq,nseq,ic,out_folder)
 % This is another function to plot sequences, using the spike times from
 % the inputted structure
 
-save_plots = 0;
+save_plots = 1;
 
 if isempty(pts) == 1
     for i = 1:length(P)
