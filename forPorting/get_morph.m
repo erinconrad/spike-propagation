@@ -90,7 +90,7 @@ for i = [19]
 
         % Run the spike detector
         tic
-        [gdf,extraOutput] = getSpikesSimple(pt,i,desiredTimes,thresh.whichDetector,thresh,0);
+        [gdf,extraOutput] = getSpikesSimple(pt,i,desiredTimes,9,thresh,0);
         toc
 
         % Save gdf file
