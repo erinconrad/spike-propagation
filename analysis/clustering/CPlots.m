@@ -159,7 +159,7 @@ for whichPt = whichPts
     window = 1800;
 
     % NEED TO CHECK THIS SCRIPT - ALSO IT's SUUUPER SLOW
-    
+    %{
     [sum_c,sum_times] = movingSumCounts(clust,plot_times,window);
     totalSum = zeros(1,size(sum_times,2));
     for i = 1:length(clusters)
@@ -182,8 +182,8 @@ for whichPt = whichPts
         end
     end
     new_prop = new_counts./sum(new_counts,2);
-    %sum_times = new_times;
-    %prop_c = new_prop';
+    sum_times = new_times;
+    prop_c = new_prop';
 
     subplot(3,1,2)
     pl = zeros(length(clusters),1);
