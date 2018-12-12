@@ -35,7 +35,7 @@ addpath(p1);
 destFolder = [resultsFolder,'clustering/validation/'];
 mkdir(destFolder)
 
-if merge == 1
+if merge == 1 && exist([destFolder,'cluster.mat'],'file') ~= 0
     temp = load([destFolder,'cluster.mat']);
     cluster = temp.cluster;
 end
