@@ -126,6 +126,7 @@ for whichPt = whichPts
         & all_times_all <= szTimes(:,2)',2));
     all_times_all(t) = [];
     all_spikes(t) = [];
+    seq_index(t) = [];
     fprintf('Removed %d ictal spikes \n',length(t));
     
     % Get locations of spikes
@@ -135,6 +136,7 @@ for whichPt = whichPts
     cluster(whichPt).all_spikes = all_spikes;
     cluster(whichPt).all_locs = all_locs;
     cluster(whichPt).all_times_all = all_times_all;
+    cluster(whichPt).seq_index = seq_index;
     
     %% Determine optimal number of clusters
     if clustOpt == 1
@@ -226,6 +228,7 @@ for whichPt = whichPts
     
     %% Get random group of sequences from each cluster and plot them
     if doLongPlots == 1
+        rep_seq = [];
         for i = 1:n_clusters(whichPt)
             
             if allSpikes == 1

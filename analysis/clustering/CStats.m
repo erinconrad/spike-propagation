@@ -116,7 +116,7 @@ for whichPt = whichPts
     % Divide run into 60 minute chunks
     % This may result in some chunks that are empty because there was low
     % voltage data and so I skipped spike detection in this period, but
-    % this should not affect the cluster distribution. CHECK THIS.
+    % this should not affect the cluster distribution. 
     n_chunks = ceil((max(all_times_all) - min(all_times_all))/test_t);
     which_chunk = zeros(length(all_times_all),1);
     
