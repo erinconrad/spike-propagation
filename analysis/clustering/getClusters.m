@@ -3,6 +3,7 @@ function cluster = getClusters(pt,whichPts)
 %% Parameters
 % Should we skip patients that are already done and merge the new patients
 % with the existing cluster?
+saveStruct = 1;
 merge = 1; 
 allSpikes = 1;
 clustOpt = 0; % get optimal cluster numbers
@@ -10,18 +11,26 @@ doPlots = 0;
 doLongPlots = 1;
 removeTies = 0;
 
+if isempty(whichPts) == 1
+    for i = 1:length(pt)
+        if isempty(pt(i).seq_matrix) == 0
+            whichPts = [whichPts,i];
+        end
+    end
+end
+
 
 %% Optimal cluster numbers
 n_clusters(3) = 4; %4; %HUP68, 2 by silhouette
-n_clusters(4) = 3; %2; %HUP70
+n_clusters(4) = 2; %2; %HUP70
 n_clusters(8) = 2; %3; %HUP78
-n_clusters(9) = 6; %3; %HUP080
-n_clusters(12) = 3; %3; %HUP86
-n_clusters(17) = 2; %2; %HUP106
+n_clusters(9) = 3; %3; %HUP080
+n_clusters(12) = 2; %3; %HUP86
+n_clusters(17) = 3; %2; %HUP106
 n_clusters(18) = 2; %4; %HUP107
 n_clusters(19) = 2; %3; %HUP111A
 n_clusters(20) = 4; %3; %HUP116
-n_clusters(22) = 4; %4; %Study16
+n_clusters(22) = 3; %4; %Study16
 n_clusters(24) = 3; %3; %Study19
 n_clusters(25) = 4; %4; %Study20
 n_clusters(27) = 4; %3; %Study22
@@ -178,6 +187,8 @@ for whichPt = whichPts
         end
         figure
         plot(1:10,SSE)
+        pause
+        close(gcf)
         
         % Silhouette method
         %E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
@@ -224,8 +235,10 @@ for whichPt = whichPts
     cluster(whichPt).k = n_clusters(whichPt);
     cluster(whichPt).bad_cluster = [];
     
-    save([destFolder,'cluster.mat'],'cluster'); 
-    
+    if saveStruct == 1
+        save([destFolder,'cluster.mat'],'cluster'); 
+    end
+        
     %% Get random group of sequences from each cluster and plot them
     if doLongPlots == 1
         rep_seq = [];
@@ -376,6 +389,8 @@ for whichPt = whichPts
         set(gca,'xticklabel',[])
         set(gca,'yticklabel',[])
         set(gca,'zticklabel',[])
+        pause
+        close(gcf)
         
     end
     
