@@ -28,11 +28,12 @@ if isempty(whichPts) == 1
 end
 
 for whichPt = whichPts
-
-    if isfield(power(whichPt),'ad_rat_fft') == 1
-        if isempty(power(whichPt).ad_rat_fft) == 0
-            fprintf('Already did %s, skipping\n',pt(whichPt).name);
-            continue
+    if size(power,1) >= whichPt
+        if isfield(power(whichPt),'ad_rat_fft') == 1
+            if isempty(power(whichPt).ad_rat_fft) == 0
+                fprintf('Already did %s, skipping\n',pt(whichPt).name);
+                continue
+            end
         end
     else
     fprintf('Doing %s\n',pt(whichPt).name)
