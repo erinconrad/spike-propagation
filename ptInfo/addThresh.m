@@ -7,7 +7,7 @@ structFolder = [resultsFolder,'ptStructs/'];
 gdfFile = 'long_gdf.mat';
 load(structFolder,gdfFile);
 
-for whichPts = whichPt
+for whichPt = whichPts
     name = pt(whichPt).name;
     [~,~,thresh,dmin,~] = ieegAndElectodeNames(name);
     pt(whichPt).thresh = thresh;
