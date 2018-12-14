@@ -347,7 +347,10 @@ eps2pdf([destFolder,'clustBar','.eps'])
 
 
 %% Now correlate with outcome
+% threshold p value, Bonferroni corrected
+p_thresh = 0.05/length(all_p); 
 
+change_over_time = all_p < p_thresh;
 
 save([destFolder,'stats.mat','stats']);
 
