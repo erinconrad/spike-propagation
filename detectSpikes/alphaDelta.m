@@ -111,10 +111,10 @@ for whichPt = whichPts
 
             %% Bandpass approach
             alpha_freq = bandpass(X,[8 13],fs);
-            alpha_pow = mean(alpha_freq.^2);
+            alpha_pow = mean(abs(alpha_freq).^2);
 
             delta_freq = bandpass(X,[1 4],fs);
-            delta_pow = mean(delta_freq.^2);
+            delta_pow = mean(abs(delta_freq).^2);
             ad_rat_band(dd,tt) = alpha_pow./delta_pow;
 
         end
