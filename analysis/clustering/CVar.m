@@ -241,11 +241,32 @@ end
 %% Do stats correlating number needed to capture with outcome
 
 allOutcome = [];
+allLoc = {};
 for whichPt = whichPts
     allOutcome = [allOutcome;outcome(whichPt)];
+    allLoc = [allLoc;pt(whichPt).sz_onset];
+    if isempty(pt(whichPt).sz_onset) == 1
+        allLoc = [allLoc;nan];
+    end
 end
 
+loc_bin = zeros(length(allLoc),1);
+for i = 1:size(loc_bin,1)
+    if isnan(allLoc{i}) == 1
+        loc_bin(i) = nan;
+    elseif strcmp(allLoc{i}(end-1:end),'TL') == 1
+        loc_bin(i) = 1;
+    else
+        loc_bin(i) = 0;
+    end
+end
+
+[p1,info1] = correlateClinically(allMinCapture,allOutcome,'num','num',1);
+[p2,info2] = correlateClinically(allMinCapture(~isnan(loc_bin)),...
+loc_bin(~isnan(loc_bin)),'num','bin',1);
+
 % Spearman correlation coefficient (non parametric rank)
+%{
 [rho,pval] = corr(allMinCapture,allOutcome,...
     'Type','Spearman');
 
@@ -264,6 +285,9 @@ scatter(allHours,allOutcome,100,'filled');
 xlabel('Total number of hours');
 ylabel('Outcome (modified Engel)');
 title(sprintf('Hours vs outcome, p = %1.2f',pval2))
+%}
 
-allMinCapture
-allMinProp
+%allMinCapture
+%allMinProp
+
+end

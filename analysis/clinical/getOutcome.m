@@ -1,4 +1,4 @@
-function outcome = getOutcome(name)
+function [outcome] = getOutcome(name)
 
 
 %{
@@ -16,13 +16,17 @@ ptnames = fieldnames(ptInfo.PATIENTS);
 ptnames(strcmp(ptnames,'HUP111B')==1) = [];
 ptnames(strcmp(ptnames,'Study004')==1) = [];
 
-% Get the outcome from the json file
+% Get the outcome and loc from the json file
 for i = 1:length(ptnames)
     if strcmp(name,ptnames{i}) == 1
         info = ptInfo.PATIENTS.(ptnames{i});
         outcome = (info.Outcome);
+        loc = (info.SeizureOnset);
     end
 end
+
+% Get the location
+
 
 %% Rename the outcome
 

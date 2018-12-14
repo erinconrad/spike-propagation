@@ -52,6 +52,17 @@ elseif strcmp(measureType,'num') == 1 && strcmp(clinicalType,'cat') == 1
             errorbar(i,mean(measure(clinical==i)),std(measure(clinical==i)),'o');
         end
     end
+elseif (strcmp(measureType,'bin') == 1 || strcmp(measureType,'cat') == 1) && ...
+    (strcmp(clinicalType,'bin') == 1 || strcmp(clinicalType,'cat') == 1)
+    % Compare binary or categorical measurement data across 2 or more
+    % clinical groups. Chi squared test. (e.g., are patients who have a
+    % pre-ictal change in cluster distribution more likely to have certain
+    % epilepsy locations?)
+    [tbl,chi2,p,labels] = crosstab(measure,clinical);
+    info.tbl = tbl;
+    info.chi2 = chi2;
+    info.labels = labels;
+    
 
 end
 

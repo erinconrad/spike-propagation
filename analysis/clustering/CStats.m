@@ -24,12 +24,6 @@ if isempty(whichPts) == 1
     end
 end
 
-allOutcome = [];
-for whichPt = whichPts
-    outcome(whichPt) = getOutcome(pt(whichPt).name);
-    allOutcome = [allOutcome;outcome(whichPt)];
-end
-
 allCounts = [];
 allPat = [];
 allChunk = [];
@@ -346,11 +340,34 @@ print(gcf,[destFolder,'clustBar'],'-depsc');
 eps2pdf([destFolder,'clustBar','.eps'])
 
 
-%% Now correlate with outcome
+%% Now correlate with clinical stuff
 % threshold p value, Bonferroni corrected
 p_thresh = 0.05/length(all_p); 
 
-change_over_time = all_p < p_thresh;
+% Get outcome
+
+allOutcome = [];
+allLoc = {};
+for whichPt = whichPts
+    [outcome(whichPt),~] = getOutcome(pt(whichPt).name);
+    allOutcome = [allOutcome;outcome(whichPt)];
+    allLoc = [allLoc;pt(whichPt).sz_onset];
+end
+
+loc_bin = zeros(length(allLoc),1);
+for i = 1:size(loc_bin,1)
+    if strcmp(allLoc{i}(end-1:end),'TL') == 1
+        loc_bin(i) = 1;
+    else
+        loc_bin(i) = 0;
+    end
+end
+
+differ_preic_interic = all_p < p_thresh;
+
+[p1,info1] = correlateClinically(differ_preic_interic,allOutcome,'bin','num',1);
+%[p2,info2] = correlateClinically(change_over_time,
+
 
 save([destFolder,'stats.mat','stats']);
 
