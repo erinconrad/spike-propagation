@@ -40,10 +40,14 @@ end
 
 %% Loop through patients, szs, run times
 % which patients to run over
-for i = [3 4 8 9 12 17 18 19 20 22 24 25 27 30 31]
+for i = [1,2,5,6,7,10,11,13,14,15,16,21,23]%[3 4 8 9 12 17 18 19 20 22 24 25 27 30 31]
     
     % load the info about which detector, the tmul, and the absthresh
     thresh =  pt(i).thresh;
+
+    if thresh.whichDetector ~= 7
+        error('look!');
+    end
     
     % make patient directory
     mkdir([gdfFolder,pt(i).name,'/']);
