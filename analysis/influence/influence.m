@@ -6,9 +6,9 @@ function influence(pt,whichPts)
 
 % Parameters
 doPlots = 1;
-plotConn = 1;
+plotConn = 0;
 removeTies = 1;
-doBootstrap = 1;
+doBootstrap = 0;
 alpha1 = 95;
 map_text = 'jet';
 fh_map = str2func(map_text);
@@ -276,6 +276,10 @@ for whichPt = whichPts
             100,gs(Y(most_freq),:),'filled');
         scatter3(locs(soz,1),locs(soz,2),locs(soz,3),30,'k','filled');
         title('Sequence frequency');
+        
+        pause
+        print(gcf,[saveFolder,'influence_',sprintf('%s',pt(whichPt).name)],'-dpng');
+        close(gcf)
 
     end
     
@@ -320,6 +324,9 @@ plot([1 1.9], [max(prices) max(prices)],'k')
 text(1.5,max(prices)+1,textAllSA,'HorizontalAlignment','center',...
         'fontsize',15);
 
-
+pause
+print(gcf,[destFolder,'influence_'],'-depsc');
+eps2pdf([destFolder,'influence_','.eps'])
+close(gcf)
 
 end

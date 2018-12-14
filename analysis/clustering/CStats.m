@@ -24,6 +24,12 @@ if isempty(whichPts) == 1
     end
 end
 
+allOutcome = [];
+for whichPt = whichPts
+    outcome(whichPt) = getOutcome(pt(whichPt).name);
+    allOutcome = [allOutcome;outcome(whichPt)];
+end
+
 allCounts = [];
 allPat = [];
 allChunk = [];
@@ -281,7 +287,12 @@ for whichPt = whichPts
 end
 
 X_2 = -2 * sum(log(all_p));
-sum_p = chi2cdf(X_2,2*length(all_p));
+sum_p = 1-chi2cdf(X_2,2*length(all_p));
+
+fprintf('The group p value is %1.1e\n',all_p);
+
+% double check
+group_pval = fisher_pvalue_meta_analysis(all_p);
 
 %% Bar graphs
 figure
@@ -326,7 +337,17 @@ for j = 1:length(whichPts)
     set(gca,'fontsize',15);
     
     
+    
+    
 end
+
+pause
+print(gcf,[destFolder,'clustBar'],'-depsc');
+eps2pdf([destFolder,'clustBar','.eps'])
+
+
+%% Now correlate with outcome
+
 
 save([destFolder,'stats.mat','stats']);
 

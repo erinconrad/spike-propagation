@@ -48,7 +48,7 @@ for i = 1:length(pt)
 
 
     gdf_all = [];
-   
+    removed_all = [];
 
 
     for k = 1:length(pt(i).chunkFiles)
@@ -86,7 +86,7 @@ for i = 1:length(pt)
         
 
         gdf_all = [gdf_all;gdf];
-        
+        removed_all = [removed_all;removed];
 
       
     end
@@ -110,6 +110,8 @@ for i = 1:length(pt)
        pt(i).data.sequences = [];
        pt(i).seq_matrix = [];
    end
+   
+   pt(i).removed = removed_all;
 
     %% Cleaning
     %{

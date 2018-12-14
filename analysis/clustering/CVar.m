@@ -23,13 +23,14 @@ width of the new range is >80% of the old range
 %}
 
 % Parameters
+chunkMethod = 1;
 doPlots = 0;
 alpha = 0.8;
 nboot = 1e3;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
-destFolder = [resultsFolder,'clustering/stats/'];
+destFolder = [resultsFolder,'clustering/var/'];
 mkdir(destFolder);
 
 if isempty(whichPts) == 1
@@ -42,6 +43,7 @@ end
 
 allMinCapture = [];
 allMinProp = [];
+allHours = [];
 
 
 for whichPt = whichPts
@@ -52,6 +54,8 @@ for whichPt = whichPts
     locs = pt(whichPt).electrodeData.locs(:,2:4);
     szTimes = pt(whichPt).newSzTimes;
     soz = pt(whichPt).newSOZChs;
+    saveFolder = [destFolder,pt(whichPt).name,'/'];
+    mkdir(saveFolder);
     
     % Reorder seizure times if out of order
     oldSzTimes = szTimes;
@@ -119,36 +123,49 @@ for whichPt = whichPts
     clusters = 1:k; clusters(bad_cluster) = [];
     
     % Get most popular cluster
-    popular = mode(idx);
     
-    %% Get cluster distributions from hour to hour
-    test_t = 3600; % 60 minute chunks
     
-    % Divide run into 60 minute chunks
-    % This may result in some chunks that are empty because there was low
-    % voltage data and so I skipped spike detection in this period, but
-    % this should not affect the cluster distribution. 
-    n_chunks = ceil((max(all_times_all) - min(all_times_all))/test_t);
-    prop_pop = zeros(n_chunks,1);
+    %% Get actual time chunks
+    test_t = 1800; % 60 minute chunks
+    allTimes = pt(whichPt).allTimes;
     
-    for i = 1:n_chunks
-        
-        % Get the time range for the chunk
-        curr_times = [min(all_times_all) + (i-1)*test_t,...
-           min(min(all_times_all) + i*test_t,max(all_times_all))];
-       
-        % Get the spike indices in that time chunk
-        chunk_spikes = find(all_times_all >= curr_times(1) & ...
-            all_times_all <= curr_times(2));
-        
-        % Get the proportion of spikes in the most popular cluster
-        prop_pop(i) = sum(idx(chunk_spikes) == popular)/length(chunk_spikes);
-       
+    if chunkMethod == 1
+        % New way
+        [prop_pop,chunk_times,~] = getChunkTimes(allTimes,test_t,all_times_all,idx);
+        n_chunks = length(chunk_times);
+    else
+    % Old way
+        popular = mode(idx);
+    
+        % Divide run into 60 minute chunks
+        % This may result in some chunks that are empty because there was low
+        % voltage data and so I skipped spike detection in this period, but
+        % this should not affect the cluster distribution. 
+        n_chunks = ceil((max(all_times_all) - min(all_times_all))/test_t);
+        prop_pop = zeros(n_chunks,1);
+        chunk_times = zeros(n_chunks,1);
+
+        for i = 1:n_chunks
+
+            % Get the time range for the chunk
+            curr_times = [min(all_times_all) + (i-1)*test_t,...
+               min(min(all_times_all) + i*test_t,max(all_times_all))];
+
+            % Get the spike indices in that time chunk
+            chunk_spikes = find(all_times_all >= curr_times(1) & ...
+                all_times_all <= curr_times(2));
+
+            chunk_times(i) = curr_times(1);
+            
+            % Get the proportion of spikes in the most popular cluster
+            prop_pop(i) = sum(idx(chunk_spikes) == popular)/length(chunk_spikes);
+
+        end
     end
 
     %{
     figure
-    plot(prop_pop)
+    plot(chunk_times,prop_pop)
     %}
     
     true_range = [min(prop_pop) max(prop_pop)];
@@ -181,6 +198,9 @@ for whichPt = whichPts
     
     allMinCapture = [allMinCapture; min_capture_var];
     allMinProp = [allMinProp; min_capture_var/n_chunks];
+    allHours = [allHours;n_chunks];
+    
+    outcome(whichPt) = getOutcome(pt(whichPt).name);
     
     %% Plot
     if doPlots == 1
@@ -211,10 +231,39 @@ for whichPt = whichPts
         cp = plot([min_capture_var, min_capture_var],get(gca,'ylim'),'k--','LineWidth',2);
         cp = plot([min_capture_var, min_capture_var],get(gca,'ylim'),'k--','LineWidth',2); % needed for voodoo
         pause
+        print(gcf,[saveFolder,'clustVar_',sprintf('%s',pt(whichPt).name)],'-depsc');
+        eps2pdf([saveFolder,'clustVar_',sprintf('%s',pt(whichPt).name),'.eps'])
         close(gcf)
     end
     
 end
+
+%% Do stats correlating number needed to capture with outcome
+
+allOutcome = [];
+for whichPt = whichPts
+    allOutcome = [allOutcome;outcome(whichPt)];
+end
+
+% Spearman correlation coefficient (non parametric rank)
+[rho,pval] = corr(allMinCapture,allOutcome,...
+    'Type','Spearman');
+
+%% Plot
+figure
+scatter(allMinCapture,allOutcome,100,'filled');
+xlabel('Minimum number of hours needed to capture 80 percent variance');
+ylabel('Outcome (modified Engel)');
+title(sprintf('Hours needed to capture variance vs outcome, p = %1.2f',pval))
+
+
+[~,pval2] = corr(allHours,allOutcome,...
+    'Type','Spearman');
+figure
+scatter(allHours,allOutcome,100,'filled');
+xlabel('Total number of hours');
+ylabel('Outcome (modified Engel)');
+title(sprintf('Hours vs outcome, p = %1.2f',pval2))
 
 allMinCapture
 allMinProp

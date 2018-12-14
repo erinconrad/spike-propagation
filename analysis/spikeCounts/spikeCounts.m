@@ -173,8 +173,15 @@ for whichPt = whichPts
     preIcIdx = preIcIdx(any(spike_times(preIcIdx)' > time_chunks(:,1) & ...
         spike_times(preIcIdx)' < time_chunks(:,2)));
     
+    % Break up preTimes
+    preTimesT = preTimes';
+    time_chunksT = time_chunks';
+    
+    unremovedPreTimes = range_intersection(preTimesT,time_chunksT);
+    
     % Get all the inter-ictal spikes
     interIcIdx = [];
+    interTimes = [];
     
     % Get times before the first seizure
     interIcTimes(1) = min(spike_times) + postIcTime; % assume seizure right before the record started
@@ -185,6 +192,7 @@ for whichPt = whichPts
         spike_idx = spike_times >= interIcTimes(1) & ...
             spike_times <= interIcTimes(2);
         interIcIdx = [interIcIdx; (spike_idx)];
+        interTimes = [interTimes; interIcTimes(1) interIcTimes(2)];
     end
     
     % Loop through the seizures
@@ -196,6 +204,7 @@ for whichPt = whichPts
         spike_idx = spike_times >= interIcTimes(1) & ...
             spike_times <= interIcTimes(2);
         interIcIdx = [interIcIdx; idx(spike_idx)]; 
+        interTimes = [interTimes; interIcTimes(1) interIcTimes(2)];
     end
     
     % Get time after the last seizure
@@ -206,6 +215,7 @@ for whichPt = whichPts
         spike_idx = spike_times >= interIcTimes(1) & ...
             spike_times <= interIcTimes(2);
         interIcIdx = [interIcIdx; (spike_idx)];
+        interTimes = [interTimes; interIcTimes(1) interIcTimes(2)];
     end
     
 
@@ -213,7 +223,7 @@ for whichPt = whichPts
     interIcIdx = interIcIdx(any(spike_times(interIcIdx)' > time_chunks(:,1) & ...
         spike_times(interIcIdx)' < time_chunks(:,2)));
     
-    % Now
+    % Now remove times
     
     
 end
