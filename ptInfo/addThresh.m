@@ -5,7 +5,7 @@ p1 = genpath(scriptFolder);
 addpath(p1);
 structFolder = [resultsFolder,'ptStructs/'];
 gdfFile = 'long_gdf.mat';
-load(structFolder,gdfFile);
+load([structFolder,gdfFile]);
 
 for whichPt = whichPts
     name = pt(whichPt).name;
@@ -15,7 +15,7 @@ for whichPt = whichPts
     
 end
 
-save(structFolder,gdfFile);
+save([structFolder,gdfFile]);
 
 
 end
