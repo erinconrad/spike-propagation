@@ -53,7 +53,7 @@ for whichPt = whichPts
     times_out = mean(pt(whichPt).runTimes,1);
     
     %  Loop over run times
-    for tt = 1:size(pt(whichPt).runTimes,1)
+    for tt = 1:2%size(pt(whichPt).runTimes,1)
         fprintf('Doing chunk %d of %d\n',tt,size(pt(whichPt).runTimes,1));
         
         % Get the desired indices
@@ -66,8 +66,9 @@ for whichPt = whichPts
         tic
         data = getiEEGData(dataName,channels,indices,pwfile);
         toc
-        fprintf('Retrieved data\n');
+        fprintf('Retrieved data, doing analysis.\n');
         
+        tic
         % remove nans
         data.values(isnan(data.values)) = 0;
         
@@ -118,6 +119,8 @@ for whichPt = whichPts
             ad_rat_band(dd,tt) = alpha_pow./delta_pow;
 
         end
+        toc
+        fprintf('Finished analysis\n');
         
         
        
