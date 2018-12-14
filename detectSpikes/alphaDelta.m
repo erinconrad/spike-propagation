@@ -1,12 +1,42 @@
-function power = alphaDelta(pt,whichPts)
+function power = alphaDelta(whichPts)
 
 %% Load file paths, etc.
-[~,~,~,~,pwfile] = fileLocations;
-power = struct;
-%t = 323420.99;
-%desiredTimesFake = [323420.99 323420.99+15;323420.99+16 323420.99+30];
+[~,~,scriptFolder,resultsFolder,pwfile] = fileLocations;
+p1 = genpath(scriptFolder);
+addpath(p1);
+structFolder = [resultsFolder,'ptStructs/'];
+
+seq_file = 'long_seq.mat';
+power_file = 'power.mat';
+
+load([structFolder,seq_file])
+
+if exist([structFolder,power_file],'file') ~= 0
+    load([structFolder,power_file])
+    
+else
+    power = struct;
+end
+
+
+if isempty(whichPts) == 1
+    for i = 1:length(pt)
+        if isempty(pt(i).seq_matrix) == 0
+            whichPts = [whichPts,i];
+        end
+    end
+end
 
 for whichPt = whichPts
+
+    if isfield(power(whichPt),'ad_rat_fft') == 1
+        if isempty(power(whichPt).ad_rat_fft) == 0
+            fprintf('Already did %s, skipping\n',pt(whichPt).name);
+            continue
+        end
+    else
+    fprintf('Doing %s\n',pt(whichPt).name)
+    end
     
     fs = pt(whichPt).fs;
     dataName = pt(whichPt).ieeg_name;
@@ -17,6 +47,7 @@ for whichPt = whichPts
     
     
     ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
+    ad_rat_band = zeros(nch,size(pt(whichPt).runTimes,1));
     all_p = zeros(nch,nbands,size(pt(whichPt).runTimes,1));
     times_out = mean(pt(whichPt).runTimes,1);
     
@@ -48,7 +79,8 @@ for whichPt = whichPts
             X = X - mean(X);
             
             
-            
+            %% fft approach
+
             % Calculate fft
             Y = fft(X);
             
@@ -75,6 +107,15 @@ for whichPt = whichPts
                 
             end
             
+
+            %% Bandpass approach
+            alpha_freq = bandpass(X,[8 13],fs);
+            alpha_pow = mean(alpha_freq.^2);
+
+            delta_freq = bandpass(X,[1 4],fs);
+            delta_pow = mean(delta_freq.^2);
+            ad_rat_band(dd,tt) = alpha_pow./delta_pow;
+
         end
         
         
@@ -82,9 +123,11 @@ for whichPt = whichPts
     
     end
     
-    power(whichPt).all_p = all_p;
-    power(whichPt).ad_rat = ad_rat;
+  %  power(whichPt).all_p = all_p;
+    power(whichPt).ad_rat_fft = ad_rat;
+    power(whichPt).ad_rat_band = ad_rat_band;
     power(whichPt).times = times_out;
+    save([structFolder,power_file])
 end
 
 
