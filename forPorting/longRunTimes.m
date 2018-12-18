@@ -57,8 +57,8 @@ for i = 1:length(ptnames)
        
        skipSz = 0;
        
-       % If the seizure number is 1000, skip seizure
-       if sz.SeizureEEC == -1
+   
+       if sz.SeizureEEC == -1 || sz.SeizureEnd == -1
            skipSz = 1;
        end
        
