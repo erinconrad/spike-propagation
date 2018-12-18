@@ -1,4 +1,4 @@
-function time_chunks = getUnremovedTimes(pt,whichPt)
+function time_chunks = getUnremovedTimes(pt,whichPt,removed)
 
 % NEED TO INSERT A REMOVED ARRAY FOR EACH ALLTIME
     

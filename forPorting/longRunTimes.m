@@ -37,6 +37,8 @@ for i = 1:length(ptnames)
     [pt(i).ieeg_name,electrodeFile,pt(i).thresh,pt(i).dmin,pt(i).elecNotes] = ieegAndElectodeNames(pt(i).name);
     pt(i).chLocationFile = [pt(i).name,'_chLocations.mat'];
     pt(i).sz_onset = info.SeizureOnset;
+    pt(i).clinical.outcome = Outcome;
+    pt(i).
 
     % Get electrode label file names
     pt(i).electrode_labels = electrodeFile;

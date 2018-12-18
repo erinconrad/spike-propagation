@@ -18,6 +18,9 @@ if isempty(whichPts) == 1
     end
 end
 
+spike_pm = zeros(max(whichPts),1);
+spike_pm_pch = zeros(max(whichPts),1);
+
 for whichPt = whichPts
     
     %% Patient parameters
@@ -55,13 +58,24 @@ for whichPt = whichPts
     end
     
     %% Remove chunks of missing data
+   
     
-    time_chunks = getUnremovedTimes(pt,whichPt);
-
+    time_chunks = getUnremovedTimes(pt,whichPt,[]);
+    
+    %{
+    -------
+    Analysis 1: What is the overall spike rate per patient?
+    -------
+    %}
+    n_spikes = length(spike_times);
+    total_t = sum(diff(time_chunks,1,2));
+    spike_pm(whichPt) = n_spikes/total_t*60;
+    spike_pm_pch(whichPt) = n_spikes/total_t*60/length(pt(whichPt).channels);
+    
     
     %{
     ------
-    Analysis 1: Does spike count change from hour to hour? 
+    Analysis 2: Does spike count change from hour to hour? 
     ------
     %}
     
@@ -70,10 +84,10 @@ for whichPt = whichPts
     % Get total time over all unremoved time chunks
     total_time = sum(diff(time_chunks,1,2));
     n_bins = ceil(total_time/test_t);
-    num_spikes = zeros(nbins,1);
+    num_spikes = zeros(n_bins,1);
     
     % Divide the time_chunks into n_nbins
-    start_time = time_chunk(1,1);
+    start_time = time_chunks(1,1);
     start_chunk = 1;
     curr_bin_time = 0;
     % Loop through bins
@@ -153,7 +167,7 @@ for whichPt = whichPts
         end
         
         % Shorten it if too close to the beginning of the record
-        preIcTimes(1) = max(preIcTimes(1),min(all_times_all));
+        preIcTimes(1) = max(preIcTimes(1),min(spike_times));
         
         % Skip the pre-ictal period if now there are no times left
         if preIcTimes(1) >= preIcTimes(2), continue; end
@@ -161,7 +175,7 @@ for whichPt = whichPts
         preTimes = [preTimes; preIcTimes(1) preIcTimes(2)];
   
         % Get the indices of the spikes in this time range
-        spike_idx = (spike_times >= preIcTimes(1) & ...
+        spike_idx = find(spike_times >= preIcTimes(1) & ...
             spike_times <= preIcTimes(2));
         
         % Get the indices
@@ -189,8 +203,8 @@ for whichPt = whichPts
     
     
     if interIcTimes(1) < interIcTimes(2)
-        spike_idx = spike_times >= interIcTimes(1) & ...
-            spike_times <= interIcTimes(2);
+        spike_idx = find(spike_times >= interIcTimes(1) & ...
+            spike_times <= interIcTimes(2));
         interIcIdx = [interIcIdx; (spike_idx)];
         interTimes = [interTimes; interIcTimes(1) interIcTimes(2)];
     end
@@ -201,9 +215,9 @@ for whichPt = whichPts
         interIcTimes(2) = szTimes(j+1,1) + preIcRange(1) - 1;
         
         if interIcTimes(1) >= interIcTimes(2), continue; end
-        spike_idx = spike_times >= interIcTimes(1) & ...
-            spike_times <= interIcTimes(2);
-        interIcIdx = [interIcIdx; idx(spike_idx)]; 
+        spike_idx = find(spike_times >= interIcTimes(1) & ...
+            spike_times <= interIcTimes(2));
+        interIcIdx = [interIcIdx; (spike_idx)]; 
         interTimes = [interTimes; interIcTimes(1) interIcTimes(2)];
     end
     
@@ -212,8 +226,8 @@ for whichPt = whichPts
     interIcTimes(2) = max(spike_times) + preIcRange(1) -1; % Assume seizure right after record ends
     
     if interIcTimes(1) < interIcTimes(2)
-        spike_idx = spike_times >= interIcTimes(1) & ...
-            spike_times <= interIcTimes(2);
+        spike_idx = find(spike_times >= interIcTimes(1) & ...
+            spike_times <= interIcTimes(2));
         interIcIdx = [interIcIdx; (spike_idx)];
         interTimes = [interTimes; interIcTimes(1) interIcTimes(2)];
     end
@@ -228,5 +242,14 @@ for whichPt = whichPts
     
 end
 
+all_spikes_pm_pch = [];
+all_spikes_pm = [];
 
+for whichPt = whichPts
+    all_spikes_pm = [all_spikes_pm;spike_pm(whichPt)];
+    all_spikes_pm_pch = [all_spikes_pm_pch;spike_pm_pch(whichPt)];
+end
+
+all_spikes_pm
+all_spikes_pm_pch
 end

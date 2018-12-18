@@ -38,7 +38,7 @@ ptInfo = loadjson(jsonfile);
 for pt = pts
 
 if isempty(out_folder) ==1
-    out_folder = [resultsFolder,'plots/exampleSeqs/',P(pt).name,'/'];
+    out_folder = [resultsFolder,'plots/exampleSeqs/'];
 end
 mkdir(out_folder);
 
@@ -68,6 +68,9 @@ if isfield(P(pt),'seq_matrix') == 0
     end
 else
     allSeq = P(pt).seq_matrix;
+    if isempty(allSeq) == 1
+        continue
+    end
 end
 
 
