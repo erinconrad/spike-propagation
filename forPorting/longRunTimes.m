@@ -48,9 +48,7 @@ for i = 1:length(ptnames)
     
     for j = 1:length(szs)
         
-        if i == 21 && j == 27
-            error('look');
-        end
+
        sz = info.Events.Ictal.(szs{j});
        
        if isfield(sz,'SeizureEEC') == 0
