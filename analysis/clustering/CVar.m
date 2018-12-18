@@ -265,6 +265,22 @@ end
 [p2,info2] = correlateClinically(allMinCapture(~isnan(loc_bin)),...
 loc_bin(~isnan(loc_bin)),'num','bin',1);
 
+allAEDs = cell(max(whichPts),1);
+onLTG = [];
+for whichPt = whichPts
+    allAEDs{whichPt} = getAEDs(pt(whichPt).name);
+    testStr = allAEDs{whichPt};
+    if isempty(testStr) == 1
+        onLTG = [onLTG;nan];
+    elseif any(strcmp(testStr,'LTG')) == 1
+        onLTG = [onLTG;1];
+    else
+        onLTG = [onLTG;0];
+    end
+end
+[p3,info3] = correlateClinically(allMinCapture(~isnan(onLTG)),...
+    onLTG(~isnan(onLTG)),'num','bin',1);
+
 % Spearman correlation coefficient (non parametric rank)
 %{
 [rho,pval] = corr(allMinCapture,allOutcome,...

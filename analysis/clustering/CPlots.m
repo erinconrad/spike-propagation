@@ -196,7 +196,10 @@ for whichPt = whichPts
         title(sprintf('X, Y, Z coordinates of all spikes for %s',...
             pt(whichPt).name));
         
+        
+        
         set(gca,'FontSize',15);
+        annotation('textbox',[0 0.79 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
         
         % Subplot 2: Plot the cluster distribution over time
         
@@ -216,7 +219,9 @@ for whichPt = whichPts
         title(sprintf(['Proportion of sequences in given cluster, '...
         'moving average']));
         xlabel('Time (hours)');
+        
         set(gca,'FontSize',15);
+        annotation('textbox',[0 0.33 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
         
         axes(ha(1));
         % Plot the seizure times
@@ -224,6 +229,8 @@ for whichPt = whichPts
             yl = ylim;
             plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
         end
+        
+        
         
         pause
 
@@ -288,7 +295,7 @@ for whichPt = whichPts
         window = 1800;
 
         % NEED TO CHECK THIS SCRIPT - ALSO IT's SUUUPER SLOW
-        %{
+        
         [sum_c,sum_times] = movingSumCounts(clust,plot_times,window);
         totalSum = zeros(1,size(sum_times,2));
         for i = 1:length(clusters)
@@ -311,8 +318,8 @@ for whichPt = whichPts
             end
         end
         new_prop = new_counts./sum(new_counts,2);
-        sum_times = new_times;
-        prop_c = new_prop';
+        %sum_times = new_times;
+        %prop_c = new_prop';
 
         subplot(3,1,2)
         pl = zeros(length(clusters),1);

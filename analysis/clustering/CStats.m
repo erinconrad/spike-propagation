@@ -8,7 +8,7 @@ This is my cleaned up file for getting statistics on the cluster data
 %}
 
 % Parameters
-plotQI = 0;
+plotQI = 1;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -29,7 +29,7 @@ allPat = [];
 allChunk = [];
 chi_tables_plot = cell(max(whichPts),1);
 p_plot = zeros(max(whichPts),1);
-
+p_change_time = zeros(max(whichPts),1);
 
 for whichPt = whichPts
     
@@ -147,7 +147,8 @@ for whichPt = whichPts
     
     fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'...
     ' distributions,\n the p-value is %1.1e\n\n\n'],pt(whichPt).name,p_1);
-
+    
+    p_change_time(whichPt) = p_1;
     
     %%
     %{
@@ -252,6 +253,8 @@ for whichPt = whichPts
         for j = 1:size(szTimes,1)
            plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k--','LineWidth',5);
         end
+        pause
+        close(gcf)
     end
     
     % Do chi_2 to test if pre-ictal cluster distribution is different from
@@ -283,10 +286,10 @@ end
 X_2 = -2 * sum(log(all_p));
 sum_p = 1-chi2cdf(X_2,2*length(all_p));
 
-fprintf('The group p value is %1.1e\n',all_p);
+fprintf('The group p value is %1.1e\n',sum_p);
 
 % double check
-group_pval = fisher_pvalue_meta_analysis(all_p);
+%group_pval = fisher_pvalue_meta_analysis(all_p);
 
 %% Bar graphs
 figure
@@ -340,34 +343,93 @@ print(gcf,[destFolder,'clustBar'],'-depsc');
 eps2pdf([destFolder,'clustBar','.eps'])
 
 
-%% Now correlate with clinical stuff
-% threshold p value, Bonferroni corrected
-p_thresh = 0.05/length(all_p); 
-
-% Get outcome
-
+%% Get clinical stuff
 allOutcome = [];
 allLoc = {};
 for whichPt = whichPts
-    [outcome(whichPt),~] = getOutcome(pt(whichPt).name);
+    [outcome(whichPt)] = getOutcome(pt(whichPt).name);
     allOutcome = [allOutcome;outcome(whichPt)];
     allLoc = [allLoc;pt(whichPt).sz_onset];
+    if isempty(pt(whichPt).sz_onset) == 1
+        allLoc = [allLoc;nan];
+    end
 end
 
 loc_bin = zeros(length(allLoc),1);
 for i = 1:size(loc_bin,1)
-    if strcmp(allLoc{i}(end-1:end),'TL') == 1
+    if isnan(allLoc{i}) == 1
+        loc_bin(i) = nan;
+    elseif strcmp(allLoc{i}(end-1:end),'TL') == 1
         loc_bin(i) = 1;
     else
         loc_bin(i) = 0;
     end
 end
 
+allAEDs = cell(max(whichPts),1);
+onLTG = [];
+for whichPt = whichPts
+    allAEDs{whichPt} = getAEDs(pt(whichPt).name);
+    testStr = allAEDs{whichPt};
+    if isempty(testStr) == 1
+        onLTG = [onLTG;nan];
+    elseif any(strcmp(testStr,'LTG')) == 1
+        onLTG = [onLTG;1];
+    else
+        onLTG = [onLTG;0];
+    end
+end
+
+%% Now correlate change in pre-ic vs inter-ic with clinical stuff
+% threshold p value, Bonferroni corrected
+p_thresh = 0.05/length(all_p); 
 differ_preic_interic = all_p < p_thresh;
 
-[p1,info1] = correlateClinically(differ_preic_interic,allOutcome,'bin','num',1);
-%[p2,info2] = correlateClinically(change_over_time,
+[p1,info1] = correlateClinically(differ_preic_interic,allOutcome,'bin','num',0);
 
+[p2,info2] = correlateClinically(differ_preic_interic(~isnan(loc_bin)),...
+    loc_bin(~isnan(loc_bin)),'bin','bin',0);
+measure = differ_preic_interic(~isnan(loc_bin));
+clinical = loc_bin(~isnan(loc_bin));
+figure
+bar([sum(measure==0 & clinical==0) sum(measure==0 & clinical==1);...
+        sum(measure==1 & clinical==0) sum(measure==1 & clinical==1)]);
+xticklabels({'No preictal change','Preictal change'});
+legend({'Non-temporal lobe','Temporal lobe'})
+ylabel('Number of patients')
+
+
+[p3,info3] = correlateClinically(differ_preic_interic(~isnan(onLTG)),...
+    onLTG(~isnan(onLTG)),'bin','bin',0);
+
+%% Now correlate change across time with clinical stuff
+%{
+all_p_time = [];
+for whichPt = whichPts
+    all_p_time = [all_p_time;p_change_time(whichPt)];
+end
+
+% threshold p value, Bonferroni corrected
+p_thresh_time = 0.05/length(all_p_time); 
+differ_time = all_p_time < p_thresh_time;
+
+[p4,info4] = correlateClinically(differ_time,allOutcome,'bin','num',0);
+
+[p5,info5] = correlateClinically(differ_time(~isnan(loc_bin)),...
+    loc_bin(~isnan(loc_bin)),'bin','bin',0);
+measure = differ_time(~isnan(loc_bin));
+clinical = loc_bin(~isnan(loc_bin));
+figure
+bar([sum(measure==0 & clinical==0) sum(measure==0 & clinical==1);...
+        sum(measure==1 & clinical==0) sum(measure==1 & clinical==1)]);
+xticklabels({'No change across time','Change across time'});
+legend({'Non-temporal lobe','Temporal lobe'})
+ylabel('Number of patients')
+
+
+[p6,info6] = correlateClinically(differ_time(~isnan(onLTG)),...
+    onLTG(~isnan(onLTG)),'bin','bin',1);
+%}
 
 save([destFolder,'stats.mat','stats']);
 

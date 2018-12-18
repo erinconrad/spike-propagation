@@ -5,7 +5,7 @@ function influence(pt,whichPts)
 
 
 % Parameters
-doPlots = 1;
+doPlots = 2; %0 = no, 1=normal, 2=pretty
 plotConn = 0;
 removeTies = 1;
 doBootstrap = 0;
@@ -222,8 +222,73 @@ for whichPt = whichPts
     end
     allAllDist =[allAllDist;allLocs];
     
+    if doPlots == 2
+        % Pretty plot
+        fig = figure;
+        circSize = 300;
+        set(gcf,'Position',[200 100 1200 600])
+        [ha, pos] = tight_subplot(1,2,[0 .03],[.05 .08],[.05 .01]); 
+        % Plot connections and surface area for biggest SA channel
+        axes(ha(1));
+        scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,'k','linewidth',2);
+        hold on
+        [~,I] = max(sa);
+        scatter3(locs(I,1),locs(I,2),locs(I,3),circSize,'g','filled');
+        downstream = chInfluence{I};
+        
+        for j = 1:length(downstream)
+            dp = locs(downstream(j),:) - locs(I,:);
+            quiver3(locs(I,1),locs(I,2),locs(I,3),dp(1), dp(2), dp(3),...
+                'color','k','linewidth',2,'maxheadsize',0.4);
+        end
+        scatter3(locs(I,1),locs(I,2),locs(I,3),circSize,'g','filled');
+
+        downstream = [I,downstream];
+        down_locs = locs(downstream,:);
+        
+        tri = delaunay(down_locs(:,1),down_locs(:,2));
+        %{
+        cv = trisurf(tri,down_locs(:,1),down_locs(:,2),...
+            down_locs(:,3),'facecolor','r');
+        alpha(cv,0.05) 
+        %}
+        title('Downstream electrode connections')
+        xticklabels([])
+        yticklabels([])
+        zticklabels([])
+        set(gca,'fontsize',25)
+        view([-0.5 -0.5 0.2])
+        annotation('textbox',[0.03 0.73 0.2 0.2],'String','A','EdgeColor','none','fontsize',30);
+        
+        
+        axes(ha(2));
+        cv = trisurf(tri,down_locs(:,1),down_locs(:,2),...
+            down_locs(:,3),'facecolor','r');
+        alpha(cv,0.2) 
+        hold on
+        scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,'k','linewidth',2);
+        hold on
+        [~,I] = max(sa);
+        scatter3(locs(I,1),locs(I,2),locs(I,3),circSize,'g','filled');
+        
+        title('Area connecting downstream electrodes');
+        set(gca,'fontsize',25)
+        xticklabels([])
+        yticklabels([])
+        zticklabels([])
+        view([-0.5 -0.5 0.2])
+        annotation('textbox',[0.52 0.73 0.2 0.2],'String','B','EdgeColor','none','fontsize',30);
+        fig.GraphicsSmoothing = 'off'; 
+        
+        %f2 = myaa(2);
+        %pause
+        print(fig,[saveFolder,'influence_pretty_',sprintf('%s',pt(whichPt).name)],'-dpng');
+        %close(f2)
+        close(fig)
+    
+    
     %% Make plots
-    if doPlots == 1
+    elseif doPlots == 1
         figure
         set(gcf,'Position',[200 100 1400 300])
         
@@ -293,13 +358,14 @@ pAllSA
 
 %% Plot bars of means
 figure
+set(gcf,'Position',[175 181 966 527]);
 prices = [mean(allAllDist) mean(allSADist) mean(allFreqDist)];
 bar(prices)
 title(sprintf(['Average distance across patients from electrode of interest\n to closest ',...
     'seizure onset zone electrode']))
 ylabel(sprintf('Average distance (mm)'));
 
-xticklabels({'All electrodes','max SA','Electrode with max sequence frequency'})
+xticklabels({'All electrodes','Electrode with max area of influence','Electrode with max sequence frequency'})
 set(gca,'FontSize',15)
 fix_xticklabels(gca,0.1,{'FontSize',15});
 
@@ -310,8 +376,8 @@ else
     textFreqSA = sprintf('p = %1.3f',pFreqSA);
 end
 hold on
-plot([2.1 3], [max(prices) max(prices)],'k')
-text(2.5,max(prices)+1,textFreqSA,'HorizontalAlignment','center',...
+plot([2.1 3], [max(prices)+1 max(prices)+1],'k')
+text(2.5,max(prices)+2,textFreqSA,'HorizontalAlignment','center',...
         'fontsize',15);
     
 if pAllSA < 0.001
@@ -320,8 +386,8 @@ else
     textAllSA = sprintf('p = %1.3f',pAllSA);
 end
 hold on
-plot([1 1.9], [max(prices) max(prices)],'k')
-text(1.5,max(prices)+1,textAllSA,'HorizontalAlignment','center',...
+plot([1 1.9], [max(prices)+1 max(prices)+1],'k')
+text(1.5,max(prices)+2,textAllSA,'HorizontalAlignment','center',...
         'fontsize',15);
 
 pause

@@ -5,23 +5,34 @@
           
 %}
  
-function [overall] = reorder_tiesErin(overall, xyChan)
+function [overall] = reorder_tiesErin(overall, xyChan,doMorph)
+
+if doMorph == 1, jump = 4; else, jump = 2; end
 
 % Loop through the even columns in overall, which contain the times of the
 % spikes for each of the sequences. We are essentially looping over
 % sequences
-for c = 2:2:size(overall,2)     
+for c = 2:jump:size(overall,2)     
     
      % the column with the times for each spike in the current sequence
     ticksCol = overall(:,c);
     
     % the column with the channels for each spike in the current sequence
-    chanCol  = overall(:,c-1); 
+    chanCol  = overall(:,c-1);
+    
+    if doMorph == 1
+        heightCol = overall(:,c+1);
+        widthCol = overall(:,c+2);
+    end
     
     % remove zeros resulting from concatenation
     ticksCol(ticksCol==0)=[]; 
     chanCol(chanCol==0)=[];   
     
+    if doMorph == 1
+        heightCol(ticksCol==0) = [];
+        widthCol(ticksCol==0) = [];
+    end
    
     
     % Find the unique times
@@ -71,7 +82,10 @@ for c = 2:2:size(overall,2)
                 % Reorder the tied channels according to the sort
                 chanCol(ind,1) = chanCol(I,1);
                 
-
+                if doMorph == 1
+                    heightCol(ind,1) = heightCol(I,1);
+                    widthCol(ind,1) = widthCol(I,1);
+                end
                 
             % If tie is first step- go by proximity to first untied entry.
             % This obviously only works if the whole thing isn't ties.
@@ -109,6 +123,10 @@ for c = 2:2:size(overall,2)
                 % update the channel column
                 chanCol(ind,1) = chanCol(I,1);
                 
+                if doMorph == 1
+                    heightCol(ind,1) = heightCol(I,1);
+                    widthCol(ind,1) = widthCol(I,1);
+                end
                
                 
             end
@@ -119,10 +137,22 @@ for c = 2:2:size(overall,2)
     z = size(overall,1)-size(chanCol,1);
     chanCol = vertcat(chanCol, zeros(z,1));
     ticksCol = vertcat(ticksCol, zeros(z,1));
+    
+    if doMorph == 1
+        z = size(overall,1)-size(heightCol,1);
+        heightCol = vertcat(heightCol, zeros(z,1));
+        z = size(overall,1)-size(widthCol,1);
+        widthCol = vertcat(widthCol, zeros(z,1));
+    end
 
     % update overall
     overall(:,c)   = ticksCol;
     overall(:,c-1) = chanCol;
+    
+    if doMorph ==1
+        overall(:,c+1) = heightCol;
+        overall(:,c+2) = widthCol;
+    end
     
 end
 

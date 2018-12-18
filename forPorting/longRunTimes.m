@@ -47,6 +47,10 @@ for i = 1:length(ptnames)
     whichSz = 0;
     
     for j = 1:length(szs)
+        
+        if i == 21 && j == 27
+            error('look');
+        end
        sz = info.Events.Ictal.(szs{j});
        
        if isfield(sz,'SeizureEEC') == 0
@@ -54,6 +58,11 @@ for i = 1:length(ptnames)
        end
        
        skipSz = 0;
+       
+       % If the seizure number is 1000, skip seizure
+       if sz.SeizureEEC == -1
+           skipSz = 1;
+       end
        
        % If the seizure is the same time as a prior, skip this one
        if j > 1
@@ -66,6 +75,9 @@ for i = 1:length(ptnames)
            end
            
        end
+       
+      
+       
        
        if skipSz == 1
            continue

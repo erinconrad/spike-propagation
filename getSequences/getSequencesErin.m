@@ -106,7 +106,7 @@ for row = 2:size(spikes,1)
                 
                 % if the current sequence is shorter, pad it with 0s
                 if diff < 0
-                    currseq = vertcat(currseq, zeros(abs(diff),2));
+                    currseq = vertcat(currseq, zeros(abs(diff),size(spikes,2)));
                     
                 % if the current sequence is longer, pad the overall matrix
                 % with zeros
@@ -138,14 +138,15 @@ end
 
 
 % Reorder tied spikes based on spatial location
-overall = reorder_tiesErin(overall, xyChan);
+if size(spikes,2)>2, doMorph = 1; end
+overall = reorder_tiesErin(overall, xyChan,doMorph);
 
 
 
 % Partition sequences- apply spatial restrictions, store
 part  = spatialConstraint(overall, xyChan, minConcurrentFreqAbs,...
     minConcurrentFreqRel, maxSpeed, fs,...
-    minSpikesCloseEnough);
+    minSpikesCloseEnough,doMorph);
 
 % store sequences according to which is the lead channel
 sequences = part;

@@ -62,7 +62,11 @@ elseif (strcmp(measureType,'bin') == 1 || strcmp(measureType,'cat') == 1) && ...
     info.tbl = tbl;
     info.chi2 = chi2;
     info.labels = labels;
-    
+    if doPlot == 1
+        figure
+        bar([sum(measure==0 & clinical==0) sum(measure==0 & clinical==1);...
+            sum(measure==1 & clinical==0) sum(measure==1 & clinical==1)]);
+    end
 
 end
 

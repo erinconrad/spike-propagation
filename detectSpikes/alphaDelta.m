@@ -46,6 +46,8 @@ for whichPt = whichPts
     
     nbands = ceil(fs/2/10);
     
+    szTimes = pt(whichPt).newSzTimes;
+    
     
     ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
     ad_rat_band = zeros(nch,size(pt(whichPt).runTimes,1));
@@ -59,8 +61,17 @@ for whichPt = whichPts
         % Get the desired indices
         desiredTimes = pt(whichPt).runTimes(tt,:);
         
+        % get times to clip
+        clipTime = [-1*60 0];
+        szTimesPlusClip = szTimes + repmat(clipTime,size(szTimes,1),1);
+        szTimesT = szTimesPlusClip';
+        out=range_intersection(desiredTimes,szTimesT(:));
+        indicesToClip = round(out(1)*fs):round(out(2)*fs);
+        
         %desiredTimes = desiredTimesFake(tt,:);
         indices = round(desiredTimes(1)*fs):round(desiredTimes(2)*fs);
+        
+        
         
         % Get the data
         tic
@@ -71,6 +82,10 @@ for whichPt = whichPts
         tic
         % remove nans
         data.values(isnan(data.values)) = 0;
+        
+        % Remove seizure times
+        data.values(indicesToClip,:) = [];
+        
         
         % Loop over channels
         
