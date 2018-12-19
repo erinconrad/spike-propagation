@@ -56,7 +56,7 @@ for whichPt = whichPts
     times_out = mean(pt(whichPt).runTimes,1);
     
     %  Loop over run times
-    for tt = 22%1:size(pt(whichPt).runTimes,1)
+    for tt = 1:size(pt(whichPt).runTimes,1)
         fprintf('Doing chunk %d of %d\n',tt,size(pt(whichPt).runTimes,1));
         
         % Get the desired indices
