@@ -53,7 +53,7 @@ for whichPt = whichPts
     ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
     ad_rat_band = zeros(nch,size(pt(whichPt).runTimes,1));
     all_p = zeros(nch,nbands,size(pt(whichPt).runTimes,1));
-    times_out = mean(pt(whichPt).runTimes,1);
+    times_out = mean(pt(whichPt).runTimes,2);
     
     %  Loop over run times
     for tt = 1:size(pt(whichPt).runTimes,1)
