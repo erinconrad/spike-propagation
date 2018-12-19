@@ -55,7 +55,7 @@ for whichPt = whichPts
     times_out = mean(pt(whichPt).runTimes,1);
     
     %  Loop over run times
-    for tt = 1:2%size(pt(whichPt).runTimes,1)
+    for tt = 1:size(pt(whichPt).runTimes,1)
         fprintf('Doing chunk %d of %d\n',tt,size(pt(whichPt).runTimes,1));
         
         % Get the desired indices
@@ -101,7 +101,7 @@ for whichPt = whichPts
             
             
             %% fft approach
-            tic
+           
             % Calculate fft
             Y = fft(X);
             
@@ -120,34 +120,30 @@ for whichPt = whichPts
             alpha = sum(P(freqs>=8 & freqs<=13));
             delta = sum(P(freqs>=1 & freqs<=4));
             ad_rat(dd,tt) = alpha/delta;
-            toc
-            fprintf('Got FFT approach\n');
+            
+            %fprintf('Got FFT approach\n');
             
             % Get all frequency bands
+            %{
             for bb = 1:nbands
                 frange = (bb-1)*10:min(bb*10,fs/2);
                 all_p(dd,bb,tt) = sum(P(freqs>=frange(1) & freqs<=frange(2)));
                 
             end
-            
+            %}
 
             %% Bandpass approach
-%{
-            alpha_freq = bandpass(X,[8 13],fs);
-            alpha_pow = mean(abs(alpha_freq).^2);
-
-            delta_freq = bandpass(X,[1 4],fs);
-            delta_pow = mean(abs(delta_freq).^2);
-            ad_rat_band(dd,tt) = alpha_pow./delta_pow;
-%}          
-            tic
+           
+         
+            
             ad_rat_band(dd,tt) = bandpower(X,fs,[8 13])/bandpower(X,fs,[1 4]);
-            toc
-            fprintf('Got bandpass approach\n');
+           
+            
+            
             
         end
         
-        fprintf('Finished analysis\n');
+        %fprintf('Finished analysis\n');
         
         
        
