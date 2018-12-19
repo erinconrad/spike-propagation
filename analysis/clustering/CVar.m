@@ -200,7 +200,7 @@ for whichPt = whichPts
     allMinProp = [allMinProp; min_capture_var/n_chunks];
     allHours = [allHours;n_chunks];
     
-    outcome(whichPt) = getOutcome(pt(whichPt).name);
+    outcome(whichPt) = getOutcome(pt,whichPt);
     
     %% Plot
     if doPlots == 1
@@ -244,7 +244,7 @@ allOutcome = [];
 allLoc = {};
 for whichPt = whichPts
     allOutcome = [allOutcome;outcome(whichPt)];
-    allLoc = [allLoc;pt(whichPt).sz_onset];
+    allLoc = [allLoc;pt(whichPt).clinical.seizureOnset];
     if isempty(pt(whichPt).sz_onset) == 1
         allLoc = [allLoc;nan];
     end

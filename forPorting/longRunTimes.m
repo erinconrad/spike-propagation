@@ -37,8 +37,17 @@ for i = 1:length(ptnames)
     [pt(i).ieeg_name,electrodeFile,pt(i).thresh,pt(i).dmin,pt(i).elecNotes] = ieegAndElectodeNames(pt(i).name);
     pt(i).chLocationFile = [pt(i).name,'_chLocations.mat'];
     pt(i).sz_onset = info.SeizureOnset;
-    pt(i).clinical.outcome = Outcome;
-    pt(i).
+    pt(i).clinical.outcome = info.Outcome;
+    pt(i).clinical.lesionstatus = info.Lesion_0x20_Status;
+    pt(i).clinical.pathology = info.Pathology;
+    pt(i).clinical.resectiontype = info.Resection_0x20_Type;
+    pt(i).clinical.ageOnset = info.AgeOnset;
+    pt(i).clinical.ageSurgery = info.AgeSurgery;
+    pt(i).clinical.sex = info.Sex;
+    pt(i).clinical.seizureOnset = info.SeizureOnset;
+    if isfield(info,'GridCoverageOfResection') == 1
+        pt(i).clinical.gridcovresection = info.GridCoverageOfResection;
+    end
 
     % Get electrode label file names
     pt(i).electrode_labels = electrodeFile;

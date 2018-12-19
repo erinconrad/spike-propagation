@@ -1,4 +1,7 @@
-function compareStructs(pt1,pt2)
+function pt1 = compareStructs(pt1,ptNew)
+
+pt2 = ptNew;
+
 
 for i = 1:length(pt1)
     same = 1;
@@ -24,6 +27,8 @@ for i = 1:length(pt1)
 
         end
     end
+    
+    pt1(i).clinical = pt2(i).clinical;
     
    
 end

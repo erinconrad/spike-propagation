@@ -1,4 +1,4 @@
-function [outcome] = getOutcome(name)
+function [outcome] = getOutcome(pt,whichPt)
 
 
 %{
@@ -6,27 +6,7 @@ function [outcome] = getOutcome(name)
 http://seizure.mgh.harvard.edu/engel-surgical-outcome-scale/
 %}
 
-[~,jsonfile,scriptFolder,~,~] = fileLocations;
-p1 = genpath(scriptFolder);
-addpath(p1);
-ptInfo = loadjson(jsonfile);
-ptnames = fieldnames(ptInfo.PATIENTS);
-
-% Do trickery
-ptnames(strcmp(ptnames,'HUP111B')==1) = [];
-ptnames(strcmp(ptnames,'Study004')==1) = [];
-
-% Get the outcome and loc from the json file
-for i = 1:length(ptnames)
-    if strcmp(name,ptnames{i}) == 1
-        info = ptInfo.PATIENTS.(ptnames{i});
-        outcome = (info.Outcome);
-        loc = (info.SeizureOnset);
-    end
-end
-
-% Get the location
-
+outcome = pt(whichPt).clinical.outcome;
 
 %% Rename the outcome
 

@@ -347,9 +347,9 @@ eps2pdf([destFolder,'clustBar','.eps'])
 allOutcome = [];
 allLoc = {};
 for whichPt = whichPts
-    [outcome(whichPt)] = getOutcome(pt(whichPt).name);
+    [outcome(whichPt)] = getOutcome(pt,whichPt);
     allOutcome = [allOutcome;outcome(whichPt)];
-    allLoc = [allLoc;pt(whichPt).sz_onset];
+    allLoc = [allLoc;pt(whichPt).clinical.seizureOnset];
     if isempty(pt(whichPt).sz_onset) == 1
         allLoc = [allLoc;nan];
     end

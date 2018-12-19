@@ -138,7 +138,7 @@ end
 
 
 % Reorder tied spikes based on spatial location
-if size(spikes,2)>2, doMorph = 1; end
+if size(spikes,2)>2, doMorph = 1; else, doMorph = 0; end
 overall = reorder_tiesErin(overall, xyChan,doMorph);
 
 
