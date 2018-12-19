@@ -5,7 +5,7 @@ function influence(pt,whichPts)
 
 
 % Parameters
-doPlots = 2; %0 = no, 1=normal, 2=pretty
+doPlots = 0; %0 = no, 1=normal, 2=pretty
 plotConn = 0;
 removeTies = 1;
 doBootstrap = 0;
@@ -24,6 +24,8 @@ mkdir(destFolder)
 allFreqDist = [];
 allAllDist =[];
 allSADist = [];
+allSpikeDist = [];
+allSAToFreqDist = [];
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
@@ -81,14 +83,17 @@ for whichPt = whichPts
     
     %% Construct a matrix of channel connections
     chCh = zeros(nchs,nchs);
+    all_spike_times = [];
     for i = 1:size(seq_matrix,2)
         seq = seq_matrix(:,i);
         spike_chs = find(isnan(seq) == 0);
         spike_times = seq((isnan(seq) == 0));
         
         % sort channels by spike time
-        [~,I] = sort(spike_times);
+        [spike_times,I] = sort(spike_times);
         spike_chs = spike_chs(I);
+        
+        all_spike_times = [all_spike_times;spike_times];
         
         % Get all unidirectional pairwise connections that start with first
         % channel
@@ -173,6 +178,15 @@ for whichPt = whichPts
     fprintf(['By poisson assumption, the number of counts is:\n'...
         '%d\n\n'],X);
     
+    %% Now find channels with more spikes than expected by chance.
+    n_spikes = length(all_spike_times);
+    lambda_spikes = n_spikes/nchs;
+    X_spikes = poissinv(alpha1/100,lambda_spikes);
+    minCountSpikes = X_spikes;
+    
+    n_spikes_ch = sum(~isnan(seq_matrix),2);
+    ch_w_spikes = find(n_spikes_ch>minCountSpikes);
+    
     
     %% Get the indices of the channels that are influenced by each other
     chInfluence = cell(nchs,1);
@@ -221,6 +235,19 @@ for whichPt = whichPts
         allLocs(i) = min(vecnorm(locs(i,:) - locs(soz,:),2,2));
     end
     allAllDist =[allAllDist;allLocs];
+    
+    % Distance from electrodes with spikes to closest SOZ electrode
+    spikeLocs = locs(ch_w_spikes,:);
+    spikeDist = zeros(size(spikeLocs,1),1);
+    for i = 1:size(spikeLocs,1)
+        spikeDist(i) = min(vecnorm(spikeLocs(i,:)-locs(soz,:),2,2));
+    end
+    allSpikeDist = [allSpikeDist;spikeDist];
+    
+    % Get distance between electrode with max SA and electrode with max seq
+    % freq
+    
+    allSAToFreqDist = [allSAToFreqDist;vecnorm(freqLoc-SALoc)];
     
     if doPlots == 2
         % Pretty plot
@@ -355,6 +382,12 @@ end
 pFreqSA
 [pAllSA,h4,stats4] = ranksum(allSADist,allAllDist);
 pAllSA
+[pSpikeSA,h5,stats5] = ranksum(allSADist,allSpikeDist);
+
+fprintf(['The median distance between the electrodes with max SA and\n'...
+    'the electrodes with max frequency is: %1.1f\n and there were %d ',...
+    'patients where these electrodes were the same\n'],median(allSAToFreqDist),...
+    sum((allSAToFreqDist==0)));
 
 %% Plot bars of means
 figure

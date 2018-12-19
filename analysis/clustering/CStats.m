@@ -9,6 +9,7 @@ This is my cleaned up file for getting statistics on the cluster data
 
 % Parameters
 plotQI = 1;
+intericTime = 6;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -160,7 +161,7 @@ for whichPt = whichPts
     
     % Define important ranges
     preIcRange = [-60*60,-1*60]; % Between 1 hour to 1 minute before a seizure
-    postIcTime = 60*60; % 60 minutes after a seizure
+    postIcTime = 60*60*intericTime; % 60 minutes after a seizure versus 6 hours
     % Interictal range will be anything else
     
     % Get times for QI purposes
@@ -339,8 +340,8 @@ for j = 1:length(whichPts)
 end
 
 pause
-print(gcf,[destFolder,'clustBar'],'-depsc');
-eps2pdf([destFolder,'clustBar','.eps'])
+print(gcf,[destFolder,'clustBar',sprintf('%d_hours',intericTime)],'-depsc');
+eps2pdf([destFolder,'clustBar',sprintf('%d_hours',intericTime),'.eps'])
 
 
 %% Get clinical stuff
