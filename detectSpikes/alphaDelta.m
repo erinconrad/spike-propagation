@@ -66,7 +66,11 @@ for whichPt = whichPts
         szTimesPlusClip = szTimes + repmat(clipTime,size(szTimes,1),1);
         szTimesT = szTimesPlusClip';
         out=range_intersection(desiredTimes,szTimesT(:));
-        indicesToClip = round(out(1)*fs):round(out(2)*fs);
+        if isempty(out) == 1
+            indicesToClip = []; 
+        else
+            indicesToClip = round(out(1)*fs):round(out(2)*fs);
+        end
         
         %desiredTimes = desiredTimesFake(tt,:);
         indices = round(desiredTimes(1)*fs):round(desiredTimes(2)*fs);
