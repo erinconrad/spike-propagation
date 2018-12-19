@@ -74,12 +74,12 @@ for whichPt = whichPts
         
         
         % Get the data
-        tic
+        
         data = getiEEGData(dataName,channels,indices,pwfile);
-        toc
+        
         fprintf('Retrieved data, doing analysis.\n');
         
-        tic
+        
         % remove nans
         data.values(isnan(data.values)) = 0;
         
@@ -97,7 +97,7 @@ for whichPt = whichPts
             
             
             %% fft approach
-
+            tic
             % Calculate fft
             Y = fft(X);
             
@@ -116,6 +116,8 @@ for whichPt = whichPts
             alpha = sum(P(freqs>=8 & freqs<=13));
             delta = sum(P(freqs>=1 & freqs<=4));
             ad_rat(dd,tt) = alpha/delta;
+            toc
+            fprintf('Got FFT approach\n');
             
             % Get all frequency bands
             for bb = 1:nbands
@@ -133,11 +135,14 @@ for whichPt = whichPts
             delta_freq = bandpass(X,[1 4],fs);
             delta_pow = mean(abs(delta_freq).^2);
             ad_rat_band(dd,tt) = alpha_pow./delta_pow;
-%}
+%}          
+            tic
             ad_rat_band(dd,tt) = bandpower(X,fs,[8 13])/bandpower(X,fs,[1 4]);
-
+            toc
+            fprintf('Got bandpass approach\n');
+            
         end
-        toc
+        
         fprintf('Finished analysis\n');
         
         

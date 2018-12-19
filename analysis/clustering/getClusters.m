@@ -6,7 +6,7 @@ function cluster = getClusters(pt,whichPts)
 saveStruct = 1;
 merge = 1; 
 allSpikes = 1;
-clustOpt = 0; % get optimal cluster numbers
+clustOpt = 1; % get optimal cluster numbers
 doPlots = 0;
 doLongPlots = 1;
 removeTies = 0;
@@ -191,13 +191,13 @@ for whichPt = whichPts
         close(gcf)
         
         % Silhouette method
-        %E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
+        E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
         
         % Gap method
         %E_G = evalclusters(all_locs,'kmeans','gap','KList',[1:10]);
  
     end
-    
+     
     %% Do clustering algorithm
     for j = 1:30 % do it 30 times and take the best result
         if allSpikes == 1
