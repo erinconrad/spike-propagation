@@ -28,6 +28,7 @@ if isempty(whichPts) == 1
 end
 
 for whichPt = whichPts
+    fprintf('Doing %s\n',pt(whichPt).name)
     if size(power,1) >= whichPt
         if isfield(power(whichPt),'ad_rat_fft') == 1
             if isempty(power(whichPt).ad_rat_fft) == 0
@@ -36,7 +37,7 @@ for whichPt = whichPts
             end
         end
     else
-    fprintf('Doing %s\n',pt(whichPt).name)
+    
     end
     
     fs = pt(whichPt).fs;
