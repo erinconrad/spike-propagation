@@ -6,10 +6,14 @@ function cluster = getClusters(pt,whichPts)
 saveStruct = 1;
 merge = 1; 
 allSpikes = 1;
-clustOpt = 1; % get optimal cluster numbers
+clustOpt = 0; % get optimal cluster numbers
 doPlots = 0;
 doLongPlots = 1;
-removeTies = 0;
+removeTies = 1;
+% My primary rationale for removing ties is that when I tested this for a
+% single patient (HUP106), when I don't remove ties there is a third
+% cluster that appears that is basically all artifact. This largely goes
+% away when I remove ties.
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
@@ -21,21 +25,71 @@ end
 
 
 %% Optimal cluster numbers
-n_clusters(3) = 4; %4; %HUP68, 2 by silhouette
-n_clusters(4) = 2; %2; %HUP70
-n_clusters(8) = 2; %3; %HUP78
-n_clusters(9) = 3; %3; %HUP080
-n_clusters(12) = 2; %3; %HUP86
-n_clusters(17) = 3; %2; %HUP106
-n_clusters(18) = 2; %4; %HUP107
-n_clusters(19) = 2; %3; %HUP111A
-n_clusters(20) = 4; %3; %HUP116
-n_clusters(22) = 3; %4; %Study16
-n_clusters(24) = 3; %3; %Study19
-n_clusters(25) = 4; %4; %Study20
-n_clusters(27) = 4; %3; %Study22
-n_clusters(30) = 3; %4; %Study28
-n_clusters(31) = 3; %3; %Study29
+if removeTies == 0
+    n_clusters(1) = 3; % HUP64
+    n_clusters(2) = 2; %HUP065
+    n_clusters(3) = 4; %HUP68
+    n_clusters(4) = 2; %HUP70
+    n_clusters(5) = 2; %HUP73
+    n_clusters(6) = 2; %HUP74
+    n_clusters(7) = 2; %HUP75
+    n_clusters(8) = 2; %HUP78
+    n_clusters(9) = 3; %HUP080
+    n_clusters(10) = 3; %HUP82
+    n_clusters(11) = 3; %HUP83
+    n_clusters(12) = 2; %HUP86 
+    n_clusters(13) = 3; %HUP87
+    n_clusters(14) = 2; %HUP88 
+    n_clusters(15) = 3; %HUP94 
+    n_clusters(16) = 2; %HUP105
+    n_clusters(17) = 3; %HUP106 
+    n_clusters(18) = 2; %HUP107
+    n_clusters(19) = 2; %HUP111A
+    n_clusters(20) = 4; %HUP116
+    n_clusters(21) = 2; %Study012
+    n_clusters(22) = 3; %Study16 
+    n_clusters(23) = 2; %Study17
+    n_clusters(24) = 3; %Study19
+    n_clusters(25) = 4; %Study20
+    n_clusters(26) = 0; %study21 - skip, no electrodes
+    n_clusters(27) = 4; %Study22
+    n_clusters(28) = 0; %study23 - skip, no electrodes
+    n_clusters(29) = 0; %study26 - skip, no electrodes
+    n_clusters(30) = 3; %Study28
+    n_clusters(31) = 3; %Study29
+elseif removeTies == 1
+    n_clusters(1) = 3; % HUP64
+    n_clusters(2) = 2; %HUP065
+    n_clusters(3) = 4; %HUP68
+    n_clusters(4) = 3; %HUP70
+    n_clusters(5) = 4; %HUP73
+    n_clusters(6) = 2; %HUP74
+    n_clusters(7) = 2; %HUP75
+    n_clusters(8) = 2; %HUP78
+    n_clusters(9) = 3; %HUP080
+    n_clusters(10) = 3; %HUP82
+    n_clusters(11) = 3; %HUP83
+    n_clusters(12) = 3; %HUP86
+    n_clusters(13) = 3; %HUP87
+    n_clusters(14) = 4; %HUP88
+    n_clusters(15) = 4; %HUP94
+    n_clusters(16) = 2; %HUP105
+    n_clusters(17) = 2; %HUP106
+    n_clusters(18) = 2; %HUP107
+    n_clusters(19) = 2; %HUP111A
+    n_clusters(20) = 4; %HUP116
+    n_clusters(21) = 4; %Study012
+    n_clusters(22) = 4; %Study16
+    n_clusters(23) = 2; %Study17
+    n_clusters(24) = 3; %Study19
+    n_clusters(25) = 4; %Study20
+    n_clusters(26) = 0; %study21 - skip, no electrodes
+    n_clusters(27) = 4; %Study22
+    n_clusters(28) = 0; %study23 - skip, no electrodes
+    n_clusters(29) = 0; %study26 - skip, no electrodes
+    n_clusters(30) = 3; %Study28
+    n_clusters(31) = 3; %Study29
+end
 
 % Save file location
 [~,~,scriptFolder,resultsFolder,~] = fileLocations;
@@ -51,7 +105,9 @@ end
 
 for whichPt = whichPts
     
-    
+    if whichPt == 26 || whichPt == 28 || whichPt == 29
+        continue
+    end
     
     
     cluster(whichPt).name = pt(whichPt).name;
@@ -191,7 +247,7 @@ for whichPt = whichPts
         close(gcf)
         
         % Silhouette method
-        E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
+        %E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
         
         % Gap method
         %E_G = evalclusters(all_locs,'kmeans','gap','KList',[1:10]);
