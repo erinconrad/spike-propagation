@@ -305,7 +305,8 @@ for whichPt = whichPts
                 spike_clust = find(idx==i); 
 
                 % Take 50 of these indices randomly
-                whichSpikes = spike_clust(randperm(length(spike_clust),50));
+                whichSpikes = spike_clust(randperm(length(spike_clust),...
+                    min(50,length(spike_clust))));
 
                 % Get the sequences these spikes belong to
                 whichSeqs = seq_index(whichSpikes);
