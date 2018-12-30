@@ -143,6 +143,7 @@ for whichPt = whichPts
             
             
         end
+        clear data
         
         %fprintf('Finished analysis\n');
         
