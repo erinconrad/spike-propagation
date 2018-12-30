@@ -155,7 +155,7 @@ for whichPt = whichPts
     power(whichPt).ad_rat_fft = ad_rat;
     power(whichPt).ad_rat_band = ad_rat_band;
     power(whichPt).times = times_out;
-    save([structFolder,power_file])
+    save([structFolder,power_file],'power')
 end
 
 
