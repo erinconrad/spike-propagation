@@ -24,7 +24,7 @@ for whichPt = whichPts
     end
     
     figure
-    plot(all_spikes(:,2)/3600,smooth(all_spikes(:,3),1000))
+    plot(all_spikes(:,2)/3600,smooth(all_spikes(:,3),1))
     hold on
     for j = 1:size(szTimes,1) 
         yl = ylim;
@@ -32,7 +32,7 @@ for whichPt = whichPts
     end
     
     figure
-    plot(all_spikes(:,2)/3600,smooth(all_spikes(:,4),1000))
+    plot(all_spikes(:,2)/3600,smooth(all_spikes(:,4),1))
     hold on
     for j = 1:size(szTimes,1) 
         yl = ylim;

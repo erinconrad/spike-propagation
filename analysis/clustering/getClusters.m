@@ -3,12 +3,12 @@ function cluster = getClusters(pt,whichPts)
 %% Parameters
 % Should we skip patients that are already done and merge the new patients
 % with the existing cluster?
-saveStruct = 1;
-merge = 1; 
+saveStruct = 0;
+merge = 0; 
 allSpikes = 1;
 clustOpt = 0; % get optimal cluster numbers
-doPlots = 0;
-doLongPlots = 1;
+doPlots = 1;
+doLongPlots = 0;
 removeTies = 1;
 % My primary rationale for removing ties is that when I tested this for a
 % single patient (HUP106), when I don't remove ties there is a third
