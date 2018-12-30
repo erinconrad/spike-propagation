@@ -21,7 +21,7 @@ n = 0;
 
 while n == 0
 
-    try
+  %  try
         session = IEEGSession(dataName, loginname, pwname);
         fs = session.data.sampleRate;
         channelLabels = session.data.channelLabels;
@@ -33,11 +33,11 @@ while n == 0
         
         n = 1;
         
-    catch
-       fprintf('Failed to retrieve ieeg.org data, trying again...\n'); 
-       error('look');
+%    catch
+%       fprintf('Failed to retrieve ieeg.org data, trying again...\n'); 
+%      
        n = 0; 
-    end
+%    end
 
 
 end
