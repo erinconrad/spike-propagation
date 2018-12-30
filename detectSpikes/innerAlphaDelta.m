@@ -4,8 +4,7 @@ function ad_rat = innerAlphaDelta(dataName,channels,indices,pwfile)
     tic
     data = getiEEGData(dataName,channels,indices,pwfile);
     toc
-    fprintf('Retrieved %1.1f seconds of data, doing analysis.\n',...
-        desiredTimes(2)-desiredTimes(1));
+    fprintf('Retrieved data, doing analysis.\n');
 
 
     % remove nans
