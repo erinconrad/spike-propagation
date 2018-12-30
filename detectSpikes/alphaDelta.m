@@ -79,10 +79,11 @@ for whichPt = whichPts
         
         
         % Get the data
-        
+        tic
         data = getiEEGData(dataName,channels,indices,pwfile);
-        
-        fprintf('Retrieved data, doing analysis.\n');
+        toc
+        fprintf('Retrieved %1.1f seconds of data, doing analysis.\n',...
+            desiredTimes(2)-desiredTimes(1));
         
         
         % remove nans
@@ -144,7 +145,7 @@ for whichPt = whichPts
             
         end
         clear data
-        
+
         %fprintf('Finished analysis\n');
         
         
