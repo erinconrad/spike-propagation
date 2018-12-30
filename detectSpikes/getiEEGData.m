@@ -54,6 +54,6 @@ data.chLabels = channelLabels;
 
 session.delete;
 clearvars -except data
-clearjava
+%clearjava
 
 end
