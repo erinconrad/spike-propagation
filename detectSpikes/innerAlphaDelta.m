@@ -3,7 +3,7 @@ function ad_rat = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip
      % Get the data
     tic
     data = getiEEGData(dataName,channels,indices,pwfile);
-    %pause(10)
+    pause(10)
     toc
     fprintf('Retrieved data, doing analysis.\n');
 
