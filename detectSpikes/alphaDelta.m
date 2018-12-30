@@ -137,7 +137,7 @@ for whichPt = whichPts
            
          
             
-            ad_rat_band(dd,tt) = bandpower(X,fs,[8 13])/bandpower(X,fs,[1 4]);
+           % ad_rat_band(dd,tt) = bandpower(X,fs,[8 13])/bandpower(X,fs,[1 4]);
            
             
             
@@ -153,7 +153,7 @@ for whichPt = whichPts
     
   %  power(whichPt).all_p = all_p;
     power(whichPt).ad_rat_fft = ad_rat;
-    power(whichPt).ad_rat_band = ad_rat_band;
+   % power(whichPt).ad_rat_band = ad_rat_band;
     power(whichPt).times = times_out;
     save([structFolder,power_file],'power')
 end
