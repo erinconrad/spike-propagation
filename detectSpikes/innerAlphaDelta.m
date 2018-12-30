@@ -1,4 +1,4 @@
-function ad_rat = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip)
+function ad_rat = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs)
 
      % Get the data
     tic

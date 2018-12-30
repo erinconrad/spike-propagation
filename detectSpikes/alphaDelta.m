@@ -78,7 +78,7 @@ for whichPt = whichPts
         
         
         
-        ad_rat(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip);
+        ad_rat(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs);
         
         %fprintf('Finished analysis\n');
         
