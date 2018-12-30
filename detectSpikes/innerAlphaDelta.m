@@ -12,7 +12,7 @@ function ad_rat = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip
     data.values(isnan(data.values)) = 0;
 
     % Remove seizure times
-    data.values(indicesToClip-indices(1),:) = [];
+    data.values(max(indicesToClip-indices(1),1),:) = [];
     nch = length(channels);
 
     ad_rat = zeros(nch,1);
