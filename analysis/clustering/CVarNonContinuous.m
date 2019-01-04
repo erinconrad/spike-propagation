@@ -1,4 +1,4 @@
-function CVar(pt,cluster,whichPts)
+function CVarNonContinuous(pt,cluster,whichPts)
 
 %{
 The goal is to determine the amount of time needed to capture x% of the
@@ -24,7 +24,7 @@ width of the new range is >80% of the old range
 
 % Parameters
 chunkMethod = 1;
-doPlots = 1;
+doPlots = 0;
 alpha = 0.8;
 nboot = 1e3;
 
@@ -39,8 +39,6 @@ if isempty(whichPts) == 1
             whichPts = [whichPts,i];
         end
     end
-elseif whichPts == 100
-    whichPts = [4 6 8 9 15 17 18 19 20 22 24 25 27 30 31];
 end
 
 allMinCapture = [];
@@ -128,7 +126,7 @@ for whichPt = whichPts
     
     
     %% Get actual time chunks
-    test_t = 3600; % 60 minute chunks
+    test_t = 1800; % 60 minute chunks
     allTimes = pt(whichPt).allTimes;
     
     if chunkMethod == 1
@@ -177,32 +175,8 @@ for whichPt = whichPts
     sub_std = zeros(n_chunks,2);
     for i = 1:n_chunks
         
-        
-        
-        % Get all subsets of n continuous hours
-        allSubsets = getContinuousSubset(n_chunks,i);
-        
-        % Need to re-initialize temp_range
-        temp_range = zeros(size(allSubsets,1),2);
-        
-        for j = 1:size(allSubsets,1)
-            subset = allSubsets(j,:);
-            temp_prop_pop = prop_pop(subset);
-            temp_range(j,:) = [min(temp_prop_pop) max(temp_prop_pop)];
-        end
-        sub_range(i,:) = mean(temp_range,1);
-        
-        if i == n_chunks
-            sub_std(i,:) = [0 0];
-        else
-            sub_std(i,:) = std(temp_range,1);
-        end
-        
-        
-        
-        % Old way: 1000 random non-continuous subsets
         %fprintf('Doing %d of %d\n',i,n_chunks)
-        %{
+        
         % Do 1000 trials where I randomly select one of those combos
         temp_range = zeros(nboot,2);
         for ib = 1:nboot
@@ -212,7 +186,6 @@ for whichPt = whichPts
         end
         sub_range(i,:) = mean(temp_range,1);
         sub_std(i,:) = std(temp_range,1);
-        %}
         
     end
     
@@ -247,10 +220,10 @@ for whichPt = whichPts
             [(yPos(1) - (min(ylim)))/diff(ylim) * pos(4) + pos(2),...
             (yPos(2) - (min(ylim)))/diff(ylim) * pos(4) + pos(2)],...
             'String',...
-            sprintf('Number of continuous hours needed to capture\n %d%% of variability: %d (%1.1f%% of total dataset)', ...
+            sprintf('Number hours needed to capture\n %d%% of variability: %d (%1.1f%%)', ...
             alpha*100,min_capture_var,min_capture_var/n_chunks*100),'FontSize',15);
 
-        xlabel('Number of continuous hour-long bins considered');
+        xlabel('Number of hour-long bins considered');
         ylabel(sprintf('Min and max proportion of spikes in\nthe most popular cluster across hour-long bins'));
         title(sprintf('Dependence on sampling of apparent cluster variability for %s',pt(whichPt).name));
         set(gca,'fontsize',15);

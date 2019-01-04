@@ -9,7 +9,7 @@ This is my cleaned up file for getting statistics on the cluster data
 
 % Parameters
 plotQI = 1;
-intericTime = 6;
+intericTime = 4;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -23,6 +23,8 @@ if isempty(whichPts) == 1
             whichPts = [whichPts,i];
         end
     end
+elseif whichPts == 100
+    whichPts = [4 6 8 9 15 17 18 19 20 22 24 25 27 30 31];
 end
 
 allCounts = [];
@@ -161,7 +163,7 @@ for whichPt = whichPts
     
     % Define important ranges
     preIcRange = [-60*60,-1*60]; % Between 1 hour to 1 minute before a seizure
-    postIcTime = 60*60*intericTime; % 60 minutes after a seizure versus 6 hours
+    postIcTime = 60*60*intericTime; % 60 minutes after a seizure versus 4 hours
     % Interictal range will be anything else
     
     % Get times for QI purposes

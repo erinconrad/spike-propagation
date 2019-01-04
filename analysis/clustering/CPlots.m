@@ -234,7 +234,7 @@ for whichPt = whichPts
         
         
         
-        pause
+        %pause
 
         print(gcf,[saveFolder,'clustTimePretty_',sprintf('%s',pt(whichPt).name)],'-depsc');
         eps2pdf([saveFolder,'clustTimePretty_',sprintf('%s',pt(whichPt).name),'.eps'])
