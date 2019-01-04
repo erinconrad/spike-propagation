@@ -29,6 +29,8 @@ end
 
 for whichPt = whichPts
     fprintf('Doing %s\n',pt(whichPt).name)
+    
+    %{
     if size(power,1) >= whichPt
         if isfield(power(whichPt),'ad_rat_fft') == 1
             if isempty(power(whichPt).ad_rat_fft) == 0
@@ -39,6 +41,7 @@ for whichPt = whichPts
     else
     
     end
+    %}
     
     fs = pt(whichPt).fs;
     dataName = pt(whichPt).ieeg_name;
@@ -51,13 +54,32 @@ for whichPt = whichPts
     
     
     ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
-    ad_rat_band = zeros(nch,size(pt(whichPt).runTimes,1));
-    all_p = zeros(nch,nbands,size(pt(whichPt).runTimes,1));
+    %ad_rat_band = zeros(nch,size(pt(whichPt).runTimes,1));
+    %all_p = zeros(nch,nbands,size(pt(whichPt).runTimes,1));
     times_out = mean(pt(whichPt).runTimes,2);
+    finished = zeros(nch,size(pt(whichPt).runTimes,1));
     
     %  Loop over run times
     for tt = 1:size(pt(whichPt).runTimes,1)
+        
+        if finished(1,tt) == 1
+            fprintf('Already did chunk %d for %s, skipping\n',...
+                tt,pt(whichPt).name);
+            continue
+        end
+        
         fprintf('Doing chunk %d of %d\n',tt,size(pt(whichPt).runTimes,1));
+        
+        
+        % Add a button push to the desmond file (for the purpose of
+        % restarting the program if it crashes due to java heap errors (I
+        % think the ieeg toolbox creates a memory leak...))
+        buttonpush = datestr(now,'yyyy-mm-dd HH:MM:SS');
+        allwrite = [buttonpush,'\n'];
+        fid = fopen('/tmp/desmond.txt','wt');
+        fprintf(fid,allwrite);
+        fclose(fid);
+        
         
         % Get the desired indices
         desiredTimes = pt(whichPt).runTimes(tt,:);
@@ -79,7 +101,7 @@ for whichPt = whichPts
         
         
         ad_rat(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs);
-        
+        finished(:,tt) = ones(nch,1);
         %fprintf('Finished analysis\n');
         
         
@@ -93,6 +115,12 @@ for whichPt = whichPts
     power(whichPt).times = times_out;
     save([structFolder,power_file],'power')
 end
+
+% Make a new document if I make it here
+fid2 = fopen('/tmp/ok.txt','wt');
+fprintf(fid2,'Done\n');
+%fflush(fid2);
+fclose(fid2);
 
 
 end
