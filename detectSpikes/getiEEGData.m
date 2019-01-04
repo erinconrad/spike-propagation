@@ -18,7 +18,6 @@ n = 0;
 % usually crash the program
 
 
-
 while n == 0
 
   %  try
@@ -54,6 +53,6 @@ data.chLabels = channelLabels;
 
 session.delete;
 clearvars -except data
-%clearjava
+clearjava
 
 end

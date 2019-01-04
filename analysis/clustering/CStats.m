@@ -8,7 +8,7 @@ This is my cleaned up file for getting statistics on the cluster data
 %}
 
 % Parameters
-plotQI = 1;
+plotQI = 0;
 intericTime = 4;
 
 % Save file location
@@ -294,8 +294,20 @@ fprintf('The group p value is %1.1e\n',sum_p);
 % double check
 %group_pval = fisher_pvalue_meta_analysis(all_p);
 
+%% Get max number of clusters amongst patients (for making legend)
+ptMax = 9;
+maxNum = 1;
+for whichPt = whichPts
+    n_cl = size(chi_tables_plot{whichPt},2);
+    if n_cl > maxNum
+        maxNum = n_cl;
+        ptMax = whichPt;
+    end
+end
+
 %% Bar graphs
 figure
+set(gcf,'Position',[99 26 1264 686]);
 numcols = 10;
 numrows = ceil(length(whichPts)/numcols);
 [ha, pos] = tight_subplot(numrows,numcols,[.08 .01],[.05 .05],[.05 .01]); 
@@ -314,9 +326,18 @@ for j = 1:length(whichPts)
     % Plot p-value
     p = p_plot(whichPts(j));
     if p < 0.001
-        textp = 'p < 0.001';
+        flag = '***';
+    elseif p < 0.01
+        flag = '**';
+    elseif p < 0.05
+        flag = '*';
     else
-        textp = sprintf('p = %1.3f',p);
+        flag='';
+    end
+    if p < 0.001
+        textp = sprintf('p < 0.001%s',flag);
+    else
+        textp = sprintf('p = %1.3f%s',p,flag);
     end
     hold on
     plot([1 2],[0.9 0.9]+0.01,'k')
@@ -327,18 +348,30 @@ for j = 1:length(whichPts)
     for k = 1:length(legend_names)
        legend_names{k} = sprintf('Cluster %d',k);  
     end
-    yticklabels([])
-   % lgnd=legend(b,legend_names,'location','northwest');
-   % set(lgnd,'color','none');
+    if mod(j,10) ~= 1
+        yticklabels([])
+    end
+   
+    if whichPts(j) == ptMax
+       lgnd=legend(b,legend_names,'Position',...
+           [pos{length(whichPts)+1}(1)+0.023 pos{length(whichPts)+1}(2)+0.31,...
+           0.03 0.1],...
+           'units','normalized');
+       set(lgnd,'color','none'); 
+     
+    end
+    
     title(sprintf('%s',pt(whichPts(j)).name),'fontsize',15);
-    if j == 1
+    if mod(j,10) == 1
         ylabel('Proportion of sequences');
     end
     set(gca,'fontsize',15);
-    
-    
-    
-    
+  
+end
+
+for j = length(whichPts) + 1:length(pos)
+    axes(ha(j));
+    set(gca,'visible','off')
 end
 
 pause

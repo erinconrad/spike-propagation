@@ -8,6 +8,7 @@ This is my cleaned up file for getting plots on the cluster data
 %}    
 
 doPretty = 1;
+makeSparse = 0;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -144,12 +145,15 @@ for whichPt = whichPts
             clust{i} = plot_times(idx == clusters(i));
         end
         window = 3600;
+        
+        
         [sum_c,sum_times] = movingSumCounts(clust,plot_times,window);
         totalSum = zeros(1,size(sum_times,2));
         for i = 1:length(clusters)
             totalSum = totalSum + sum_c(i,:);
         end
         prop_c = sum_c./totalSum;
+        %}
         
         for i = 1:length(clusters)  
            c_idx(idx==clusters(i),:) = ...
@@ -167,19 +171,30 @@ for whichPt = whichPts
         ttext = {'x','y','z'};
         toAdd = 0;
         
+        if makeSparse == 1
+            sparseness = 10;
+            sparse_plot = plot_thing(1:sparseness:end,:);
+            sparse_time = plot_times(1:sparseness:end);
+            sparse_cidx = c_idx(1:sparseness:end,:);
+        else
+            sparse_plot = plot_thing;
+            sparse_time = plot_times;
+            sparse_cidx = c_idx;
+        end
+        
         
         for i = 1:3
             % Plot each coordinate over time, offset from each other
-            scatter(plot_times/3600,plot_thing(:,i)+...
-                repmat(toAdd,size(plot_thing,1),1),20,c_idx)
+            scatter(sparse_time/3600,sparse_plot(:,i)+...
+                repmat(toAdd,size(sparse_plot,1),1),20,sparse_cidx)
             hold on
           %  text(0,toAdd+median(plot_thing(:,i)),...
           %      sprintf('%s',ttext{i}),'FontSize',30);
-            tickloc(i) = toAdd+median(plot_thing(:,i));
+            tickloc(i) = toAdd+median(sparse_plot(:,i));
             if i ~=3
                 % Define the offset for each coordinate
-                toAdd = toAdd + 10+(max(plot_thing(:,i)) - ...
-                    min(plot_thing(:,i+1)));
+                toAdd = toAdd + 10+(max(sparse_plot(:,i)) - ...
+                    min(sparse_plot(:,i+1)));
             end
         end
         yticks(tickloc)
