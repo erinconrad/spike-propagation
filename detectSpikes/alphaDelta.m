@@ -53,22 +53,22 @@ for whichPt = whichPts
     szTimes = pt(whichPt).newSzTimes;
     
     
-    ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
-    %ad_rat_band = zeros(nch,size(pt(whichPt).runTimes,1));
-    %all_p = zeros(nch,nbands,size(pt(whichPt).runTimes,1));
-    times_out = mean(pt(whichPt).runTimes,2);
-    finished = zeros(nch,size(pt(whichPt).runTimes,1));
-    
+    if isfield(power(whichPt),'ad_rat') == 0 || isempty(pt(whichPt).ad_rat) == 1
+        power(whichPt).ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
+        power(whichPt).times = mean(pt(whichPt).runTimes,2);
+        power(whichPt).finished = zeros(size(pt(whichPt).runTimes,1),1);
+    end
     %  Loop over run times
     for tt = 1:size(pt(whichPt).runTimes,1)
         
-        if finished(1,tt) == 1
+        if power(whichPt).finished(tt) == 1
             fprintf('Already did chunk %d for %s, skipping\n',...
                 tt,pt(whichPt).name);
             continue
         end
         
-        fprintf('Doing chunk %d of %d\n',tt,size(pt(whichPt).runTimes,1));
+        fprintf('Doing chunk %d of %d for %s\n',tt,...
+            size(pt(whichPt).runTimes,1),pt(whichPt).name);
         
         
         % Add a button push to the desmond file (for the purpose of
@@ -100,8 +100,9 @@ for whichPt = whichPts
         
         
         
-        ad_rat(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs);
-        finished(:,tt) = ones(nch,1);
+        power(whichPt).ad_rat(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs);
+        power(whichPt).finished(tt) = 1;
+        save([structFolder,power_file],'power')
         %fprintf('Finished analysis\n');
         
         
@@ -110,10 +111,10 @@ for whichPt = whichPts
     end
     
   %  power(whichPt).all_p = all_p;
-    power(whichPt).ad_rat_fft = ad_rat;
+   % power(whichPt).ad_rat_fft = ad_rat;
    % power(whichPt).ad_rat_band = ad_rat_band;
-    power(whichPt).times = times_out;
-    save([structFolder,power_file],'power')
+    %power(whichPt).times = times_out;
+    
 end
 
 % Make a new document if I make it here

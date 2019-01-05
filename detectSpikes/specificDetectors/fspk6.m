@@ -1,4 +1,3 @@
-%% Like fspk3 except I am changing parameters for depth electrodes
 
 function [gdf,noise,removed] = fspk6(eeg,tmul,absthresh,n_chans,...
     srate,window,electrodes)
