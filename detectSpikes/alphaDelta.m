@@ -52,10 +52,10 @@ for whichPt = whichPts
     
     szTimes = pt(whichPt).newSzTimes;
     
-    
+    power(whichPt).times = mean(pt(whichPt).runTimes,2);
     if isfield(power(whichPt),'ad_rat') == 0 || isempty(power(whichPt).ad_rat) == 1
         power(whichPt).ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
-        power(whichPt).times = mean(pt(whichPt).runTimes,2);
+        
         power(whichPt).finished = zeros(size(pt(whichPt).runTimes,1),1);
     end
     %  Loop over run times
