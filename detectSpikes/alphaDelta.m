@@ -55,6 +55,7 @@ for whichPt = whichPts
     power(whichPt).times = mean(pt(whichPt).runTimes,2);
     if isfield(power(whichPt),'ad_rat') == 0 || isempty(power(whichPt).ad_rat) == 1
         power(whichPt).ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
+        power(whichPt).ad_rat_alt = zeros(nch,size(pt(whichPt).runTimes,1));
         
         power(whichPt).finished = zeros(size(pt(whichPt).runTimes,1),1);
     end
@@ -100,7 +101,8 @@ for whichPt = whichPts
         
         
         
-        power(whichPt).ad_rat(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs);
+        power(whichPt).ad_rat(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,1);
+        power(whichPt).ad_rat_alt(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,2);
         power(whichPt).finished(tt) = 1;
         save([structFolder,power_file],'power')
         %fprintf('Finished analysis\n');
