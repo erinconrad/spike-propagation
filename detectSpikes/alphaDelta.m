@@ -96,7 +96,7 @@ for whichPt = whichPts
         end
         
         %desiredTimes = desiredTimesFake(tt,:);
-        indices = round(desiredTimes(1)*fs):round(desiredTimes(2)*fs);
+        indices = max(round(desiredTimes(1)*fs),1):round(desiredTimes(2)*fs);
         
         
         
