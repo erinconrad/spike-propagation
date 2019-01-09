@@ -103,7 +103,7 @@ if merge == 1 && exist([destFolder,'cluster.mat'],'file') ~= 0
     cluster = temp.cluster;
 end
 
-for whichPt = 18%whichPts
+for whichPt = whichPts
     
     if whichPt == 26 || whichPt == 28 || whichPt == 29
         continue
