@@ -7,7 +7,7 @@ addpath(p1);
 structFolder = [resultsFolder,'ptStructs/'];
 
 seq_file = 'long_seq.mat';
-power_file = 'power.mat';
+power_file = 'power2.mat';
 
 load([structFolder,seq_file])
 
@@ -53,9 +53,12 @@ for whichPt = whichPts
     szTimes = pt(whichPt).newSzTimes;
     
     power(whichPt).times = mean(pt(whichPt).runTimes,2);
-    if isfield(power(whichPt),'ad_rat') == 0 || isempty(power(whichPt).ad_rat) == 1
-        power(whichPt).ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
-        power(whichPt).ad_rat_alt = zeros(nch,size(pt(whichPt).runTimes,1));
+    if isfield(power(whichPt),'alpha') == 0 || isempty(power(whichPt).alpha) == 1
+        power(whichPt).alpha = zeros(nch,size(pt(whichPt).runTimes,1));
+        power(whichPt).delta = zeros(nch,size(pt(whichPt).runTimes,1));
+        
+        %power(whichPt).ad_rat = zeros(nch,size(pt(whichPt).runTimes,1));
+        %power(whichPt).ad_rat_alt = zeros(nch,size(pt(whichPt).runTimes,1));
         
         power(whichPt).finished = zeros(size(pt(whichPt).runTimes,1),1);
     end
@@ -101,8 +104,8 @@ for whichPt = whichPts
         
         
         
-        power(whichPt).ad_rat(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,1);
-        power(whichPt).ad_rat_alt(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,2);
+        power(whichPt).alpha(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,3);
+        power(whichPt).delta(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,4);
         power(whichPt).finished(tt) = 1;
         save([structFolder,power_file],'power')
         %fprintf('Finished analysis\n');

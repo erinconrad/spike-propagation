@@ -46,8 +46,12 @@ function ad_rat = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip
             alpha = sum(P(freqs>=8 & freqs<=13));
             delta = sum(P(freqs>=1 & freqs<=4));
             ad_rat(dd) = alpha/delta;
-        else
+        elseif whichVer == 2
             ad_rat(dd) = bandpower(X,fs,[8 13])/bandpower(X,fs,[1 4]);
+        elseif whichVer == 3
+            ad_rat(dd) = alpha;
+        elseif whichVer == 4
+            ad_rat(dd) = delta;
         end
 
         %fprintf('Got FFT approach\n');

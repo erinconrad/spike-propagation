@@ -1,4 +1,4 @@
-function influence(pt,whichPts)
+function Cinfluence(pt,cluster,whichPts)
 
 % Need to decide whether to take clustering results. My intuition says no,
 % but then I should have a check to throw out bad patients at least.

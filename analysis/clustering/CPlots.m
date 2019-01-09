@@ -8,7 +8,7 @@ This is my cleaned up file for getting plots on the cluster data
 %}    
 
 doPretty = 1;
-makeSparse = 0;
+makeSparse = 1;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -117,26 +117,6 @@ for whichPt = whichPts
     
     if doPretty == 1
         
-        %% Figure 1: Centroid location
-        figure
-        set(gcf,'Position',[50 100 600 500]);
-        scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
-        hold on
-        for k = 1:size(C,1)
-            scatter3(C(k,1),C(k,2),C(k,3),100,colors((k),:),'filled');
-        end
-        title(sprintf('Spike location centroids for each cluster for %s',...
-            pt(whichPt).name))
-        set(gca,'FontSize',15);
-        set(gca,'xticklabel',[])
-        set(gca,'yticklabel',[])
-        set(gca,'zticklabel',[])
-        %pause
-        print(gcf,[saveFolder,'clustLocPretty_',sprintf('%s',pt(whichPt).name)],'-depsc');
-        eps2pdf([saveFolder,'clustLocPretty_',sprintf('%s',pt(whichPt).name),'.eps'])
-        close(gcf)
-        
-        
         
         plot_thing = all_locs;
         plot_times = all_times_all;
@@ -160,14 +140,49 @@ for whichPt = whichPts
                repmat(colors(i,:),sum(idx==clusters(i)),1);
         end
         
+        possibleText = {'Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster 5','Cluster 6'};
+        textLeg = possibleText(1:size(C,1));
+        
+        %% Centroid location
+        figure
+        set(gcf,'Position',[50 100 1200 900]);
+        [ha, ~] = tight_subplot(3, 1, [.05 .01],[.06 .05],[.03 .01]);
+        axes(ha(1));
+        [gcapos] = get(gca,'Position');
+        set(gca,'Position',[gcapos(1),gcapos(2),gcapos(3)/2,gcapos(4)]);
+        
+        scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
+        hold on
+        plLeg = zeros(size(C,1),1);
+        
+        for k = 1:size(C,1)
+            plLeg(k) = scatter3(C(k,1),C(k,2),C(k,3),100,colors((k),:),'filled');
+        end
+        title(sprintf('Spike location centroids for %s',...
+            pt(whichPt).name))
+        set(gca,'FontSize',15);
+        set(gca,'xticklabel',[])
+        set(gca,'yticklabel',[])
+        set(gca,'zticklabel',[])
+        annotation('textbox',[0 0.77 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
+        legend(plLeg,textLeg,'Location','northeastoutside','fontsize',15);
+        %pause
+        %print(gcf,[saveFolder,'clustLocPretty_',sprintf('%s',pt(whichPt).name)],'-depsc');
+        %eps2pdf([saveFolder,'clustLocPretty_',sprintf('%s',pt(whichPt).name),'.eps'])
+        %close(gcf)
+        
+        
+        
+        
+        
         %% Figure 2: change over time
         
-        figure
-        set(gcf,'Position',[50 100 1200 500])
-        [ha, ~] = tight_subplot(2, 1, [.06 .01],[.1 .05],[.03 .01]);
+       % figure
+       % set(gcf,'Position',[50 100 1200 500])
+       % [ha, ~] = tight_subplot(2, 1, [.06 .01],[.1 .05],[.03 .01]);
         
         % Subplot 1: Plot the x, y, z over time
-        axes(ha(1));
+        axes(ha(2));
         ttext = {'x','y','z'};
         toAdd = 0;
         
@@ -216,11 +231,12 @@ for whichPt = whichPts
         
         
         set(gca,'FontSize',15);
-        annotation('textbox',[0 0.79 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
+        annotation('textbox',[0 0.47 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
+
         
         % Subplot 2: Plot the cluster distribution over time
         
-        axes(ha(2));
+        axes(ha(3));
         pl = zeros(length(clusters),1);
         for i = 1:length(clusters)
             pl(i)= plot(sum_times/3600,prop_c(i,:),...
@@ -238,9 +254,9 @@ for whichPt = whichPts
         xlabel('Time (hours)');
         
         set(gca,'FontSize',15);
-        annotation('textbox',[0 0.33 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
+        annotation('textbox',[0 0.17 0.2 0.2],'String','C','EdgeColor','none','fontsize',25);
         
-        axes(ha(1));
+        axes(ha(2));
         % Plot the seizure times
         for j = 1:size(szTimes,1) 
             yl = ylim;
@@ -251,8 +267,8 @@ for whichPt = whichPts
         
         %pause
 
-        print(gcf,[saveFolder,'clustTimePretty_',sprintf('%s',pt(whichPt).name)],'-depsc');
-        eps2pdf([saveFolder,'clustTimePretty_',sprintf('%s',pt(whichPt).name),'.eps'])
+        print(gcf,[saveFolder,'clustTimePrettySparse_',sprintf('%s',pt(whichPt).name)],'-depsc');
+        eps2pdf([saveFolder,'clustTimePrettySparse_',sprintf('%s',pt(whichPt).name),'.eps'])
         close(gcf)
 
         
