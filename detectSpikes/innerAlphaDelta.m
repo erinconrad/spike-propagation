@@ -40,11 +40,12 @@ function ad_rat = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip
         freqs = freqs(1:ceil(length(freqs)/2));
 
         %plot(freqs,P);
+        
+        alpha = sum(P(freqs>=8 & freqs<=13));
+        delta = sum(P(freqs>=1 & freqs<=4));
 
         % Get alpha/delta ratio
         if whichVer == 1
-            alpha = sum(P(freqs>=8 & freqs<=13));
-            delta = sum(P(freqs>=1 & freqs<=4));
             ad_rat(dd) = alpha/delta;
         elseif whichVer == 2
             ad_rat(dd) = bandpower(X,fs,[8 13])/bandpower(X,fs,[1 4]);
