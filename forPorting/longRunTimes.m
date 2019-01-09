@@ -200,7 +200,7 @@ for i = 1:length(pt)
     
 end
        
-       
+pt = addMissingSeizures(pt);     
  
 
 save([resultsFolder,'ptStructs/',outputFile],'pt');
