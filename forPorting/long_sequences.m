@@ -7,6 +7,10 @@ doVanleer = 0;
 rmDepth = 0;
 rmType = 'D';
 
+% Should we try to merge the patient structure with an existing, incomplete
+% patient structure?
+merge = 1;
+
 
 %% File names
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -18,12 +22,19 @@ gdfFolder = [resultsFolder,'long_gdf/'];
 chLocationsFolder = 'chLocations/';
 ptWithSeq = 'long_seq.mat';
 
-%% Load file with filenames and run times
-load([resultsFolder,'ptStructs/',ptWithFs]);
+
+%% Load gdf or sequence file
+if merge == 1 && exist([resultsFolder,'ptStructs/',ptWithSeq ],'file') ~= 0
+    load([resultsFolder,'ptStructs/',ptWithSeq ]);
+else
+    load([resultsFolder,'ptStructs/',ptWithFs]);
+end
 
 
 %% Loop through patients and seizures
-for i = 1:length(pt)
+for i = 18
+    
+    fprintf('Doing %s\n',pt(i).name);
     
     % Get electrode data
     electrodeData =  pt(i).electrodeData;

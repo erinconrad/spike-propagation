@@ -8,7 +8,7 @@ This is my cleaned up file for getting plots on the cluster data
 %}    
 
 doPretty = 1;
-makeSparse = 1;
+makeSparse = 0;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -269,7 +269,7 @@ for whichPt = whichPts
 
         print(gcf,[saveFolder,'clustTimePrettySparse_',sprintf('%s',pt(whichPt).name)],'-depsc');
         eps2pdf([saveFolder,'clustTimePrettySparse_',sprintf('%s',pt(whichPt).name),'.eps'])
-        close(gcf)
+      %  close(gcf)
 
         
         
