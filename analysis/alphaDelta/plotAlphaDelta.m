@@ -12,7 +12,7 @@ against proportion of spikes in most popular cluster
 
 
 
-doPretty = 0;
+doPretty = 1;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 destFolder = [resultsFolder,'alphaDelta/plots/'];
@@ -171,7 +171,7 @@ for whichPt = whichPts
         
         figure
         set(gcf,'Position',[50 100 1200 500])
-        [ha, ~] = tight_subplot(3, 1, [.06 .01],[.1 .05],[.03 .01]);
+        [ha, ~] = tight_subplot(3, 1, [.06 .01],[.12 .08],[.05 .01]);
         
         % Subplot 1: Plot the x, y, z over time
         axes(ha(1));
@@ -188,7 +188,7 @@ for whichPt = whichPts
         
         
         sparse_plot = plot_thing;
-        sparse_time = plot_times;
+        sparse_time = plot_times-min(plot_times);
         sparse_cidx = c_idx;
        
         
@@ -211,74 +211,88 @@ for whichPt = whichPts
         yticklabels({'X','Y','Z'});
 
         % Plot the seizure times
+        %{
         for j = 1:size(szTimes,1) 
             yl = ylim;
-            plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
+            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k','LineWidth',2);
         end
+        %}
         
-        
+        ylim([min(ylim) max(ylim)+70])
 
         set(gca,'xtick',[]);
-        xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
+        xlim([sparse_time(1)/3600-1 sparse_time(end)/3600+1])
         title(sprintf('X, Y, Z coordinates of all spikes for %s',...
             pt(whichPt).name));
         
         
         
-        set(gca,'FontSize',15);
-        annotation('textbox',[0 0.79 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
+        set(gca,'FontSize',20);
+        annotation('textbox',[0 0.79 0.2 0.2],'String','A','EdgeColor','none','fontsize',30);
         
         % Subplot 2: Plot the cluster distribution over time
         
         axes(ha(2));
         pl = zeros(length(clusters),1);
         for i = 1:length(clusters)
-            pl(i)= plot(sum_times/3600,prop_c(i,:),...
+            pl(i)= plot((sum_times-min(plot_times))/3600,prop_c(i,:),...
                 'color',colors((i),:),'LineWidth',2);
         hold on
         end
 
+        %{
         for j = 1:size(szTimes,1) 
             yl = ylim;
-            plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
+            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k','LineWidth',2);
         end
-        xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
-        title(sprintf(['Proportion of sequences in given cluster, '...
+        %}
+        xlim([sparse_time(1)/3600-1 sparse_time(end)/3600+1])
+        title(sprintf(['Proportion of spikes in given cluster, '...
         'moving average']));
         set(gca,'xtick',[]);
         %xlabel('Time (hours)');
         
-        set(gca,'FontSize',15);
-        annotation('textbox',[0 0.5 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
+        set(gca,'FontSize',20);
+        annotation('textbox',[0 0.5 0.2 0.2],'String','B','EdgeColor','none','fontsize',30);
         
         
         axes(ha(3));
-        plot(power(whichPt).times/3600,mean(power(whichPt).ad_rat,1),...
-            'LineWidth',2);
-        xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
+        plot((power(whichPt).times-min(plot_times))/3600,mean(power(whichPt).ad_rat,1),...
+            'k','LineWidth',2);
+        xlim([(plot_times(1)-min(plot_times))/3600-1 (plot_times(end)-min(plot_times))/3600+1])
         hold on
         
         title(sprintf('Alpha-delta power ratio averaged across all electrodes'))
         xlabel('Time (hours)');
-        set(gca,'FontSize',15);
-        annotation('textbox',[0 0.18 0.2 0.2],'String','C','EdgeColor','none','fontsize',25);
+        set(gca,'FontSize',20);
+        annotation('textbox',[0 0.18 0.2 0.2],'String','C','EdgeColor','none','fontsize',30);
 
         
         % Plot the seizure times
         for j = 1:size(szTimes,1) 
             yl = ylim;
-            plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
+            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k','LineWidth',2);
         end
         
         axes(ha(1));
         % Plot the seizure times
         for j = 1:size(szTimes,1) 
             yl = ylim;
-            plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
+            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k','LineWidth',2);
+        end
+        
+        axes(ha(2));
+        % Plot the seizure times
+        for j = 1:size(szTimes,1) 
+            yl = ylim;
+            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k','LineWidth',2);
         end
         
         
-        
+        annotation('textarrow',[0.24 0.19],[0.92 0.92],'String','Seizures',...
+            'FontSize',20);
+        annotation('textarrow',[0.84 0.89],[0.92 0.92],'String','Seizure',...
+            'FontSize',20);
         
         
         %pause

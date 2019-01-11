@@ -247,16 +247,19 @@ for whichPt = whichPts
             [(yPos(1) - (min(ylim)))/diff(ylim) * pos(4) + pos(2),...
             (yPos(2) - (min(ylim)))/diff(ylim) * pos(4) + pos(2)],...
             'String',...
-            sprintf('Number of continuous hours\nneeded to capture\n %d%% of variability:\n%d (%1.1f%% of total dataset)', ...
+            sprintf('Duration needed to capture %d%% of variability:\n%d hours (%1.1f%% of total dataset)', ...
             alpha*100,min_capture_var,min_capture_var/n_chunks*100),'FontSize',15);
 
-        xlabel('Number of continuous hour-long bins considered');
+        xlabel('Number of sequential hours considered');
         ylabel(sprintf('Min and max proportion of spikes in\nthe most popular cluster across hour-long bins'));
-        title(sprintf('Dependence on sampling of apparent cluster variability for %s',pt(whichPt).name));
+        title(sprintf('Dependence on sampling of apparent cluster variability for %s',...
+            pt(whichPt).name),'fontsize',25);
         set(gca,'fontsize',15);
         hold on
         cp = plot([min_capture_var, min_capture_var],get(gca,'ylim'),'k--','LineWidth',2);
         cp = plot([min_capture_var, min_capture_var],get(gca,'ylim'),'k--','LineWidth',2); % needed for voodoo
+       
+        ylim([min(ylim),1.2])
         pause
         print(gcf,[saveFolder,'clustVar_',sprintf('%s',pt(whichPt).name)],'-depsc');
         eps2pdf([saveFolder,'clustVar_',sprintf('%s',pt(whichPt).name),'.eps'])

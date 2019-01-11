@@ -149,6 +149,7 @@ for whichPt = whichPts
         textLeg = possibleText(1:size(C,1));
         
         %% Centroid location
+        %{
         figure
         set(gcf,'Position',[50 100 1200 900]);
         [ha, ~] = tight_subplot(3, 1, [.05 .01],[.06 .05],[.03 .01]);
@@ -175,25 +176,26 @@ for whichPt = whichPts
         %print(gcf,[saveFolder,'clustLocPretty_',sprintf('%s',pt(whichPt).name)],'-depsc');
         %eps2pdf([saveFolder,'clustLocPretty_',sprintf('%s',pt(whichPt).name),'.eps'])
         %close(gcf)
+        %}
         
         
         
         
         
-        %% Figure 2: change over time
+        %% Figure 
         
-       % figure
-       % set(gcf,'Position',[50 100 1200 500])
-       % [ha, ~] = tight_subplot(2, 1, [.06 .01],[.1 .05],[.03 .01]);
+        figure
+        set(gcf,'Position',[71 241 1237 538])
+        [ha, ~] = tight_subplot(2, 1, [.06 .01],[.1 .05],[.03 .01]);
         
         % Subplot 1: Plot the x, y, z over time
-        axes(ha(2));
+        axes(ha(1));
         ttext = {'x','y','z'};
         toAdd = 0;
         
         
         sparse_plot = plot_thing;
-        sparse_time = plot_times;
+        sparse_time = plot_times-min(plot_times);
         sparse_cidx = c_idx;
         
         
@@ -202,74 +204,119 @@ for whichPt = whichPts
             % Plot each coordinate over time, offset from each other
             scatter(sparse_time/3600,sparse_plot(:,i)+...
                 repmat(toAdd,size(sparse_plot,1),1),20,sparse_cidx)
+            
+            if i == 1
+                minPoint = min(sparse_plot(:,i)+...
+                repmat(toAdd,size(sparse_plot,1),1));
+            end
             hold on
           %  text(0,toAdd+median(plot_thing(:,i)),...
           %      sprintf('%s',ttext{i}),'FontSize',30);
             tickloc(i) = toAdd+median(sparse_plot(:,i));
+            if i == 3
+                maxPoint = max(sparse_plot(:,i)+...
+                repmat(toAdd,size(sparse_plot,1),1));
+            end
             if i ~=3
                 % Define the offset for each coordinate
                 toAdd = toAdd + 10+(max(sparse_plot(:,i)) - ...
                     min(sparse_plot(:,i+1)));
             end
         end
+        ylim([minPoint maxPoint + 30])
         yticks(tickloc)
         yticklabels({'X','Y','Z'});
+        set(gca,'fontsize',20);
 
         % Plot the seizure times
+        %{
         for j = 1:size(szTimes,1) 
             yl = ylim;
             plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
         end
+        %}
         
         
 
         set(gca,'xtick',[]);
-        xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
+        xlim([sparse_time(1)/3600-1 sparse_time(end)/3600+1])
+        %{
         title(sprintf('X, Y, Z coordinates of all spikes for %s',...
-            pt(whichPt).name));
+            pt(whichPt).name),'fontsize',20);
+        %}
         
         
         
-        set(gca,'FontSize',15);
-        annotation('textbox',[0 0.47 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
+
+        annotation('textbox',[0 0.8 0.2 0.2],'String','D','EdgeColor','none','fontsize',30);
 
         
         % Subplot 2: Plot the cluster distribution over time
         
-        axes(ha(3));
+        axes(ha(2));
         pl = zeros(length(clusters),1);
         for i = 1:length(clusters)
-            pl(i)= plot(sum_times/3600,prop_c(i,:),...
+            pl(i)= plot((sum_times-min(plot_times))/3600,prop_c(i,:),...
                 'color',colors((i),:),'LineWidth',2);
         hold on
         end
 
+        %{
         for j = 1:size(szTimes,1) 
             yl = ylim;
             plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
         end
-        xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
-        title(sprintf(['Proportion of sequences in given cluster, '...
+        %}
+        xlim([sparse_time(1)/3600-1 sparse_time(end)/3600+1])
+        %{
+        title(sprintf(['Proportion of spikes in given cluster, '...
         'moving average']));
+        %}
         xlabel('Time (hours)');
         
-        set(gca,'FontSize',15);
-        annotation('textbox',[0 0.17 0.2 0.2],'String','C','EdgeColor','none','fontsize',25);
+        set(gca,'FontSize',20);
+        annotation('textbox',[0 0.347 0.2 0.2],'String','E','EdgeColor','none','fontsize',30);
+        
+        axes(ha(1));
+        % Plot the seizure times
+        for j = 1:size(szTimes,1) 
+            yl = ylim;
+            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,...
+                yl,'k','LineWidth',2);
+        end
         
         axes(ha(2));
         % Plot the seizure times
         for j = 1:size(szTimes,1) 
             yl = ylim;
-            plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
+            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,...
+                yl,'k','LineWidth',2);
         end
         
+        % Add annotations
+        annotation('textarrow',[0.2 0.275],[0.93 0.93],'String','Seizure',...
+            'FontSize',20);
         
+        annotation('textarrow',[0.49-.075 0.495],[0.93 0.93],'String','Seizure',...
+            'FontSize',20);
+        
+        annotation('textarrow',[0.735-.075 0.74],[0.93 0.93],'String','Seizure',...
+            'FontSize',20);
+        
+        annotation('textbox',[0.32 0.95 0.5 0.05],'string',...
+            sprintf('X, Y, Z coordinates of all spikes for %s',...
+            pt(whichPt).name),'fontsize',23,'edgecolor','none');
+        
+        annotation('textbox',[0.29 0.49 0.5 0.05],'string',...
+            sprintf(['Proportion of spikes in given cluster, '...
+        'moving average']),'fontsize',23,'edgecolor','none');
         
         %pause
 
         print(gcf,[saveFolder,'clustTimePretty_',sprintf('%s',pt(whichPt).name)],'-depsc');
         eps2pdf([saveFolder,'clustTimePretty_',sprintf('%s',pt(whichPt).name),'.eps'])
         close(gcf)
+        
 
         
         
