@@ -1,11 +1,16 @@
 function prettySpikes(pt,cluster)
 
 
+
+
 %% Parameters
 dur = [-1 1];
 
+% HUP078
+offset = [-3 27 7.7653];
+%offset = [-3 40.5780 7.7653];
+%offset = [-8.5508 40.5780 7.7653]; CORRECT
 
-%% Spike info
 whichPt = 8;
 
 spikes = [7622,7623,7640,7645];
@@ -19,6 +24,8 @@ end
 
 %% Get stuff
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
+
+outputFolder = [resultsFolder,'pretty_plots/Fig1/'];
 
 if exist('pretty_spikes.mat','file') ~= 0
     load('pretty_spikes.mat')
@@ -36,8 +43,12 @@ else
     save('pretty_spikes.mat','plot_points','spikes');
 end
 
-%% Plot EEG tracings
+%% Initialize figure
 figure
+[ha,pos] = tight_subplot(1,3,[0.01 0.01],[0.01 0.01],[0.01 0.01]);
+
+%% Plot EEG tracings
+axes(ha(1));
 toAdd = 0;
 timeAdd = 0;
 for i = 1:length(times)
@@ -56,13 +67,15 @@ end
 xlim([0 timePlot(end)+0.6]);
 xticks([])
 yticks([])
+axis(ha(1),'off');
 
 %% Plot brain
+axes(ha(2))
 locs = pt(whichPt).electrodeData.locs(:,2:4);
 
 % Get transformation matrix to get new coordinate locations
 A = makeNewElecData(pt,whichPt);
-offset = [-10 30 0]; % bs
+%offset = [-10 30 0]; % bs
 newlocs = A*locs-offset;
 
 % Load gifti
@@ -72,19 +85,31 @@ names = dir([giftiFolder,'*pial.gii']);
 fname2 = names(1).name;
 g = gifti([giftiFolder,fname2]);
 
-figure
+circSize = 130;
 p = plotGIFTI(g);
 hold on
-alpha(p,0.4)
-scatter3(newlocs(:,1),newlocs(:,2),newlocs(:,3),100,'k','filled');
+view(-120,-11);
+%alpha(p,0.4)
+scatter3(newlocs(:,1),newlocs(:,2),newlocs(:,3),circSize,'k','filled');
 hold on
+
 for i = 1:length(times)
-    scatter3(newlocs(chs(i),1),newlocs(chs(i),2),newlocs(chs(i),3),100,...
+    scatter3(newlocs(chs(i),1),newlocs(chs(i),2),newlocs(chs(i),3),circSize,...
         c_idx(i,:),'filled');   
+    %{
+   text(newlocs(chs(i),1),...
+        newlocs(chs(i),2),...
+        newlocs(chs(i),3),...
+        sprintf('Spike %d',i),'FontSize',25,'color',c_idx(i,:));
+        %}
+   
+   
 end
 xticklabels([]);
 yticklabels([]);
 zticklabels([]);
+
+%view(-112,-11);
 
 
 %{
@@ -105,12 +130,11 @@ end
 
 %% Plot x,y,z coordinates
 % NEED TO FIX
-
+axes(ha(3))
 yPos = [0 100 200];
 groupRange = zeros(3,2);
 textPos = {'X','Y','Z'};
 
-figure
 for j = 1:3
     timeAdd = 0;
     maxThing = 0;
@@ -137,8 +161,8 @@ ylim([(groupRange(1,2)+groupRange(2,1))/2-ywidth,...
 
 for j = 1:3
     yLower = get(gca,'Ylim'); yLower = yLower(1);
-    text(-0.4,(yLower+ywidth*(j-1) + yLower+ywidth*(j))/2,...
-        textPos{j},'color','k','FontSize',20);
+    text(-0.7,(yLower+ywidth*(j-1) + yLower+ywidth*(j))/2,...
+        textPos{j},'color','k','FontSize',30);
 end
 
 for i = 1:length(spikes)
@@ -159,7 +183,36 @@ plot(get(gca,'xlim'),...
 
 xticks([])
 yticks([])
+axis(ha(3),'off');
 
+%% Adjust figure
+set(gcf,'Position',[71 241 1237 538]);
+
+%% Plot arrows and text
+annotation('textarrow',[0.1 0.555],[0.8 0.355],'String','',...
+    'color','b','FontSize',20,'LineWidth',2);
+annotation('textarrow',[0.13 0.57],[0.6 0.385],'String','',...
+    'color','b','FontSize',20,'LineWidth',2);
+annotation('textarrow',[0.155 0.52],[0.4 0.28],'String','',...
+    'color','r','FontSize',20,'LineWidth',2);
+annotation('textarrow',[0.19 0.475],[0.2 0.28],'String','',...
+    'color','r','FontSize',20,'LineWidth',2);
+
+annotation('textbox',[0.33 0.9 0.5 0.1],...
+    'String','Spike location clustering and plotting',...
+    'linestyle','none','FontSize',23);
+
+annotation('textbox',[0.01 0.88 0.3 0.1],'String','A',...
+    'linestyle','none','FontSize',30);
+
+annotation('textbox',[0.3 0.88 0.3 0.1],'String','B',...
+    'linestyle','none','FontSize',30);
+
+annotation('textbox',[0.65 0.88 0.3 0.1],'String','C',...
+    'linestyle','none','FontSize',30);
+
+print(gcf,[outputFolder,'Fig1'],'-depsc');
+eps2pdf([outputFolder,'Fig1','.eps']);
 
 %{
 figure
