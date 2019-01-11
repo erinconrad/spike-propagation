@@ -29,6 +29,10 @@ allAllDist =[];
 allSADist = [];
 allSpikeDist = [];
 allSAToFreqDist = [];
+allSAs = [];
+allSpikers = [];
+allSF = [];
+allDegPref = [];
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
@@ -37,7 +41,7 @@ if isempty(whichPts) == 1
         end
     end
 elseif whichPts == 100
-    whichPts = [4 6 7 8 9 12 14 15 16 17 18 19 20 22 24 25 27 30 31];
+    whichPts = [4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31];
 elseif whichPts == 300
     whichPts = [1 4 6 8 9 12 17 18 19 20 22 24 25 27 30 31];
 end
@@ -177,6 +181,7 @@ for whichPt = whichPts
     %% Construct a matrix of channel connections
     chCh = zeros(nchs,nchs);
     all_spike_times = [];
+    upDown = zeros(nchs,2);
     for i = 1:size(seq_matrix,2)
         seq = seq_matrix(:,i);
         spike_chs = find(isnan(seq) == 0);
@@ -197,13 +202,29 @@ for whichPt = whichPts
             chCh(B(j,1),B(j,2)) = chCh(B(j,1),B(j,2)) + 1;
         end
         
+        % Add info for degree preference
+        for j = 1:length(spike_chs)
+            % Add the number of channels before it in the sequence
+            upDown(spike_chs(j),1) = upDown(spike_chs(j),1) + j-1;
+            
+           upDown(spike_chs(j),2) = upDown(spike_chs(j),2) + length(spike_chs)-j;
+        end
+        
     end
+    
+    degPref = zeros(nchs,1);
+    for i = 1:size(upDown,1)
+        degPref(i) = 100*(upDown(i,2)-upDown(i,1))/(upDown(i,2)+upDown(i,1));
+    end
+    allDegPref = [allDegPref;degPref];
     
     if plotConn == 1
         figure
         imagesc(chCh)
         colorbar
     end
+    
+    if whichPt == 8, exampleChCh = chCh; end
     
     %% Do a test of symmetry
     % If spikes are randomly oriented, then chCh should be symmetric, which
@@ -271,6 +292,8 @@ for whichPt = whichPts
     fprintf(['By poisson assumption, the number of counts is:\n'...
         '%d\n\n'],X);
     
+    if whichPt == 8, exampleX = X; end
+    
     %% Now find channels with more spikes than expected by chance.
     n_spikes = length(all_spike_times);
     lambda_spikes = n_spikes/nchs;
@@ -279,7 +302,8 @@ for whichPt = whichPts
     
     n_spikes_ch = sum(~isnan(seq_matrix),2);
     ch_w_spikes = find(n_spikes_ch>minCountSpikes);
-    
+    spiker = n_spikes_ch>minCountSpikes;
+    allSpikers = [allSpikers;spiker];
     
     %% Get the indices of the channels that are influenced by each other
     chInfluence = cell(nchs,1);
@@ -307,7 +331,13 @@ for whichPt = whichPts
         sa(i) = sum(sqrt(dot(cp,cp,2)));
     end
     
+    
+    
+    
+    
     %% How far is the channel with max area of influence from SOZ?
+    allSF = [allSF;n_spikes_ch];
+    allSAs = [allSAs;sa];
     
     % Distance from electrode with max SA to closest SOZ
     [~,I] = max(sa);
@@ -341,6 +371,11 @@ for whichPt = whichPts
     % freq
     
     allSAToFreqDist = [allSAToFreqDist;vecnorm(freqLoc-SALoc)];
+    
+    if whichPt == 8, exampleSA = sa; end
+    if whichPt == 8, exampleChInfluence = chInfluence; end
+    
+    %{
     
     if doPlots == 2
         % Pretty plot
@@ -406,6 +441,7 @@ for whichPt = whichPts
         %close(f2)
         close(fig)
     
+        
     
     %% Make plots
     elseif doPlots == 1
@@ -465,35 +501,125 @@ for whichPt = whichPts
         pause
         print(gcf,[saveFolder,'influence_',sprintf('%s',pt(whichPt).name)],'-dpng');
         close(gcf)
+    
 
     end
+    %}
     
 end
 
+%{
+figure
+subplot(1,3,1)
+scatter(allSF,allAllDist);
+subplot(1,3,2)
+scatter(allDegPref(allSpikers==1),allAllDist(allSpikers==1));
+subplot(1,3,3)
+scatter(allSAs(allSpikers==1),allAllDist(allSpikers==1));
+[rho,pval] = corr(allSAs(allSpikers==1),allAllDist(allSpikers==1),'Type','Spearman')
+%}
+
 %% Does SA do better than chance?
 [pFreqSA,h3,stats3] = ranksum(allFreqDist,allSADist);
-pFreqSA
+%pFreqSA
 [pAllSA,h4,stats4] = ranksum(allSADist,allAllDist);
-pAllSA
-[pSpikeSA,h5,stats5] = ranksum(allSADist,allSpikeDist);
+%pAllSA
+%[pSpikeSA,h5,stats5] = ranksum(allSADist,allSpikeDist);
+[pFreqAll,~,~] = ranksum(allFreqDist,allAllDist);
 
 fprintf(['The median distance between the electrodes with max SA and\n'...
     'the electrodes with max frequency is: %1.1f\n and there were %d ',...
     'patients where these electrodes were the same\n'],median(allSAToFreqDist),...
     sum((allSAToFreqDist==0)));
 
-%% Plot bars of means
+%% Do Plots
+
+%% Parameters and plot initialization
+fontsizes = 15;
+
 figure
-set(gcf,'Position',[175 181 966 527]);
+set(gcf,'Position',[270 12 817 793]);
+[ha,pos] = tight_subplot(3,2,[0.09 0.03],[0.03 0.03],[0.07 0.02]);
+set(ha(5),'Position',[pos{5}(1) pos{5}(2) pos{5}(3)*2 pos{5}(4)]);
+delete(ha(6));
+
+%% Plot downstream connections
+axes(ha(1))
+imagesc(exampleChCh)
+colorbar
+title('Number of downstream spike connections');
+xlabel('Downstream electrode #');
+ylabel('Leading electrode #');
+set(gca,'FontSize',fontsizes)
+annotation('textbox',[0.02 0.8 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
+
+%% Plot significant downstream connections
+axes(ha(2))
+imagesc(exampleChCh > exampleX)
+colormap(ha(2),flipud(gray));
+title('Frequent downstream spike connections');
+xlabel('Downstream electrode #');
+%ylabel('Leading electrode #');
+set(gca,'FontSize',fontsizes)
+yticklabels([])
+annotation('textbox',[0.51 0.8 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
+
+%% Plot downstream connections for single electrode
+axes(ha(3));
+circSize = 150;
+locs = pt(8).electrodeData.locs(:,2:4);
+scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,'k','linewidth',2);
+hold on
+[~,I] = max(exampleSA);
+scatter3(locs(I,1),locs(I,2),locs(I,3),circSize,'g','filled');
+downstream = exampleChInfluence{I};
+
+for j = 1:length(downstream)
+    dp = locs(downstream(j),:) - locs(I,:);
+    quiver3(locs(I,1),locs(I,2),locs(I,3),dp(1), dp(2), dp(3),...
+        'color','k','linewidth',2,'maxheadsize',0.4);
+end
+scatter3(locs(I,1),locs(I,2),locs(I,3),circSize,'g','filled');
+xticklabels([])
+yticklabels([])
+zticklabels([])
+view(118.1000,2.8000);
+title(sprintf('Downstream electrodes for electrode %d',I));
+set(gca,'FontSize',fontsizes)
+annotation('textbox',[0.02 0.46 0.2 0.2],'String','C','EdgeColor','none','fontsize',25);
+
+%% Plot area of influence for a single electrode
+axes(ha(4));
+downstream = [I,downstream];
+down_locs = locs(downstream,:);
+tri = delaunay(down_locs(:,1),down_locs(:,2));
+cv = trisurf(tri,down_locs(:,1),down_locs(:,2),...
+    down_locs(:,3),'facecolor','r');
+alpha(cv,0.2) 
+hold on
+scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,'k','linewidth',2);
+hold on
+[~,I] = max(exampleSA);
+scatter3(locs(I,1),locs(I,2),locs(I,3),circSize,'g','filled');
+xticklabels([])
+yticklabels([])
+zticklabels([])
+title(sprintf('Area of influence for electrode %d',I));
+view(118.1000,2.8000);
+set(gca,'FontSize',fontsizes)
+annotation('textbox',[0.51 0.46 0.2 0.2],'String','D','EdgeColor','none','fontsize',25);
+
+%% Plot bar graph showing overall performance
+axes(ha(5));
 prices = [mean(allAllDist) mean(allSADist) mean(allFreqDist)];
 bar(prices)
 title(sprintf(['Average distance across patients from electrode of interest\n to closest ',...
     'seizure onset zone electrode']))
 ylabel(sprintf('Average distance (mm)'));
 
-xticklabels({'All electrodes','Electrode with max area of influence','Electrode with max sequence frequency'})
-set(gca,'FontSize',15)
-fix_xticklabels(gca,0.1,{'FontSize',15});
+xticklabels({'All electrodes','Max area of influence','Max spike frequency'})
+set(gca,'FontSize',fontsizes)
+%fix_xticklabels(gca,0.1,{'FontSize',fontsizes});
 
 % Plot p-values
 if pFreqSA < 0.001
@@ -503,22 +629,41 @@ else
 end
 hold on
 plot([2.1 3], [max(prices)+1 max(prices)+1],'k')
-text(2.5,max(prices)+2,textFreqSA,'HorizontalAlignment','center',...
-        'fontsize',15);
+text(2.5,max(prices)+4,textFreqSA,'HorizontalAlignment','center',...
+        'fontsize',fontsizes);
     
 if pAllSA < 0.001
     textAllSA = 'p < 0.001';
 else
     textAllSA = sprintf('p = %1.3f',pAllSA);
 end
+
+
 hold on
 plot([1 1.9], [max(prices)+1 max(prices)+1],'k')
-text(1.5,max(prices)+2,textAllSA,'HorizontalAlignment','center',...
-        'fontsize',15);
+text(1.5,max(prices)+4,textAllSA,'HorizontalAlignment','center',...
+        'fontsize',fontsizes);
+    
+if pFreqAll < 0.001
+    textFreqAll = 'p < 0.001';
+else
+    textFreqAll = sprintf('p = %1.3f',pFreqAll);
+end
+plot([1 3], [max(prices)+8 max(prices)+8],'k');
+text(2,max(prices)+11,textFreqAll,'HorizontalAlignment','center',...
+        'fontsize',fontsizes);
+    
+ylim([0 max(prices) + 15]);
+annotation('textbox',[0.02 0.11 0.2 0.2],'String','E','EdgeColor','none','fontsize',25);
+%pause
+print(gcf,[destFolder,'influence_nonAA'],'-depsc');
+eps2pdf([destFolder,'influence_nonAA','.eps'])
 
-pause
-print(gcf,[destFolder,'influence_'],'-depsc');
-eps2pdf([destFolder,'influence_','.eps'])
-close(gcf)
+
+f2= myaa(2);
+%pause
+print(f2,[destFolder,'influence_AA'],'-dpng');
+%eps2pdf([destFolder,'influence_AA','.eps'])
+
 
 end

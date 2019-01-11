@@ -1,29 +1,22 @@
-function [badChNums,badChNamesOut] = getBadChs(pt,whichPt)
+function getBadChs(power,whichPt)
 
-[electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
-ptInfo = loadjson(jsonfile);
-ptnames = fieldnames(ptInfo.PATIENTS);
+alpha = power(whichPt).alpha;
+delta = power(whichPt).delta;
+ad_rat = alpha./delta;
+nchs = size(alpha,1);
 
-for i = 1:length(ptnames)
-    name = ptnames{i};
-    info = ptInfo.PATIENTS.(ptnames{i});
-    if strcmp(name,pt(whichPt).name) == 1
-        badChs = info.IGNORE_ELECTRODES;
-        
-    end
-    
-end
+%{
+scatter(1:nchs,mean(delta,2))
+hold on
+plot(get(gca,'xlim'),3*[median(mean(delta,2)) median(mean(delta,2))])
+%}
 
-badChNums = [];
-badChNamesOut = {};
+badChs = (mean(alpha,2) > 3*median(mean(alpha,2)));
 
-for i = 1:length(badChs)
-    for j = 1:length(pt(whichPt).electrodeData.electrodes)
-        if strcmp(pt(whichPt).electrodeData.electrodes(j).name,badChs{i}) == 1
-            badChNums = [badChNums;j];
-            badChNamesOut = [badChNamesOut; pt(whichPt).electrodeData.electrodes(j).name];
-        end
-    end
-end
+figure
+plot(mean(ad_rat,1));
+hold on
+plot(mean(ad_rat(~badChs,:),1));
+
 
 end

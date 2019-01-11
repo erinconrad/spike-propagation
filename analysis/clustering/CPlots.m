@@ -99,6 +99,11 @@ for whichPt = whichPts
         idx(t) = [];
     end
     
+    % Skip patient if all clusters are bad
+    if isequal(1:k,bad_cluster) == 1
+        fprintf('All clusters for %s are bad, skipping.\n',pt(whichPt).name);
+        continue
+    end
 
     % Remove bad clusters
     bad_idx = find(ismember(idx,bad_cluster));
@@ -186,16 +191,11 @@ for whichPt = whichPts
         ttext = {'x','y','z'};
         toAdd = 0;
         
-        if makeSparse == 1
-            sparseness = 10;
-            sparse_plot = plot_thing(1:sparseness:end,:);
-            sparse_time = plot_times(1:sparseness:end);
-            sparse_cidx = c_idx(1:sparseness:end,:);
-        else
-            sparse_plot = plot_thing;
-            sparse_time = plot_times;
-            sparse_cidx = c_idx;
-        end
+        
+        sparse_plot = plot_thing;
+        sparse_time = plot_times;
+        sparse_cidx = c_idx;
+        
         
         
         for i = 1:3
@@ -267,9 +267,9 @@ for whichPt = whichPts
         
         %pause
 
-        print(gcf,[saveFolder,'clustTimePrettySparse_',sprintf('%s',pt(whichPt).name)],'-depsc');
-        eps2pdf([saveFolder,'clustTimePrettySparse_',sprintf('%s',pt(whichPt).name),'.eps'])
-      %  close(gcf)
+        print(gcf,[saveFolder,'clustTimePretty_',sprintf('%s',pt(whichPt).name)],'-depsc');
+        eps2pdf([saveFolder,'clustTimePretty_',sprintf('%s',pt(whichPt).name),'.eps'])
+        close(gcf)
 
         
         
