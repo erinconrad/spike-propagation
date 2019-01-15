@@ -4,8 +4,7 @@ function plotAlphaDelta(pt,cluster,power,whichPts)
 
 Analysis: does the alpha delta ratio correlate with cluster distribution?
 
-
-One way: Spearman Rank correlation - alpha/delta ratio in a 2000 s bin
+Spearman Rank correlation - alpha/delta ratio in a 2000 s bin
 against proportion of spikes in most popular cluster
 
 %}

@@ -9,7 +9,7 @@ This is my cleaned up file for getting statistics on the cluster data
 
 % Parameters
 plotQI = 0;
-intericTime = 4;
+intericTime = 1;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -24,7 +24,7 @@ if isempty(whichPts) == 1
         end
     end
 elseif whichPts == 100
-    whichPts = [4 6 8 9 15 17 18 19 20 22 24 25 27 30 31];
+    whichPts = [4,6,8,9,12,15,17,18,19,20,22,24,25,27,30,31];
 end
 
 allCounts = [];
@@ -374,7 +374,7 @@ for j = length(whichPts) + 1:length(pos)
     set(gca,'visible','off')
 end
 
-pause
+%pause
 print(gcf,[destFolder,'clustBar',sprintf('%d_hours',intericTime)],'-depsc');
 eps2pdf([destFolder,'clustBar',sprintf('%d_hours',intericTime),'.eps'])
 

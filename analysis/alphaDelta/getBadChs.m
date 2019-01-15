@@ -5,11 +5,11 @@ delta = power(whichPt).delta;
 ad_rat = alpha./delta;
 nchs = size(alpha,1);
 
-%{
-scatter(1:nchs,mean(delta,2))
+
+scatter(1:nchs,mean(alpha,2))
 hold on
-plot(get(gca,'xlim'),3*[median(mean(delta,2)) median(mean(delta,2))])
-%}
+plot(get(gca,'xlim'),3*[median(mean(alpha,2)) median(mean(alpha,2))])
+
 
 badChs = (mean(alpha,2) > 3*median(mean(alpha,2)));
 
