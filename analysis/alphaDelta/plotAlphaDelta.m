@@ -14,6 +14,8 @@ against proportion of spikes in most popular cluster
 doPretty = 1;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
+p1 = genpath(scriptFolder);
+addpath(p1);
 destFolder = [resultsFolder,'alphaDelta/plots/'];
 mkdir(destFolder);
 
