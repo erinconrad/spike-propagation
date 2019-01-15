@@ -8,8 +8,9 @@ This is my cleaned up file for getting statistics on the cluster data
 %}
 
 % Parameters
-plotQI = 0;
+plotQI = 1;
 intericTime = 1;
+doPermute = 0;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -24,7 +25,7 @@ if isempty(whichPts) == 1
         end
     end
 elseif whichPts == 100
-    whichPts = [4,6,8,9,12,15,17,18,19,20,22,24,25,27,30,31];
+    whichPts = [1,4,6,8,9,12,15,17,18,19,20,22,24,25,27,30,31];
 end
 
 allCounts = [];
@@ -278,6 +279,58 @@ for whichPt = whichPts
     fprintf(['For %s, regarding whether the pre-ictal period\n has a different cluster'...
     ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
     %}
+    
+    if doPermute == 1
+    
+        %{
+        Permutation test approach: if we randomly swap interictal and pre-ictal
+        identities, how often do we get as significant a p-value? 
+
+        My concern with this is the temporal dependence... if there is an hour
+        to hour change and I am grouping things by hour, then this may be
+        feeding the difference...
+
+        %}
+        n_preIc = size(preIcClustIdx,1);
+        n_interIc = size(interIcClustIdx,1);
+        nboot = 1e3;
+        chi2_boot = zeros(nboot,1);
+        for ib = 1:nboot
+            if mod(ib,100) == 0
+                fprintf('Doing %d of %d\n',ib,nboot);
+            end
+            preIcVsInterIc = ones(n_preIc+n_interIc,1);
+
+            % Get a random sample, equal to the true number of interictal
+            % spikes, and define those to be interictal
+            fakeInterIc = randsample(n_preIc+n_interIc,n_interIc);
+            preIcVsInterIc(fakeInterIc) = 2;
+
+            [~,chi2_boot(ib),~,~] = crosstab(preIcVsInterIc,[preIcClustIdx;interIcClustIdx]);
+        end
+        
+        s_chi = sort(chi2_boot);
+        diff_s_chi = s_chi-chi2_2;
+        allLarger = find(diff_s_chi>0);
+        if isempty(allLarger) == 1
+            p_boot = 0;
+        else
+            firstLarger = allLarger(1);
+            p_boot = (nboot-firstLarger)/nboot;
+        end
+        
+        fprintf('By bootstrap, pre-ictal vs inter-ictal cluster distribution diff is:\n%1.1e\n',...
+            p_boot);
+
+        figure
+        scatter(1:nboot,sort(chi2_boot))
+        hold on
+        plot(xlim,[chi2_2 chi2_2])
+        pause
+        close(gcf)
+
+        
+    end
 end
 
 %% Fisher's method to combine p values

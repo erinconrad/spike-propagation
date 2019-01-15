@@ -12,7 +12,7 @@ against proportion of spikes in most popular cluster
 
 
 doPretty = 1;
-skipDone = 1;
+skipDone = 0;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 p1 = genpath(scriptFolder);
@@ -27,7 +27,7 @@ if isempty(whichPts) == 1
         end
     end
 elseif whichPts == 100
-    whichPts = [4,6,8,9,12,15,17,18,19,20,22,24,25,27,30,31];
+    whichPts = [1,4,6,8,9,12,15,17,18,19,20,22,24,25,27,30,31];
 end
 
 for whichPt = whichPts
@@ -118,7 +118,7 @@ for whichPt = whichPts
     %[badChNums,badChNamesOut] = getBadChs(pt,whichPt);
     %mean_ad = mean(power(whichPt).ad_rat,1)';
     all_ad = power(whichPt).alpha./power(whichPt).delta;
-    mean_ad = mean(all_ad,1);
+    mean_ad = nanmean(all_ad,1);
     %{
     mean_ad = mean(power(whichPt).ad_rat(...
         ~ismember(1:length(pt(whichPt).channels),badChNums),:),1)';

@@ -41,7 +41,7 @@ if isempty(whichPts) == 1
         end
     end
 elseif whichPts == 100
-    whichPts = [4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31];
+    whichPts = [1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31];
 elseif whichPts == 300
     whichPts = [1 4 6 8 9 12 17 18 19 20 22 24 25 27 30 31];
 end
