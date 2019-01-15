@@ -12,6 +12,7 @@ against proportion of spikes in most popular cluster
 
 
 doPretty = 1;
+skipDone = 1;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 p1 = genpath(scriptFolder);
@@ -32,7 +33,7 @@ end
 for whichPt = whichPts
     
     %look = mean(power(whichPt).ad_rat,2);
-
+    
     
     saveFolder = [destFolder,pt(whichPt).name,'/'];
     mkdir(saveFolder)
@@ -115,7 +116,9 @@ for whichPt = whichPts
     
     
     %[badChNums,badChNamesOut] = getBadChs(pt,whichPt);
-    mean_ad = mean(power(whichPt).ad_rat,1)';
+    %mean_ad = mean(power(whichPt).ad_rat,1)';
+    all_ad = power(whichPt).alpha./power(whichPt).delta;
+    mean_ad = mean(all_ad,1);
     %{
     mean_ad = mean(power(whichPt).ad_rat(...
         ~ismember(1:length(pt(whichPt).channels),badChNums),:),1)';
@@ -137,7 +140,7 @@ for whichPt = whichPts
     prop_pop(isnan(prop_pop)) = [];
     
     
-    [rho,pval] = corr(mean_ad,prop_pop,'Type','Spearman');
+    [rho,pval] = corr(mean_ad',prop_pop,'Type','Spearman');
     fprintf(['For %s, the correlation between proportion in most popular'...
         ' cluster and alpha delta ratio is:\n %1.1f (p = %1.1e)\n'],...
         pt(whichPt).name,rho,pval);
@@ -258,7 +261,7 @@ for whichPt = whichPts
         
         
         axes(ha(3));
-        plot((power(whichPt).times-min(plot_times))/3600,mean(power(whichPt).ad_rat,1),...
+        plot((power(whichPt).times-min(plot_times))/3600,mean(all_ad,1),...
             'k','LineWidth',2);
         xlim([(plot_times(1)-min(plot_times))/3600-1 (plot_times(end)-min(plot_times))/3600+1])
         hold on
