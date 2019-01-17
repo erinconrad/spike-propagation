@@ -3,7 +3,7 @@ function cluster = getClusters(pt,whichPts)
 %% Parameters
 % Should we skip patients that are already done and merge the new patients
 % with the existing cluster?
-saveStruct = 1;
+saveStruct = 0;
 merge = 1; 
 allSpikes = 1;
 clustOpt = 0; % get optimal cluster numbers
@@ -105,6 +105,7 @@ end
 
 for whichPt = whichPts
     
+    % These are not actual patients
     if whichPt == 26 || whichPt == 28 || whichPt == 29
         continue
     end

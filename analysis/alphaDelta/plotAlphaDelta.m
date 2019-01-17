@@ -11,7 +11,7 @@ against proportion of spikes in most popular cluster
 
 
 
-doPretty = 1;
+doPretty = 0;
 skipDone = 0;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -23,12 +23,21 @@ mkdir(destFolder);
 if isempty(whichPts) == 1
     for i = 1:length(pt)
         if isempty(pt(i).seq_matrix) == 0
-            whichPts = [whichPts,i];
+            if size(cluster(i).bad_cluster) < cluster(i).k
+                whichPts = [whichPts,i];
+            end
         end
+    end
+    
+    if isequal(whichPts,[1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31]) == 0
+        error('Warning, not doing correct patients!\n');
     end
 elseif whichPts == 100
     whichPts = [1,4,6,8,9,12,15,17,18,19,20,22,24,25,27,30,31];
 end
+
+allP = [];
+allRho = [];
 
 for whichPt = whichPts
     
@@ -101,6 +110,7 @@ for whichPt = whichPts
     
     bin_times = pt(whichPt).runTimes;
     prop_pop = zeros(size(bin_times,1),1);
+    locs_bin = zeros(size(bin_times,1),3);
     
     % Run through bin times and get proportion of spikes in most popular
     % cluster for that bin.
@@ -112,6 +122,11 @@ for whichPt = whichPts
         
         prop_pop(i) = sum(whichClust == popular)/length(whichClust);
         
+        
+        % Get spike locs
+        whichSpikes = all_times_all > bin_times(i,1) & ...
+            all_times_all < bin_times(i,2);
+        locs_bin(i,:) = mean(all_locs(whichSpikes,:),1);
     end
     
     
@@ -124,6 +139,8 @@ for whichPt = whichPts
         ~ismember(1:length(pt(whichPt).channels),badChNums),:),1)';
     %}
     
+    
+    
     if 1 == 0
         figure
         subplot(2,1,1)
@@ -134,6 +151,7 @@ for whichPt = whichPts
 
         subplot(2,1,2)
         scatter(mean_ad,prop_pop)
+        lsline
     end
     
     mean_ad(isnan(prop_pop)) = [];
@@ -145,6 +163,17 @@ for whichPt = whichPts
         ' cluster and alpha delta ratio is:\n %1.1f (p = %1.1e)\n'],...
         pt(whichPt).name,rho,pval);
     
+    if isnan(pval) == 1
+        if k == length(bad_cluster) + 1
+            fprintf('Only one cluster, setting p to 1\n');
+            pval = 1;
+        else
+            error('What\n');
+        end
+    end
+    
+    allP = [allP;pval];
+    allRho = [allRho;rho];
     
     colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
     c_idx = zeros(size(idx,1),3);
@@ -311,6 +340,23 @@ for whichPt = whichPts
         
     
 end
+
+
+fprintf('The range of rho was %1.2f-%1.2f. The mean was %1.2f.\n',...
+    min(abs(allRho)),max(abs(allRho)),mean(abs(allRho(~isnan(allRho)))));
+
+fprintf('There were %d of %d patients with significant p values\n',...
+    sum(allP < 0.05/length(allP)),length(allP));
+
+
+X_2 = -2 * sum(log(allP));
+sum_p = 1-chi2cdf(X_2,2*length(allP));
+
+fprintf('The group p value is %1.1e\n',sum_p);
+
+% Double check
+group_pval = fisher_pvalue_meta_analysis(allP);
+
 
 %figure
 %plot(power(whichPt).times/3600,mean(power(whichPt).ad_rat,1));

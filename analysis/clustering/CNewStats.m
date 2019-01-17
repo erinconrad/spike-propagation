@@ -1,4 +1,4 @@
-function stats = CStats(pt,cluster,whichPts)
+function stats = CNewStats(pt,cluster,whichPts)
 
 %{ 
 
@@ -10,7 +10,7 @@ This is my cleaned up file for getting statistics on the cluster data
 % Parameters
 plotQI = 0;
 intericTime = 1;
-doPermute = 0;
+doPermPlot = 0;
 doPlots = 1;
 
 % Save file location
@@ -221,10 +221,10 @@ for whichPt = whichPts
     postIcTimesQI = [];
     
     % Get all the pre-ictal spikes
-    preIcClustIdx = [];
-    postIcClustIdx = [];
     preIcSpikes = [];
     postIcSpikes = [];
+    preIcSpikeTimes = [];
+    postIcSpikeTimes = [];
     
     % Loop through seizures
     for j = 1:size(szTimes,1)
@@ -236,8 +236,8 @@ for whichPt = whichPts
         % Get the indices of spikes in this time range
         post_ic_spike_idx = (all_times_all >= postIcTimes(1) & ...
             all_times_all <= postIcTimes(2));
-        postIcClustIdx = [postIcClustIdx;idx(post_ic_spike_idx)];
         postIcSpikes = [postIcSpikes;find(post_ic_spike_idx)];
+        postIcSpikeTimes = [postIcSpikeTimes;all_times_all(post_ic_spike_idx)];
         
         % Get range of pre-ictal times
         preIcTimes = szTimes(j,1) + preIcRange;
@@ -261,15 +261,15 @@ for whichPt = whichPts
             all_times_all <= preIcTimes(2));
         
         % Get the cluster indices
-        preIcClustIdx = [preIcClustIdx;idx(spike_idx)];
         preIcSpikes = [preIcSpikes;find(spike_idx)];
+        preIcSpikeTimes = [preIcSpikeTimes;all_times_all(spike_idx)];
         
         
     end
     
     % Get all the inter-ictal spikes
-    interIcClustIdx = [];
     interIcSpikes = [];
+    interIcSpikeTimes = [];
     
     % Get times before the first seizure
     interIcTimes(1) = min(all_times_all) + postIcTime; % assume seizure right before the record started
@@ -279,9 +279,9 @@ for whichPt = whichPts
     if interIcTimes(1) < interIcTimes(2)
         spike_idx = all_times_all >= interIcTimes(1) & ...
             all_times_all <= interIcTimes(2);
-        interIcClustIdx = [interIcClustIdx; idx(spike_idx)];
         interIcTimesQI = [interIcTimesQI; interIcTimes(1) interIcTimes(2)];
         interIcSpikes = [interIcSpikes;find(spike_idx)];
+        interIcSpikeTimes = [interIcSpikeTimes;all_times_all(spike_idx)];
     end
     
     % Loop through the seizures
@@ -292,9 +292,9 @@ for whichPt = whichPts
         if interIcTimes(1) >= interIcTimes(2), continue; end
         spike_idx = all_times_all >= interIcTimes(1) & ...
             all_times_all <= interIcTimes(2);
-        interIcClustIdx = [interIcClustIdx; idx(spike_idx)]; 
         interIcTimesQI = [interIcTimesQI; interIcTimes(1) interIcTimes(2)];
         interIcSpikes = [interIcSpikes;find(spike_idx)];
+        interIcSpikeTimes = [interIcSpikeTimes;all_times_all(spike_idx)];
     end
     
     % Get time after the last seizure
@@ -304,9 +304,9 @@ for whichPt = whichPts
     if interIcTimes(1) < interIcTimes(2)
         spike_idx = all_times_all >= interIcTimes(1) & ...
             all_times_all <= interIcTimes(2);
-        interIcClustIdx = [interIcClustIdx; idx(spike_idx)];
         interIcTimesQI = [interIcTimesQI; interIcTimes(1) interIcTimes(2)];
         interIcSpikes = [interIcSpikes;find(spike_idx)];
+        interIcSpikeTimes = [interIcSpikeTimes;all_times_all(spike_idx)];
     end
     
     % Plot interical and preictal times next to seizure times for QI
@@ -332,136 +332,214 @@ for whichPt = whichPts
         close(gcf)
     end
     
-    % Do chi_2 to test if pre-ictal cluster distribution is different from
-    % inter-ictal cluster distribution
-    [tbl_2,chi2_2,p_2,labels_2] = crosstab([ones(size(preIcClustIdx));...
-        2*ones(size(interIcClustIdx))],[preIcClustIdx;interIcClustIdx]);
+   %{
+    Analysis 2: Is the cluster distribution different in the pre-ictal
+    compared to the interictal period?
     
-    if isnan(p_2) == 1
-        if k == length(bad_cluster) + 1
-            p_2 = 1;
-            fprintf('Only one cluster, defining p-value to be 1\n');
-        else
-            error('What\n');
+    I don't want to do a simple chi squared or a simple permutation test
+    where I just swap the pre-ictal/interictal identity of individual
+    spikes. This will tell me that the pre-ictal and interictal periods are
+    different, but it won't tell me that they are MORE different than I
+    would expect from just picking two random different hours (because I
+    have already PROVEN that the cluster distributions change from hour to
+    hour).
+    
+    INSTEAD, I will construct the following permutation test:
+    - I will concatenate the spike indices sorted by time
+    - I will get the number of preictal spikes (N_pre)
+    - I will pick a random start index of this concatenated array. 
+    - I will take N_pre SEQUENTIAL spikes starting at that start index
+       - I will wrap around to the beginning if needed
+    - I will redfine these to be the "pre-ictal" spikes.
+    - I will get the chi_2 value
+    - I will repeat 1,000 times.
+    %}
+    all_s = [(preIcSpikes);(interIcSpikes)];
+    all_s_times = [preIcSpikeTimes;interIcSpikeTimes];
+    colors = [repmat([1,0,0],length(preIcSpikes),1);...
+        repmat([0,0,1],length(interIcSpikes),1)];
+    all_s_old = all_s;
+    [B,I] = sort(all_s_times);
+    all_s = all_s(I);
+    
+    if doPermPlot == 1
+        new_colors = colors(I,:);
+        figure
+        scatter(B/3600,all_s,50,new_colors);
+        hold on
+        szTimes = pt(whichPt).newSzTimes;
+        for j = 1:size(szTimes,1)
+            plot([szTimes(j,1),szTimes(j,1)]/3600,ylim,'k--');
         end
+        pause
+        close(gcf)
     end
     
-    % Save information into patient struct
-    stats(whichPt).cluster.preic.tbl = tbl_2;
-    stats(whichPt).cluster.preic.chi2 = chi2_2;
-    stats(whichPt).cluster.preic.p = p_2;
-    stats(whichPt).cluster.preic.labels = labels_2;
+    n_pre = length(preIcSpikes); %3
+    n_spikes = length(all_s); %10
+    nboot = 1e3;
+    chi2_boot = zeros(nboot,1);
+    for ib = 1:nboot
+        start = randi(n_spikes);
+        if start > n_spikes - n_pre + 1 % 9 > 10 - 3 + 1
+            new_pre = [1:n_pre-(n_spikes-start)-1,start:n_spikes]; 
+            %1:3-(10-9)-1,9:10 = 1:1,9:10
+        else % 8 = 10-3 +1
+            new_pre = start:start+n_pre-1; %8:10
+        end
+        pre_s = all_s(new_pre);
+        new_inter = setdiff(1:length(all_s),new_pre);
+        inter_s = all_s(new_inter);
+        pre_clust = idx(pre_s);
+        inter_clust = idx(inter_s);
+        if isequal(sort([pre_clust;inter_clust]),sort(idx(all_s))) == 0
+            error('look\n');
+        end
+        [~,chi2_boot(ib)] = crosstab([ones(length(pre_clust),1);...
+            2*ones(length(inter_clust),1)],[pre_clust;inter_clust]);
+    end
     
+    % Do it once for real
+    inter_clust = idx(interIcSpikes);
+    pre_clust = idx(preIcSpikes);
+    [tbl_2,chi2_real] = crosstab([ones(length(pre_clust),1);...
+            2*ones(length(inter_clust),1)],[pre_clust;inter_clust]);
+        
+        
+    sorted_boot = sort(chi2_boot);
+    
+    diff_s_chi = sorted_boot-chi2_real;
+    allLarger = find(diff_s_chi>0);
+    if isempty(allLarger) == 1
+        p_2 = 0;
+    else
+        firstLarger = allLarger(1);
+        p_2 = (nboot-firstLarger)/nboot;
+    end
+    
+    if doPermPlot == 1
+        figure 
+        scatter(1:length(sorted_boot),sorted_boot);
+        hold on
+        plot(xlim,[chi2_real chi2_real]);
+        text(mean(xlim),mean(ylim),sprintf('%1.1e',p_2));
+
+        pause
+        close(gcf)
+    end
+    %}
+    
+    
+    
+    if k == length(bad_cluster) + 1
+        p_2 = 1;
+        fprintf('Only one cluster, defining p-value to be 1\n');
+    end
+    
+    
+    % Save information into patient struct
+
     chi_tables_plot{whichPt} = tbl_2;
     p_plot(whichPt) = p_2;
     
+    
+    
     %{
-    fprintf(['For %s, regarding whether the pre-ictal period\n has a different cluster'...
-    ' distribution from the interictal period,\n the p-value is %1.1e\n\n'],pt(whichPt).name,p_2);
+    Analysis 3: post-ictal vs the rest
     %}
+    all_s = [(preIcSpikes);(interIcSpikes);postIcSpikes];
+    all_s_times = [preIcSpikeTimes;interIcSpikeTimes;postIcSpikeTimes];
+    colors = [repmat([1,0,0],length(preIcSpikes),1);...
+        repmat([0,0,1],length(interIcSpikes),1);...
+        repmat([0,1,0],length(postIcSpikes),1)];
     
-    fprintf('Found %d interictal spikes and %d pre-ictal spikes\n',...
-       size(interIcClustIdx,1),size(preIcClustIdx,1));
+    [B,I] = sort(all_s_times);
+    all_s = all_s(I);
     
-    if doPermute == 1
-    
-        %{
-        Permutation test approach: if we randomly swap interictal and pre-ictal
-        identities, how often do we get as significant a p-value? 
-
-        My concern with this is the temporal dependence... if there is an hour
-        to hour change and I am grouping things by hour, then this may be
-        feeding the difference...
-
-        %}
-        n_preIc = size(preIcClustIdx,1);
-        n_interIc = size(interIcClustIdx,1);
-        nboot = 1e3;
-        chi2_boot = zeros(nboot,1);
-        for ib = 1:nboot
-            if mod(ib,100) == 0
-                fprintf('Doing %d of %d\n',ib,nboot);
-            end
-            preIcVsInterIc = ones(n_preIc+n_interIc,1);
-
-            % Get a random sample, equal to the true number of interictal
-            % spikes, and define those to be interictal
-            fakeInterIc = randsample(n_preIc+n_interIc,n_interIc);
-            preIcVsInterIc(fakeInterIc) = 2;
-
-            [~,chi2_boot(ib),~,~] = crosstab(preIcVsInterIc,[preIcClustIdx;interIcClustIdx]);
-        end
-        
-        s_chi = sort(chi2_boot);
-        diff_s_chi = s_chi-chi2_2;
-        allLarger = find(diff_s_chi>0);
-        if isempty(allLarger) == 1
-            p_boot = 0;
-        else
-            firstLarger = allLarger(1);
-            p_boot = (nboot-firstLarger)/nboot;
-        end
-        
-        fprintf('By bootstrap, pre-ictal vs inter-ictal cluster distribution diff is:\n%1.1e\n',...
-            p_boot);
-
+    if doPermPlot == 1
+        new_colors = colors(I,:);
         figure
-        scatter(1:nboot,sort(chi2_boot))
+        scatter(B/3600,all_s,50,new_colors);
         hold on
-        plot(xlim,[chi2_2 chi2_2])
+        szTimes = pt(whichPt).newSzTimes;
+        for j = 1:size(szTimes,1)
+            plot([szTimes(j,1),szTimes(j,1)]/3600,ylim,'k--');
+        end
         pause
         close(gcf)
-
-        
     end
     
-    %% Post-ictal change
-     % Do chi_2 to test if post-ictal cluster distribution is different from
-     % inter-ictal cluster distribution
-    [tbl_3,chi2_3,p_3,labels_3] = crosstab([ones(size(postIcClustIdx));...
-        2*ones(size(interIcClustIdx))],[postIcClustIdx;interIcClustIdx]);
-    
-    if isnan(p_3) == 1
-        if k == length(bad_cluster) + 1
-            p_3 = 1;
-            fprintf('Only one cluster, defining p-value to be 1\n');
-        else
-            error('What\n');
+    n_post = length(postIcSpikes); %3
+    n_spikes = length(all_s); %10
+    nboot = 1e3;
+    chi2_boot = zeros(nboot,1);
+    for ib = 1:nboot
+        start = randi(n_spikes);
+        if start > n_spikes - n_post + 1 % 9 > 10 - 3 + 1
+            new_post = [1:n_post-(n_spikes-start)-1,start:n_spikes]; 
+            %1:3-(10-9)-1,9:10 = 1:1,9:10
+        else % 8 = 10-3 +1
+            new_post = start:start+n_post-1; %8:10
         end
+        post_s = all_s(new_post);
+        new_other = setdiff(1:length(all_s),new_post);
+        other_s = all_s(new_other);
+        post_clust = idx(post_s);
+        other_clust = idx(other_s);
+        if isequal(sort([post_clust;other_clust]),sort(idx(all_s))) == 0
+            error('look\n');
+        end
+        [~,chi2_boot(ib)] = crosstab([ones(length(post_clust),1);...
+            2*ones(length(other_clust),1)],[post_clust;other_clust]);
+    end
+    
+    % Do it once for real
+    post_clust = idx(postIcSpikes);
+    other_clust = idx([preIcSpikes;interIcSpikes]);
+    [tbl_3,chi2_real] = crosstab([ones(length(post_clust),1);...
+            2*ones(length(other_clust),1)],[post_clust;other_clust]);
+        
+        
+    sorted_boot = sort(chi2_boot);
+    
+    diff_s_chi = sorted_boot-chi2_real;
+    allLarger = find(diff_s_chi>0);
+    if isempty(allLarger) == 1
+        p_3 = 0;
+    else
+        firstLarger = allLarger(1);
+        p_3 = (nboot-firstLarger)/nboot;
+    end
+    
+    if doPermPlot == 1
+        figure 
+        scatter(1:length(sorted_boot),sorted_boot);
+        hold on
+        plot(xlim,[chi2_real chi2_real]);
+        text(mean(xlim),mean(ylim),sprintf('%1.1e',p_3));
+
+        pause
+        close(gcf)
+    end
+    %}
+    
+    
+    
+    if k == length(bad_cluster) + 1
+        p_3 = 1;
+        fprintf('Only one cluster, defining p-value to be 1\n');
     end
     
     
+    % Save information into patient struct
+
     chi_tables_postIc{whichPt} = tbl_3;
     p_postIc(whichPt) = p_3;
     
-    
-    %% Post-ictal distance from nearest SOZ
-    % Is the distance from the SOZ bigger or smaller post-ictally compared
-    % to inter-ictally
-    if isempty(soz) == 0
-        preIcDistAll = [preIcDistAll;spike_dist(preIcSpikes)];
-        postIcDistAll = [postIcDistAll;spike_dist(postIcSpikes)];
-        interIcDistAll = [interIcDistAll;spike_dist(interIcSpikes)];
-        
-        preIcDistMean = [preIcDistMean;mean(spike_dist(preIcSpikes))];
-        postIcDistMean = [postIcDistMean;mean(spike_dist(postIcSpikes))];
-        interIcDistMean = [interIcDistMean;mean(spike_dist(interIcSpikes))];
-    end
-    %[p,h]=ranksum(spike_dist(postIcSpikes),spike_dist(interIcSpikes));
-    %bar(mean(spike_dist(postIcSpikes)), mean(spike_dist(interIcSpikes)));
+   
     
 end
 
-pPostInterDist = ranksum(postIcDistAll,interIcDistAll);
-pPreInterDist = ranksum(preIcDistAll,interIcDistAll);
-
-fprintf(['Across all patients, the mean post-ictal distance from the'...
-    ' nearest SOZ electrode is %1.1f,\nthe mean interictal distance is '...
-    '%1.1f\nand the mean pre-ictal distance is %1.1f\n'],mean(postIcDistAll),...
-    mean(interIcDistAll),mean(preIcDistAll));
-
-fprintf(['The pre-ictal/interictal difference p is %1.1e\nand the post-ictal/interictal'...
-    ' p is %1.1e\n'],pPreInterDist,pPostInterDist);
 
 %% Fisher's method to combine p values for change over time
 all_p_change = [];
@@ -489,18 +567,7 @@ fprintf('%d of %d patients had a different preictal vs interictal distribution.\
 % double check
 %group_pval = fisher_pvalue_meta_analysis(all_p);
 
-%% Fisher's method to combine p values for post-ic vs interic
-all_p_post = [];
-for whichPt = whichPts
-   all_p_post = [all_p_post;p_postIc(whichPt)]; 
-end
 
-X_2 = -2 * sum(log(all_p_post));
-sum_p = 1-chi2cdf(X_2,2*length(all_p_post));
-
-fprintf('The group p value for post-ictal vs interictal cluster is %1.1e\n',sum_p);
-fprintf('%d of %d patients had a different postictal vs interictal distribution.\n',...
-    sum(all_p_post<0.05/length(whichPts)),length(whichPts));
 
 %% Get max number of clusters amongst patients (for making legend)
 ptMax = 9;
@@ -593,6 +660,7 @@ if doPlots == 1
     print(gcf,[destFolder,'clustBar',sprintf('%d_hours',intericTime)],'-depsc');
     eps2pdf([destFolder,'clustBar',sprintf('%d_hours',intericTime),'.eps'])
     
+    
     %% Post-ic
     figure
     set(gcf,'Position',[99 26 1264 686]);
@@ -609,7 +677,7 @@ if doPlots == 1
         prop = tbl./sum(tbl,2);
 
         b=bar(prop);
-        xticklabels({'Post','Inter'})
+        xticklabels({'Post','Other'})
 
         % Plot p-value
         p = p_postIc(whichPts(j));
@@ -669,102 +737,6 @@ if doPlots == 1
     %pause
     print(gcf,[destFolder,'clustPost',sprintf('%d_hours',intericTime)],'-depsc');
     eps2pdf([destFolder,'clustPost',sprintf('%d_hours',intericTime),'.eps'])
-    
-end
-
-fprintf('The cluster centroids are on average %1.1f mm from each other (range %1.1f-%1.1f)\n',...
-mean(allDist), min(allDist), max(allDist));
-
-
-%% Get clinical stuff
-allOutcome = [];
-allLoc = {};
-for whichPt = whichPts
-    [outcome(whichPt)] = getOutcome(pt,whichPt);
-    allOutcome = [allOutcome;outcome(whichPt)];
-    allLoc = [allLoc;pt(whichPt).clinical.seizureOnset];
-    if isempty(pt(whichPt).sz_onset) == 1
-        allLoc = [allLoc;nan];
-    end
-end
-
-loc_bin = zeros(length(allLoc),1);
-for i = 1:size(loc_bin,1)
-    if isnan(allLoc{i}) == 1
-        loc_bin(i) = nan;
-    elseif strcmp(allLoc{i}(end-1:end),'TL') == 1
-        loc_bin(i) = 1;
-    else
-        loc_bin(i) = 0;
-    end
-end
-
-allAEDs = cell(max(whichPts),1);
-onLTG = [];
-for whichPt = whichPts
-    allAEDs{whichPt} = getAEDs(pt(whichPt).name);
-    testStr = allAEDs{whichPt};
-    if isempty(testStr) == 1
-        onLTG = [onLTG;nan];
-    elseif any(strcmp(testStr,'LTG')) == 1
-        onLTG = [onLTG;1];
-    else
-        onLTG = [onLTG;0];
-    end
-end
-
-%% Now correlate change in pre-ic vs inter-ic with clinical stuff
-% threshold p value, Bonferroni corrected
-p_thresh = 0.05/length(all_p); 
-differ_preic_interic = all_p < p_thresh;
-
-[p1,info1] = correlateClinically(differ_preic_interic,allOutcome,'bin','num',0);
-
-[p2,info2] = correlateClinically(differ_preic_interic(~isnan(loc_bin)),...
-    loc_bin(~isnan(loc_bin)),'bin','bin',0);
-measure = differ_preic_interic(~isnan(loc_bin));
-clinical = loc_bin(~isnan(loc_bin));
-figure
-bar([sum(measure==0 & clinical==0) sum(measure==0 & clinical==1);...
-        sum(measure==1 & clinical==0) sum(measure==1 & clinical==1)]);
-xticklabels({'No preictal change','Preictal change'});
-legend({'Non-temporal lobe','Temporal lobe'})
-ylabel('Number of patients')
-
-
-[p3,info3] = correlateClinically(differ_preic_interic(~isnan(onLTG)),...
-    onLTG(~isnan(onLTG)),'bin','bin',0);
-
-%% Now correlate change across time with clinical stuff
-%{
-all_p_time = [];
-for whichPt = whichPts
-    all_p_time = [all_p_time;p_change_time(whichPt)];
-end
-
-% threshold p value, Bonferroni corrected
-p_thresh_time = 0.05/length(all_p_time); 
-differ_time = all_p_time < p_thresh_time;
-
-[p4,info4] = correlateClinically(differ_time,allOutcome,'bin','num',0);
-
-[p5,info5] = correlateClinically(differ_time(~isnan(loc_bin)),...
-    loc_bin(~isnan(loc_bin)),'bin','bin',0);
-measure = differ_time(~isnan(loc_bin));
-clinical = loc_bin(~isnan(loc_bin));
-figure
-bar([sum(measure==0 & clinical==0) sum(measure==0 & clinical==1);...
-        sum(measure==1 & clinical==0) sum(measure==1 & clinical==1)]);
-xticklabels({'No change across time','Change across time'});
-legend({'Non-temporal lobe','Temporal lobe'})
-ylabel('Number of patients')
-
-
-[p6,info6] = correlateClinically(differ_time(~isnan(onLTG)),...
-    onLTG(~isnan(onLTG)),'bin','bin',1);
-%}
-
-save([destFolder,'stats.mat','stats']);
-
+   
 
 end

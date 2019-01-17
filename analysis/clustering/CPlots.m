@@ -18,7 +18,7 @@ mkdir(destFolder);
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
-        if isempty(pt(i).seq_matrix) == 0
+        if isempty(pt(i).seq_matrix) == 0 
             whichPts = [whichPts,i];
         end
     end
@@ -87,7 +87,6 @@ for whichPt = whichPts
     idx = cluster(whichPt).idx; % the cluster index for every spike
     C = cluster(whichPt).C; % the centroids of the clusters
     bad_cluster = cluster(whichPt).bad_cluster; % which clusters are bad
-    allSpikes = cluster(whichPt).allSpikes; % am I taking all spikes???
     
     % Confirm that I do not have any ictal spikes
     t = find(any(all_times_all >= szTimes(:,1)' & all_times_all <= szTimes(:,2)',2));
@@ -108,7 +107,6 @@ for whichPt = whichPts
     % Remove bad clusters
     bad_idx = find(ismember(idx,bad_cluster));
     all_times_all(bad_idx) = [];
-    all_spikes(bad_idx) = [];
     all_locs(bad_idx,:) = [];
     idx(bad_idx) = [];
     clusters = 1:k; clusters(bad_cluster) = [];

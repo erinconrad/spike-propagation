@@ -33,17 +33,24 @@ allSAs = [];
 allSpikers = [];
 allSF = [];
 allDegPref = [];
+allMaxSAs = [];
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
         if isempty(pt(i).seq_matrix) == 0
-            whichPts = [whichPts,i];
+            if size(cluster(i).bad_cluster) < cluster(i).k
+                whichPts = [whichPts,i];
+            end
         end
     end
 elseif whichPts == 100
     whichPts = [1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31];
 elseif whichPts == 300
     whichPts = [1 4 6 8 9 12 17 18 19 20 22 24 25 27 30 31];
+end
+
+if isequal(whichPts,[1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31]) == 0
+    error('Warning, not doing correct patients!\n');
 end
 
 for whichPt = whichPts
@@ -338,6 +345,7 @@ for whichPt = whichPts
     %% How far is the channel with max area of influence from SOZ?
     allSF = [allSF;n_spikes_ch];
     allSAs = [allSAs;sa];
+    allMaxSAs = [allMaxSAs;(max(sa))];
     
     % Distance from electrode with max SA to closest SOZ
     [~,I] = max(sa);
@@ -527,10 +535,7 @@ scatter(allSAs(allSpikers==1),allAllDist(allSpikers==1));
 %[pSpikeSA,h5,stats5] = ranksum(allSADist,allSpikeDist);
 [pFreqAll,~,~] = ranksum(allFreqDist,allAllDist);
 
-fprintf(['The median distance between the electrodes with max SA and\n'...
-    'the electrodes with max frequency is: %1.1f\n and there were %d ',...
-    'patients where these electrodes were the same\n'],median(allSAToFreqDist),...
-    sum((allSAToFreqDist==0)));
+
 
 %% Do Plots
 
@@ -664,6 +669,18 @@ f2= myaa(2);
 %pause
 print(f2,[destFolder,'influence_AA'],'-dpng');
 %eps2pdf([destFolder,'influence_AA','.eps'])
+
+fprintf('The average largest area of influence was %1.1f cm squared (range %1.1f-%1.1f).\n',...
+    mean(allMaxSAs/100),min(allMaxSAs/100),max(allMaxSAs/100));
+
+fprintf('The average distance between biggest SA electrode and nearest SOZ electrode is:\n%1.1f (range %1.1f-%1.1f)\n',...
+    mean(allSADist), min(allSADist), max(allSADist));
+
+fprintf(['The average distance between the electrodes with max SA and\n'...
+    'the electrodes with max frequency is: %1.1f (range %1.1f-%1.1f)\n and there were %d of %d ',...
+    'patients where these electrodes were the same\n'],mean(allSAToFreqDist),...
+    min(allSAToFreqDist),max(allSAToFreqDist),sum((allSAToFreqDist==0)),length(allSAToFreqDist==0));
+
 
 
 end

@@ -24,7 +24,7 @@ width of the new range is >80% of the old range
 
 % Parameters
 chunkMethod = 1;
-doPlots = 1;
+doPlots = 0;
 alpha = 0.8;
 nboot = 1e3;
 
@@ -36,8 +36,13 @@ mkdir(destFolder);
 if isempty(whichPts) == 1
     for i = 1:length(pt)
         if isempty(pt(i).seq_matrix) == 0
-            whichPts = [whichPts,i];
+            if size(cluster(i).bad_cluster) < cluster(i).k - 1
+                whichPts = [whichPts,i];
+            end
         end
+    end
+    if isequal(whichPts,[1,4,6,8,9,12,15,17,18,19,20,22,24,25,27,30,31]) == 0
+        error('look\n');
     end
 elseif whichPts == 100
     whichPts = [4 6 8 9 15 17 18 19 20 22 24 25 27 30 31];
@@ -267,6 +272,12 @@ for whichPt = whichPts
     end
     
 end
+
+fprintf('The mean number of hours needed to capture 80%% of the variability was %1.1f (range %d-%d)\n',...
+    mean(allMinCapture),min(allMinCapture),max(allMinCapture));
+
+fprintf('The mean percent of hours needed to capture 80%% of the variability was %1.1f (range %1.1f-%1.1f)\n',...
+    mean(allMinProp)*100,min(allMinProp)*100,max(allMinProp)*100);
 
 %% Do stats correlating number needed to capture with outcome
 
