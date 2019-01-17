@@ -9,7 +9,7 @@ This is my cleaned up file for getting statistics on the cluster data
 
 % Parameters
 plotQI = 0;
-intericTime = 1;
+intericTime = 4;
 doPermPlot = 0;
 doPlots = 1;
 
