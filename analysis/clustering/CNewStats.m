@@ -9,7 +9,7 @@ This is my cleaned up file for getting statistics on the cluster data
 
 % Parameters
 plotQI = 0;
-intericTime = 4;
+intericTime = 1;
 doPermPlot = 0;
 doPlots = 1;
 doLongStuff = 1;
@@ -377,6 +377,10 @@ for whichPt = whichPts
         chi2_boot = zeros(nboot,1);
         for ib = 1:nboot
             
+            if mod(ib,100) == 0
+                fprintf('Doing %d of %d\n',ib,nboot);
+            end
+            
             % The number of spikes in each pre-ictal period
             new_pre = cell(size(preIcSpikeNums,1),1);
             
@@ -519,7 +523,12 @@ for whichPt = whichPts
         nboot = 1e3;
         n_spikes = length(all_s);
         chi2_boot = zeros(nboot,1);
+        dist_diff_boot = zeros(nboot,1);
         for ib = 1:nboot
+            
+            if mod(ib,100) == 0
+                fprintf('Doing %d of %d\n',ib,nboot);
+            end
             
             new_post = cell(size(postIcSpikeNums,1),1);
             
@@ -528,6 +537,8 @@ for whichPt = whichPts
                 
                 % How many spikes to pick
                 n_chunk = postIcSpikeNums(j);
+                
+                % Number we've already done
                 
                 while 1
                     % pick a start index
@@ -554,6 +565,15 @@ for whichPt = whichPts
             other_s = all_s(new_other);
             post_clust = idx(post_s);
             other_clust = idx(other_s);
+            
+            % Get distances
+            if isempty(soz) == 1
+                diff_dist_boot(ib) = nan;
+            else
+                boot_post_dist = mean(spike_dist(post_s));
+                boot_other_dist = mean(spike_dist(other_s));
+                diff_dist_boot(ib) = boot_post_dist-boot_other_dist;
+            end
             
             if 1== 0
             figure
@@ -617,6 +637,38 @@ for whichPt = whichPts
 
         chi_tables_postIc{whichPt} = tbl_3;
         p_postIc(whichPt) = p_3;
+        
+        
+        %% Distance analysis
+        % Do it once for real
+        if isempty(soz) == 1
+            p_dist = [];
+            sorted_boot = [];
+            diff_dist_real = [];
+        else
+            post_dist = mean(spike_dist(postIcSpikes));
+            other_dist = mean(spike_dist([preIcSpikes;interIcSpikes]));
+            diff_dist_real = post_dist-other_dist;
+
+            sorted_boot = sort(dist_diff_boot);
+            p_dist = (sum(abs(sorted_boot) > abs(diff_dist_real))+1)/...
+                (length(sorted_boot) + 1);
+        end
+        
+        pDistAll = [pDistAll;p_dist];
+        diffDistAll = [diffDistAll;diff_dist_real];
+        
+        if doPermPlot == 1 && isempty(soz) == 0
+            figure
+            scatter(1:length(sorted_boot),sorted_boot)
+            hold on
+            plot(xlim,[diff_dist_real diff_dist_real]);
+            text(mean(xlim),mean(ylim),sprintf('%1.1e',p_dist));
+            pause
+            close(gcf)
+            
+        end
+        
         
         
     end
