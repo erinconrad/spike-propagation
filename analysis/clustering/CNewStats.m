@@ -704,7 +704,11 @@ for whichPt = whichPts
     
 end
 
-save([destFolder,'stats.mat'],'stats');
+if intericTime == 4
+    save([destFolder,'stats4.mat'],'stats');
+elseif intericTime == 1
+    save([destFolder,'stats1.mat'],'stats');
+end
 
 %% Fisher's method to combine p values for change over time
 all_p_change = [];
