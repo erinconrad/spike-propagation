@@ -9,7 +9,7 @@ This is my cleaned up file for getting statistics on the cluster data
 
 % Parameters
 plotQI = 0;
-intericTime = 1;
+intericTime = 4;
 doPermPlot = 0;
 doPlots = 1;
 doLongStuff = 1;
@@ -530,29 +530,48 @@ for whichPt = whichPts
                 fprintf('Doing %d of %d\n',ib,nboot);
             end
             
-            new_post = cell(size(postIcSpikeNums,1),1);
+            iter = 0;
+            bad = 0;
+            while 1
             
-            %Get post-ictal indices
-            for j = 1:size(postIcSpikeNums,1)
-                
-                % How many spikes to pick
-                n_chunk = postIcSpikeNums(j);
-                
-                % Number we've already done
-                
-                while 1
-                    % pick a start index
-                    start = randi(n_spikes);
+                new_post = cell(size(postIcSpikeNums,1),1);
 
-                    % See if it will run into one of the other chunks
-                    if isempty(intersect(mod(start-1:start+n_chunk-1,n_spikes) + 1,...
-                            unique([new_post{:}]))) == 1
+                %Get post-ictal indices
+                for j = 1:size(postIcSpikeNums,1)
+                    
+                    bad = 0;
+
+                    % How many spikes to pick
+                    n_chunk = postIcSpikeNums(j);
+
+
+                    while 1
+                        % pick a start index
+                        start = randi(n_spikes);
+
+                        % See if it will run into one of the other chunks
+                        if isempty(intersect(mod(start-1:start+n_chunk-1,n_spikes) + 1,...
+                                unique([new_post{:}]))) == 1
+                            break
+                        end
+                        
+                        iter = iter + 1;
+                        if iter > 1e3
+                            bad = 1;
+                            break
+                        end
+                    end
+                    if bad == 1
                         break
                     end
+                    new_post{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;
+                    bad = 0;
+                    
                 end
-                   
-                new_post{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;
                 
+                if bad == 0
+                    break
+                end
             end
             
            if isequal(sort([new_post{:}]),unique([new_post{:}])) == 0
@@ -575,7 +594,7 @@ for whichPt = whichPts
                 diff_dist_boot(ib) = boot_post_dist-boot_other_dist;
             end
             
-            if 1== 0
+            if 1== 1
             figure
             scatter(all_times_all(other_s)/3600,ones(length(other_s),1),50,'r');
             hold on
