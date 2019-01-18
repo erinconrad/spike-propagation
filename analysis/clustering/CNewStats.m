@@ -1,4 +1,4 @@
-function stats = CNewStats(pt,cluster,whichPts)
+function CNewStats(pt,cluster,whichPts)
 
 %{ 
 
@@ -674,7 +674,7 @@ for whichPt = whichPts
             other_dist = mean(spike_dist([preIcSpikes;interIcSpikes]));
             diff_dist_real = post_dist-other_dist;
 
-            sorted_boot = sort(dist_diff_boot);
+            sorted_boot = sort(diff_dist_boot);
             p_dist = (sum(abs(sorted_boot) > abs(diff_dist_real))+1)/...
                 (length(sorted_boot) + 1);
         end
