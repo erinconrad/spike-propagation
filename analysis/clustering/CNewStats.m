@@ -526,7 +526,7 @@ for whichPt = whichPts
         dist_diff_boot = zeros(nboot,1);
         for ib = 1:nboot
             
-            if mod(ib,100) == 0
+            if mod(ib,10) == 0
                 fprintf('Doing %d of %d\n',ib,nboot);
             end
             
@@ -556,7 +556,7 @@ for whichPt = whichPts
                         end
                         
                         iter = iter + 1;
-                        if iter > 1e3
+                        if iter > 1e2
                             bad = 1;
                             break
                         end
@@ -594,7 +594,7 @@ for whichPt = whichPts
                 diff_dist_boot(ib) = boot_post_dist-boot_other_dist;
             end
             
-            if 1== 1
+            if 1== 0
             figure
             scatter(all_times_all(other_s)/3600,ones(length(other_s),1),50,'r');
             hold on
