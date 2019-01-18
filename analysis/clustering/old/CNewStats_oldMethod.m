@@ -10,7 +10,7 @@ This is my cleaned up file for getting statistics on the cluster data
 % Parameters
 plotQI = 0;
 intericTime = 4;
-doPermPlot = 0;
+doPermPlot = 1;
 doPlots = 1;
 doLongStuff = 1;
 doPre = 1;
@@ -97,6 +97,16 @@ for whichPt = whichPts
         fprintf('WARNING!!! %s had duplicate seizure times\n',pt(whichPt).name);
     end
     
+    % Pull cluster info
+    %{
+    all_times_all = pt(whichPt).cluster.all_times_all; % all spike times
+    all_spikes = pt(whichPt).cluster.all_spikes; % all spike channels
+    all_locs = pt(whichPt).cluster.all_locs;
+    k = pt(whichPt).cluster.k; % the number of clusters
+    idx = pt(whichPt).cluster.idx; % the cluster index for every spike
+    C = pt(whichPt).cluster.C; % the centroids of the clusters
+    bad_cluster = pt(whichPt).cluster.bad_cluster; % which clusters are bad
+    %}
     
     all_times_all = cluster(whichPt).all_times_all; % all spike times
     all_spikes = cluster(whichPt).all_spikes; % all spike channels
@@ -218,7 +228,7 @@ for whichPt = whichPts
         interIcTimesQI = [];
         postIcTimesQI = [];
 
-        % Get all the pre-ictal and post-ictal spikes
+        % Get all the pre-ictal spikes
         preIcSpikes = [];
         postIcSpikes = [];
         preIcSpikeTimes = [];
@@ -261,8 +271,7 @@ for whichPt = whichPts
             spike_idx = (all_times_all >= preIcTimes(1) & ...
                 all_times_all <= preIcTimes(2));
 
-            % Get the cluster indices, times of spikes, and number of
-            % spikes
+            % Get the cluster indices
             preIcSpikes = [preIcSpikes;find(spike_idx)];
             preIcSpikeTimes = [preIcSpikeTimes;all_times_all(spike_idx)];
             preIcSpikeNums = [preIcSpikeNums;sum(spike_idx)];
@@ -344,8 +353,24 @@ for whichPt = whichPts
         Analysis 2: Is the cluster distribution different in the pre-ictal
         compared to the interictal period?
 
-       %}
-        
+        I don't want to do a simple chi squared or a simple permutation test
+        where I just swap the pre-ictal/interictal identity of individual
+        spikes. This will tell me that the pre-ictal and interictal periods are
+        different, but it won't tell me that they are MORE different than I
+        would expect from just picking two random different hours (because I
+        have already PROVEN that the cluster distributions change from hour to
+        hour).
+
+        INSTEAD, I will construct the following permutation test:
+        - I will concatenate the spike indices sorted by time
+        - I will get the number of preictal spikes (N_pre)
+        - I will pick a random start index of this concatenated array. 
+        - I will take N_pre SEQUENTIAL spikes starting at that start index
+           - I will wrap around to the beginning if needed
+        - I will redfine these to be the "pre-ictal" spikes.
+        - I will get the chi_2 value
+        - I will repeat 1,000 times.
+        %}
         if doPre == 1
         all_s = [(preIcSpikes);(interIcSpikes)];
         all_s_times = [preIcSpikeTimes;interIcSpikeTimes];
@@ -355,12 +380,10 @@ for whichPt = whichPts
         [B,I] = sort(all_s_times);
         all_s = all_s(I);
 
-        % To test it, show the times of all the sorted pre and interictal
-        % spikes and their cluster distributions
         if doPermPlot == 1
             new_colors = colors(I,:);
             figure
-            scatter(B/3600,ones(length(B),1),50,new_colors);
+            scatter(B/3600,all_s,50,new_colors);
             hold on
             szTimes = pt(whichPt).newSzTimes;
             for j = 1:size(szTimes,1)
@@ -370,25 +393,19 @@ for whichPt = whichPts
             close(gcf)
         end
         
-        % Now, for the permutation test, I will take random chunks of
-        % spikes equal in number to the original pre-ictal time periods
         nboot = 1e3;
         n_spikes = length(all_s);
         chi2_boot = zeros(nboot,1);
         for ib = 1:nboot
             
-            % The number of spikes in each pre-ictal period
             new_pre = cell(size(preIcSpikeNums,1),1);
             
-            % Loop through pre-ictal periods
+            %Get pre-ictal indices
             for j = 1:size(preIcSpikeNums,1)
                 
-                % How many spikes to pick (number of true pre-ictal spikes
-                % in that period)
+                % How many spikes to pick
                 n_chunk = preIcSpikeNums(j);
                 
-                % Try to generate a random set of spikes equal to that
-                % number
                 while 1
                     % pick a start index
                     start = randi(n_spikes);
@@ -399,52 +416,67 @@ for whichPt = whichPts
                         break
                     end
                 end
-                
-                % If it doesn't run into one of the other chunks, add it to
-                % the new fake pre-ictal spikes
+                   
                 new_pre{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;
                 
             end
             
-           % There should not be ANY repeats
            if isequal(sort([new_pre{:}]),unique([new_pre{:}])) == 0
                error('What\n');
            end
             
             % Get interictal indices
             new_inter = setdiff(1:length(all_s),unique([new_pre{:}]));
-            
-            % Get the actual spike indices
             pre_s = all_s(unique([new_pre{:}]));
             inter_s = all_s(new_inter);
-            
-            % Get their clusters
             pre_clust = idx(pre_s);
             inter_clust = idx(inter_s);
             
-            if 1==0
-                % test this by plotting the times of these fake pre-ictal
-                % and interictal spikes
-                figure
-                scatter(all_times_all(inter_s)/3600,ones(length(inter_s),1),50,'r');
-                hold on
-                scatter(all_times_all(pre_s)/3600,ones(length(pre_s),1),50,'b');
-
-
-                for j = 1:size(szTimes,1)
-                    plot([szTimes(j,1),szTimes(j,1)]/3600,ylim,'k--');
-                end
-                text(mean(xlim),[1.5],sprintf('%d pre-ic spikes',length(pre_s)));
-                pause
-                close(gcf)
+            %{
+            figure
+            scatter(all_times_all(inter_s)/3600,ones(length(inter_s),1),50,'r');
+            hold on
+            scatter(all_times_all(pre_s)/3600,ones(length(pre_s),1),50,'b');
+  
+            
+            for j = 1:size(szTimes,1)
+                plot([szTimes(j,1),szTimes(j,1)]/3600,ylim,'k--');
             end
+            text(mean(xlim),[1.5],sprintf('%d pre-ic spikes',length(pre_s)));
+            pause
+            close(gcf)
+            %}
             
             [~,chi2_boot(ib)] = crosstab([ones(length(pre_clust),1);...
                 2*ones(length(inter_clust),1)],[pre_clust;inter_clust]);
             
         end
 
-       
+        %{
+        n_pre = length(preIcSpikes); %3
+        n_spikes = length(all_s); %10
+        nboot = 1e3;
+        chi2_boot = zeros(nboot,1);
+        for ib = 1:nboot
+            start = randi(n_spikes);
+            if start > n_spikes - n_pre + 1 % 9 > 10 - 3 + 1
+                new_pre = [1:n_pre-(n_spikes-start)-1,start:n_spikes]; 
+                %1:3-(10-9)-1,9:10 = 1:1,9:10
+            else % 8 = 10-3 +1
+                new_pre = start:start+n_pre-1; %8:10
+            end
+            pre_s = all_s(new_pre);
+            new_inter = setdiff(1:length(all_s),new_pre);
+            inter_s = all_s(new_inter);
+            pre_clust = idx(pre_s);
+            inter_clust = idx(inter_s);
+            if isequal(sort([pre_clust;inter_clust]),sort(idx(all_s))) == 0
+                error('look\n');
+            end
+            [~,chi2_boot(ib)] = crosstab([ones(length(pre_clust),1);...
+                2*ones(length(inter_clust),1)],[pre_clust;inter_clust]);
+        end
+        %}
 
         % Do it once for real
         inter_clust = idx(interIcSpikes);
@@ -452,21 +484,18 @@ for whichPt = whichPts
         [tbl_2,chi2_real] = crosstab([ones(length(pre_clust),1);...
                 2*ones(length(inter_clust),1)],[pre_clust;inter_clust]);
 
-        % Sort the permutation test chi squareds and find how many are
-        % larger than the real chi squared
+
         sorted_boot = sort(chi2_boot);
+
         diff_s_chi = sorted_boot-chi2_real;
         allLarger = find(diff_s_chi>0);
-        
-        % The p value is the percentage larger 
         if isempty(allLarger) == 1
             p_2 = 0;
         else
             firstLarger = allLarger(1);
-            p_2 = (nboot-firstLarger+1)/(nboot+1);
+            p_2 = (nboot-firstLarger)/nboot;
         end
 
-        % Plot the result of the permuation test
         if doPermPlot == 1
             figure 
             scatter(1:length(sorted_boot),sorted_boot);
@@ -479,13 +508,16 @@ for whichPt = whichPts
         end
         %}
 
+
+
         if k == length(bad_cluster) + 1
             p_2 = 1;
             fprintf('Only one cluster, defining p-value to be 1\n');
         end
 
 
-        % Save information 
+        % Save information into patient struct
+
         chi_tables_plot{whichPt} = tbl_2;
         p_plot(whichPt) = p_2;
         end
@@ -523,7 +555,7 @@ for whichPt = whichPts
             
             new_post = cell(size(postIcSpikeNums,1),1);
             
-            %Get post-ictal indices
+            %Get pre-ictal indices
             for j = 1:size(postIcSpikeNums,1)
                 
                 % How many spikes to pick
@@ -548,14 +580,14 @@ for whichPt = whichPts
                error('What\n');
            end
             
-            % Get other indices
+            % Get interictal indices
             new_other = setdiff(1:length(all_s),unique([new_post{:}]));
             post_s = all_s(unique([new_post{:}]));
             other_s = all_s(new_other);
             post_clust = idx(post_s);
             other_clust = idx(other_s);
             
-            if 1== 0
+            %{
             figure
             scatter(all_times_all(other_s)/3600,ones(length(other_s),1),50,'r');
             hold on
@@ -568,13 +600,70 @@ for whichPt = whichPts
             text(mean(xlim),[1.5],sprintf('%d post-ic spikes',length(post_s)));
             pause
             close(gcf)
-            end
+            %}
             
             [~,chi2_boot(ib)] = crosstab([ones(length(post_clust),1);...
                 2*ones(length(other_clust),1)],[post_clust;other_clust]);
             
         end
-  
+        
+
+        %{
+        n_post = length(postIcSpikes); %3
+        n_spikes = length(all_s); %10
+        nboot = 1e3;
+        chi2_boot = zeros(nboot,1);
+        dist_diff_boot = zeros(nboot,1);
+        if isempty(soz) == 1
+            diff_dist_boot = [];
+        else
+            for ib = 1:nboot
+                start = randi(n_spikes);
+                if start > n_spikes - n_post + 1 % 9 > 10 - 3 + 1
+                    new_post = [1:n_post-(n_spikes-start)-1,start:n_spikes]; 
+                    %1:3-(10-9)-1,9:10 = 1:1,9:10
+                else % 8 = 10-3 +1
+                    new_post = start:start+n_post-1; %8:10
+                end
+
+                % Get the identities of the spikes I am calling post-ictal and
+                % the spikes I am calling other
+                post_s = all_s(new_post);
+                new_other = setdiff(1:length(all_s),new_post);
+                other_s = all_s(new_other);
+
+                % Get their cluster identities
+                post_clust = idx(post_s);
+                other_clust = idx(other_s);
+                if isequal(sort([post_clust;other_clust]),sort(idx(all_s))) == 0
+                    error('look\n');
+                end
+                
+                figure
+                scatter(all_times_all(post_s)/3600,ones(length(new_post),1),50,'g');
+                hold on
+                scatter(all_times_all(other_s)/3600,ones(length(new_other),1),50,'r');
+                for j = 1:size(szTimes,1)
+                    plot([szTimes(j,1),szTimes(j,1)]/3600,ylim,'k--');
+                end
+                text(mean(xlim),[1.5],sprintf('%d post-ic spikes',length(new_post)));
+                pause
+                close(gcf)
+                
+                % Get the chi2 statistic
+                [~,chi2_boot(ib)] = crosstab([ones(length(post_clust),1);...
+                    2*ones(length(other_clust),1)],[post_clust;other_clust]);
+
+                % For the distance from SOZ analysis - get the distances of the
+                % spikes from the SOZ and take their means
+                boot_post_dist = mean(spike_dist(post_s));
+                boot_other_dist = mean(spike_dist(other_s));
+                dist_diff_boot(ib) = boot_post_dist-boot_other_dist;
+
+            end
+        end
+        %}
+
         % Do it once for real
         post_clust = idx(postIcSpikes);
         other_clust = idx([preIcSpikes;interIcSpikes]);
@@ -617,6 +706,40 @@ for whichPt = whichPts
 
         chi_tables_postIc{whichPt} = tbl_3;
         p_postIc(whichPt) = p_3;
+        
+        
+        % Distance analysis
+        %{
+        
+        % Do it once for real
+        if isempty(soz) == 1
+            p_dist = [];
+            sorted_boot = [];
+            diff_dist_real = [];
+        else
+            post_dist = mean(spike_dist(postIcSpikes));
+            other_dist = mean(spike_dist([preIcSpikes;interIcSpikes]));
+            diff_dist_real = post_dist-other_dist;
+
+            sorted_boot = sort(dist_diff_boot);
+            p_dist = (sum(abs(sorted_boot) > abs(diff_dist_real))+1)/...
+                (length(sorted_boot) + 1);
+        end
+        
+        pDistAll = [pDistAll;p_dist];
+        diffDistAll = [diffDistAll;diff_dist_real];
+        
+        if doPermPlot == 1 && isempty(soz) == 0
+            figure
+            scatter(1:length(sorted_boot),sorted_boot)
+            hold on
+            plot(xlim,[diff_dist_real diff_dist_real]);
+            text(mean(xlim),mean(ylim),sprintf('%1.1e',p_dist));
+            pause
+            close(gcf)
+            
+        end
+        %}
         
         
     end

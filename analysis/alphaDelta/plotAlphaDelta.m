@@ -38,6 +38,8 @@ end
 
 allP = [];
 allRho = [];
+allP2 = [];
+allRho2 = [];
 
 for whichPt = whichPts
     
@@ -49,6 +51,7 @@ for whichPt = whichPts
     fprintf('Doing %s\n',pt(whichPt).name);
     szTimes = pt(whichPt).newSzTimes;
     locs = pt(whichPt).electrodeData.locs(:,2:4);
+    soz = locs(pt(whichPt).newSOZChs,:);
 
     
     % Reorder seizure times if out of order
@@ -111,7 +114,8 @@ for whichPt = whichPts
     bin_times = pt(whichPt).runTimes;
     prop_pop = zeros(size(bin_times,1),1);
     locs_bin = zeros(size(bin_times,1),3);
-    
+    soz_dist_bin = zeros(size(bin_times,1),1);
+    num_spikes = zeros(size(bin_times,1),1);
     % Run through bin times and get proportion of spikes in most popular
     % cluster for that bin.
     for i = 1:size(bin_times,1)
@@ -124,9 +128,33 @@ for whichPt = whichPts
         
         
         % Get spike locs
-        whichSpikes = all_times_all > bin_times(i,1) & ...
-            all_times_all < bin_times(i,2);
+        whichSpikes = find(all_times_all > bin_times(i,1) & ...
+            all_times_all < bin_times(i,2));
         locs_bin(i,:) = mean(all_locs(whichSpikes,:),1);
+        num_spikes(i) = length(whichSpikes);
+        
+        if isempty(soz) == 1
+            
+            soz_dist_bin = [];
+            
+        else
+        
+            % Get mean distance from spike to nearest SOZ
+            soz_dist = zeros(length(whichSpikes),1);
+
+            % Loop through all spikes in bin
+            for j = 1:length(whichSpikes)
+
+                % For each spike, get the distance between the spike and its
+                % nearest SOZ
+                soz_dist(j) = min(vecnorm(locs(all_spikes(whichSpikes(j)),:) - ...
+                    soz,2,2)); 
+            end
+            % Average that distance over all spikes in the bin
+            soz_dist_bin(i) = mean(soz_dist);
+        
+        end
+        
     end
     
     
@@ -143,26 +171,39 @@ for whichPt = whichPts
     
     if 1 == 0
         figure
-        subplot(2,1,1)
+        subplot(3,1,1)
         plot(power(whichPt).times/3600,prop_pop);
         hold on
         plot(power(whichPt).times/3600,mean_ad);
+        plot(power(whichPt).times/3600,soz_dist_bin);
 
-
-        subplot(2,1,2)
+        subplot(3,1,2)
         scatter(mean_ad,prop_pop)
+        lsline
+        
+        subplot(3,1,3)
+        scatter(mean_ad,soz_dist_bin)
         lsline
     end
     
-    mean_ad(isnan(prop_pop)) = [];
-    prop_pop(isnan(prop_pop)) = [];
+
     
-    
-    [rho,pval] = corr(mean_ad',prop_pop,'Type','Spearman');
+    [rho,pval] = corr(mean_ad(~isnan(prop_pop))',prop_pop(~isnan(prop_pop)),'Type','Spearman');
     fprintf(['For %s, the correlation between proportion in most popular'...
         ' cluster and alpha delta ratio is:\n %1.1f (p = %1.1e)\n'],...
         pt(whichPt).name,rho,pval);
     
+    if isempty(soz) == 0
+        [rho2,pval2] = corr(mean_ad(~isnan(soz_dist_bin))',...
+            soz_dist_bin(~isnan(soz_dist_bin)),'Type','Spearman');
+        fprintf(['For %s, the correlation between distance from nearest'...
+            ' SOZ and alpha delta ratio is:\n %1.1f (p = %1.1e)\n'],...
+            pt(whichPt).name,rho2,pval2);
+    else
+        pval2 = [];
+        rho2 = [];
+    end
+
     if isnan(pval) == 1
         if k == length(bad_cluster) + 1
             fprintf('Only one cluster, setting p to 1\n');
@@ -174,6 +215,9 @@ for whichPt = whichPts
     
     allP = [allP;pval];
     allRho = [allRho;rho];
+    
+    allP2 = [allP2;pval2];
+    allRho2 = [allRho2;rho2];
     
     colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
     c_idx = zeros(size(idx,1),3);
@@ -342,20 +386,37 @@ for whichPt = whichPts
 end
 
 
-fprintf('The range of rho was %1.2f-%1.2f. The mean was %1.2f.\n',...
+% Change in location
+fprintf('The range of rho for change in location was:\n%1.2f-%1.2f. The mean was %1.2f.\n',...
     min(abs(allRho)),max(abs(allRho)),mean(abs(allRho(~isnan(allRho)))));
 
-fprintf('There were %d of %d patients with significant p values\n',...
+fprintf('There were %d of %d patients with significant p values for change in location\n',...
     sum(allP < 0.05/length(allP)),length(allP));
 
 
 X_2 = -2 * sum(log(allP));
 sum_p = 1-chi2cdf(X_2,2*length(allP));
 
-fprintf('The group p value is %1.1e\n',sum_p);
+fprintf('The group p value for change in location is %1.1e\n',sum_p);
+
+% Dist from SOZ
+
+fprintf('Remember we are skipping HUP116 because no SOZ electrodes\n');
+fprintf('The range of rho for dist from SOZ was:\n%1.2f-%1.2f. The mean was %1.2f.\n',...
+    min(abs(allRho2)),max(abs(allRho2)),mean(abs(allRho2(~isnan(allRho2)))));
+
+fprintf('There were %d of %d patients with significant p values for SOZ distance\n',...
+    sum(allP2 < 0.05/length(allP2)),length(allP2));
+
+
+X_2 = -2 * sum(log(allP2));
+sum_p2 = 1-chi2cdf(X_2,2*length(allP2));
+
+fprintf('The group p value for change in location is %1.1e\n',sum_p2);
+
 
 % Double check
-group_pval = fisher_pvalue_meta_analysis(allP);
+%group_pval = fisher_pvalue_meta_analysis(allP);
 
 
 %figure

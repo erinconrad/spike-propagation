@@ -17,6 +17,8 @@ end
 all = [];
 post_proc = [];
 post_clust = [];
+times_all_pts = [];
+all_spike_num = [];
 
 for whichPt = whichPts
     
@@ -30,6 +32,7 @@ for whichPt = whichPts
     
     % Get all times
     all_times = sum(diff(pt(whichPt).allTimes,1,2));
+    times_all_pts = [times_all_pts;all_times];
     
     % Spike rate
     spike_rate = n_spikes_all/all_times/nchs*60;
@@ -88,6 +91,9 @@ for whichPt = whichPts
     spikes_post_cluster = length(all_spikes)/all_times/nchs*60;
     post_clust = [post_clust;spikes_post_cluster];
     
+    %fprintf('%s had %d spikes post cluster.\n',pt(whichPt).name,length(all_spikes));
+    all_spike_num = [all_spike_num;length(all_spikes)];
+    
 end
 
 fprintf('Before processing, the spike rate in spikes/ch/min was:\n%1.3f (range %1.3f-%1.3f)\n',...
@@ -98,5 +104,8 @@ fprintf('After processing, the spike rate in spikes/ch/min was:\n%1.3f (range %1
 
 fprintf('After clustering, the spike rate in spikes/ch/min was:\n%1.3f (range %1.3f-%1.3f)\n',...
     mean(post_clust),min(post_clust),max(post_clust));
+
+fprintf('The average time analyzed was %1.1f hours (range %1.1f-%1.1f).\n',...
+    mean(times_all_pts)/3600,min(times_all_pts)/3600,max(times_all_pts)/3600);
 
 end
