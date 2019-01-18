@@ -9,7 +9,7 @@ This is my cleaned up file for getting statistics on the cluster data
 
 % Parameters
 plotQI = 0;
-intericTime = 4;
+intericTime = 1;
 doPermPlot = 0;
 doPlots = 1;
 doLongStuff = 1;
@@ -236,9 +236,12 @@ for whichPt = whichPts
             % Get the indices of spikes in this time range
             post_ic_spike_idx = (all_times_all >= postIcTimes(1) & ...
                 all_times_all <= postIcTimes(2));
-            postIcSpikes = [postIcSpikes;find(post_ic_spike_idx)];
-            postIcSpikeTimes = [postIcSpikeTimes;all_times_all(post_ic_spike_idx)];
-            postIcSpikeNums = [postIcSpikeNums;sum(post_ic_spike_idx)];
+            s = find(post_ic_spike_idx);
+            % Remove those that we've already included
+            s(ismember(s,postIcSpikes)) = [];
+            postIcSpikes = [postIcSpikes;s];
+            postIcSpikeTimes = [postIcSpikeTimes;all_times_all(s)];
+            postIcSpikeNums = [postIcSpikeNums;length(s)];
             
             % Get range of pre-ictal times
             preIcTimes = szTimes(j,1) + preIcRange;
