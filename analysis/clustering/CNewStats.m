@@ -188,10 +188,10 @@ for whichPt = whichPts
     end
     
     % Save information into patient struct
-    stats(whichPt).cluster.hour.tbl = tbl_1;
-    stats(whichPt).cluster.hour.chi2 = chi2_1;
-    stats(whichPt).cluster.hour.p = p_1;
-    stats(whichPt).cluster.hour.labels = labels_1;
+    stats(whichPt).hour.tbl = tbl_1;
+    stats(whichPt).hour.chi2 = chi2_1;
+    stats(whichPt).hour.p = p_1;
+    stats(whichPt).hour.labels = labels_1;
     
     fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'...
     ' distributions,\n the p-value is %1.1e\n\n\n'],pt(whichPt).name,p_1);
@@ -493,6 +493,8 @@ for whichPt = whichPts
 
 
         % Save information 
+        stats(whichPt).preIc.tbl = tbl_2;
+        stats(whichPt).preIc.p = p_2;
         chi_tables_plot{whichPt} = tbl_2;
         p_plot(whichPt) = p_2;
         end
@@ -655,7 +657,8 @@ for whichPt = whichPts
 
 
         % Save information into patient struct
-
+        stats(whichPt).postIc.tbl = tbl_3;
+        stats(whichPt).postIc.p = p_3;
         chi_tables_postIc{whichPt} = tbl_3;
         p_postIc(whichPt) = p_3;
         
@@ -679,6 +682,9 @@ for whichPt = whichPts
         pDistAll = [pDistAll;p_dist];
         diffDistAll = [diffDistAll;diff_dist_real];
         
+        stats(whichPt).dist.p = p_dist;
+        stats(whichPt).dist.dist_diff = diff_dist_real;
+        
         if doPermPlot == 1 && isempty(soz) == 0
             figure
             scatter(1:length(sorted_boot),sorted_boot)
@@ -698,6 +704,7 @@ for whichPt = whichPts
     
 end
 
+save([destFolder,'stats.mat'],'stats');
 
 %% Fisher's method to combine p values for change over time
 all_p_change = [];
@@ -824,6 +831,19 @@ if doLongStuff == 1
         end
 
         %% Post-ic
+        
+        all_p = [];
+        for whichPt = whichPts
+           all_p = [all_p;p_postIc(whichPt)]; 
+        end
+
+        X_2 = -2 * sum(log(all_p));
+        sum_p = 1-chi2cdf(X_2,2*length(all_p));
+
+        fprintf('The group p value for pre-ictal vs interictal cluster is %1.1e\n',sum_p);
+        fprintf('%d of %d patients had a different preictal vs interictal distribution.\n',...
+            sum(all_p<0.05/length(whichPts)),length(whichPts));
+        
         figure
         set(gcf,'Position',[99 26 1264 686]);
         numcols = 10;
