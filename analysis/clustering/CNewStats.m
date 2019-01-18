@@ -9,7 +9,7 @@ This is my cleaned up file for getting statistics on the cluster data
 
 % Parameters
 plotQI = 0;
-intericTime = 1;
+intericTime = 4;
 doPermPlot = 0;
 doPlots = 1;
 doLongStuff = 1;
@@ -523,27 +523,33 @@ for whichPt = whichPts
             close(gcf)
         end
         
+        if length(postIcSpikes) ~= length(unique(postIcSpikes))
+            error('What\n');
+        end
+        
         nboot = 1e3;
         n_spikes = length(all_s);
         chi2_boot = zeros(nboot,1);
         dist_diff_boot = zeros(nboot,1);
+        
+        % Sort the post ic spike numbers in descending order. I do this
+        % because I am trying to fit a bunch of smaller chunks, non
+        % overlapping, into a big chunk. If I put in the small chunks
+        % first, I am likely to put them in a configuration that will not
+        % allow me to fit the bigger ones in later, so my while loop gets
+        % stuck!!!
+        postIcSpikeNums = sort(postIcSpikeNums,'descend');
         for ib = 1:nboot
             
             if mod(ib,10) == 0
                 fprintf('Doing %d of %d\n',ib,nboot);
             end
             
-            iter = 0;
-            bad = 0;
-            while 1
-            
                 new_post = cell(size(postIcSpikeNums,1),1);
 
                 %Get post-ictal indices
                 for j = 1:size(postIcSpikeNums,1)
                     
-                    bad = 0;
-
                     % How many spikes to pick
                     n_chunk = postIcSpikeNums(j);
 
@@ -558,27 +564,20 @@ for whichPt = whichPts
                             break
                         end
                         
-                        iter = iter + 1;
-                        if iter > 1e2
-                            bad = 1;
-                            break
-                        end
+                       
                     end
-                    if bad == 1
-                        break
-                    end
-                    new_post{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;
-                    bad = 0;
                     
+                    new_post{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;                 
                 end
                 
-                if bad == 0
-                    break
-                end
-            end
+                
             
            if isequal(sort([new_post{:}]),unique([new_post{:}])) == 0
                error('What\n');
+           end
+           
+           if sum(postIcSpikeNums) ~= length(postIcSpikes)
+               error('what\n');
            end
             
             % Get other indices
