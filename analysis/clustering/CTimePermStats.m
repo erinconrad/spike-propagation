@@ -8,8 +8,9 @@ This is my cleaned up file for getting statistics on the cluster data
 %}
 
 % Parameters
-intericTime = 4;
+intericTime = 1;
 
+saveStuff = 1;
 plotQI = 0;
 doPermPlot = 0;
 doPlots = 1;
@@ -312,6 +313,7 @@ for whichPt = whichPts
         end
 
         
+        if doPre == 1
         %% Pre-ic analysis
         
         % Concatenate all continuous blocks of time. Very commonly a
@@ -671,6 +673,8 @@ for whichPt = whichPts
 
             pause
             close(gcf)
+        end
+        
         end
         
         
@@ -1056,10 +1060,12 @@ for whichPt = whichPts
     end
 end
 
-if intericTime == 4
-    save([destFolder,'stats4TimePerm.mat'],'stats');
-elseif intericTime == 1
-    save([destFolder,'stats1TimePerm.mat'],'stats');
+if saveStuff == 1
+    if intericTime == 4
+        save([destFolder,'stats4TimePerm.mat'],'stats');
+    elseif intericTime == 1
+        save([destFolder,'stats1TimePerm.mat'],'stats');
+    end
 end
 
 %% Fisher's method to combine p values for change over time
@@ -1182,8 +1188,10 @@ if doLongStuff == 1
         end
 
         %pause
-        print(gcf,[destFolder,'clustBarTimePerm',sprintf('%d_hours',intericTime)],'-depsc');
-        eps2pdf([destFolder,'clustBarTimePerm',sprintf('%d_hours',intericTime),'.eps'])
+        if saveStuff == 1
+            print(gcf,[destFolder,'clustBarTimePerm',sprintf('%d_hours',intericTime)],'-depsc');
+            eps2pdf([destFolder,'clustBarTimePerm',sprintf('%d_hours',intericTime),'.eps'])
+        end
         end
 
         %% Post-ic
@@ -1273,9 +1281,10 @@ if doLongStuff == 1
         end
 
         %pause
-        print(gcf,[destFolder,'clustPostTimePerm',sprintf('%d_hours',intericTime)],'-depsc');
-        eps2pdf([destFolder,'clustPostTimePerm',sprintf('%d_hours',intericTime),'.eps'])
-
+        if saveStuff == 1
+            print(gcf,[destFolder,'clustPostTimePerm',sprintf('%d_hours',intericTime)],'-depsc');
+            eps2pdf([destFolder,'clustPostTimePerm',sprintf('%d_hours',intericTime),'.eps'])
+        end
 
     end
    
