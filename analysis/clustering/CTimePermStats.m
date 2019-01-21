@@ -349,6 +349,9 @@ for whichPt = whichPts
         
         nboot = 1e3;
         chi2_boot = zeros(nboot,1);
+        bin_size = 100;
+        preIcTimeBinBoot = [];
+        interIcTimeBinBoot = [];
         
         for ib = 1:nboot
             
@@ -555,6 +558,9 @@ for whichPt = whichPts
                 spike_idx = find(all_times_all >= fakePreIcTimes(i,1) & ...
                     all_times_all <= fakePreIcTimes(i,2));
                 fakePreIcSpikes = [fakePreIcSpikes;spike_idx];
+                preIcTimeBinBoot = [preIcTimeBinBoot,...
+                    linspace(round(fakePreIcTimes(i,1)),...
+                    round(fakePreIcTimes(i,2)),bin_size)];
             end
             
             fakeInterIcSpikes = [];
@@ -562,6 +568,9 @@ for whichPt = whichPts
                 spike_idx = find(all_times_all >= fakeInterIcTimes(i,1) & ...
                     all_times_all <= fakeInterIcTimes(i,2));
                 fakeInterIcSpikes = [fakeInterIcSpikes;spike_idx];
+                interIcTimeBinBoot = [interIcTimeBinBoot,...
+                    linspace(round(fakeInterIcTimes(i,1)),...
+                    round(fakeInterIcTimes(i,2)),bin_size)];
             end
             
             % Now get the cluster distributions
@@ -572,7 +581,31 @@ for whichPt = whichPts
             [~,chi2_boot(ib)] = crosstab([ones(length(fakePreIcClust),1);...
                 2*ones(length(fakeInterIcClust),1)],...
                 [fakePreIcClust;fakeInterIcClust]);  
+            
+            
+            
         end
+        
+        if 1 == 0
+        figure
+        subplot(1,2,1)
+        hist(preIcTimeBinBoot/3600)
+        hold on
+        yl = ylim;
+        for j = 1:size(szTimes,1)
+           plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k--','LineWidth',5);
+        end
+        
+        subplot(1,2,2)
+        hist(interIcTimeBinBoot/3600)
+        hold on
+        hold on
+        yl = ylim;
+        for j = 1:size(szTimes,1)
+           plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k--','LineWidth',5);
+        end
+        end
+        
         
         % Do it once for real
         realPreIcSpikes = [];
@@ -616,6 +649,9 @@ for whichPt = whichPts
         
         chi_tables_plot{whichPt} = tbl_2;
         p_plot(whichPt) = p_2;
+        
+        stats(whichPt).preIc.tbl = tbl_2;
+        stats(whichPt).preIc.p = p_2;
         
         % Plot the result of the permuation test
         if doPermPlot == 1
@@ -673,6 +709,12 @@ for whichPt = whichPts
         
         nboot = 1e3;
         chi2_boot = zeros(nboot,1);
+        dist_diff_boot = zeros(nboot,1);
+        spike_idx_boot = zeros(nboot,1);
+        locs_boot_post = zeros(nboot,3);
+        locs_boot_other = zeros(nboot,3);
+        dist_boot_post = zeros(nboot,1);
+        dist_boot_other = zeros(nboot,1);
         
         for ib = 1:nboot
             
@@ -894,6 +936,21 @@ for whichPt = whichPts
             [~,chi2_boot(ib)] = crosstab([ones(length(fakePostIcClust),1);...
                 2*ones(length(fakeOtherIcClust),1)],...
                 [fakePostIcClust;fakeOtherIcClust]);  
+            
+           
+            % Get distances
+            locs_boot_post(ib,:) = mean(locs(all_spikes(fakePostIcSpikes),:),1);
+            locs_boot_other(ib,:) = mean(locs(all_spikes(fakeOtherIcSpikes),:),1);
+            if isempty(soz) == 1
+                dist_diff_boot(ib) = nan;
+            else
+                boot_post_dist = mean(spike_dist(fakePostIcSpikes));
+                boot_other_dist = mean(spike_dist(fakeOtherIcSpikes));
+                dist_boot_post(ib) = boot_post_dist;
+                dist_boot_other(ib) = boot_other_dist;
+                dist_diff_boot(ib) = boot_post_dist-boot_other_dist;
+            end
+            
         end
         
         % Do it once for real
@@ -940,6 +997,9 @@ for whichPt = whichPts
         chi_tables_postIc{whichPt} = tbl_2;
         p_postIc(whichPt) = p_2;
         
+        stats(whichPt).postIc.tbl = tbl_2;
+        stats(whichPt).postIc.p = p_2;
+        
         % Plot the result of the permuation test
         if doPermPlot == 1
             figure 
@@ -958,6 +1018,39 @@ for whichPt = whichPts
 
             pause
             close(gcf)
+        end
+        
+        %% Distance analysis
+        % Do it once for real
+        if isempty(soz) == 1
+            p_dist = [];
+            sorted_boot = [];
+            diff_dist_real = [];
+        else
+            post_dist = mean(spike_dist(realPostIcSpikes));
+            other_dist = mean(spike_dist(realOtherIcSpikes));
+            diff_dist_real = post_dist-other_dist;
+
+            sorted_boot = sort(dist_diff_boot);
+            p_dist = (sum(abs(sorted_boot) > abs(diff_dist_real))+1)/...
+                (length(sorted_boot) + 1);
+        end
+        
+        pDistAll = [pDistAll;p_dist];
+        diffDistAll = [diffDistAll;diff_dist_real];
+        
+        stats(whichPt).dist.p = p_dist;
+        stats(whichPt).dist.dist_diff = diff_dist_real;
+        
+        if doPermPlot == 1 && isempty(soz) == 0
+            figure
+            hist(sorted_boot)
+            hold on
+            plot([diff_dist_real diff_dist_real],ylim);
+            text(mean(xlim),mean(ylim),sprintf('%1.1e',p_dist));
+            pause
+            close(gcf)
+            
         end
         
     end

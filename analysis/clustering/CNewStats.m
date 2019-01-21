@@ -592,11 +592,11 @@ for whichPt = whichPts
             
             % Get distances
             if isempty(soz) == 1
-                diff_dist_boot(ib) = nan;
+                dist_diff_boot(ib) = nan;
             else
                 boot_post_dist = mean(spike_dist(post_s));
                 boot_other_dist = mean(spike_dist(other_s));
-                diff_dist_boot(ib) = boot_post_dist-boot_other_dist;
+                dist_diff_boot(ib) = boot_post_dist-boot_other_dist;
             end
             
             if 1== 0
@@ -675,7 +675,7 @@ for whichPt = whichPts
             other_dist = mean(spike_dist([preIcSpikes;interIcSpikes]));
             diff_dist_real = post_dist-other_dist;
 
-            sorted_boot = sort(diff_dist_boot);
+            sorted_boot = sort(dist_diff_boot);
             p_dist = (sum(abs(sorted_boot) > abs(diff_dist_real))+1)/...
                 (length(sorted_boot) + 1);
         end
