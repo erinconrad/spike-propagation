@@ -286,9 +286,11 @@ allLoc = {};
 for whichPt = whichPts
     allOutcome = [allOutcome;outcome(whichPt)];
     allLoc = [allLoc;pt(whichPt).clinical.seizureOnset];
+    %{
     if isempty(pt(whichPt).sz_onset) == 1
         allLoc = [allLoc;nan];
     end
+    %}
 end
 
 loc_bin = zeros(length(allLoc),1);

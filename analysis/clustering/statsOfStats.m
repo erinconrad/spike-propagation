@@ -79,16 +79,18 @@ fprintf('%d out of %d patients showed a significant pre-ictal change in cluster 
     sum(p_pre_all < 0.05/length(whichPts)),length(whichPts))
 fprintf('The group p value for change over time is %1.3f\n',sum_p);
 
-%% Pre-ic change
+%% Post-ic change
 X_2 = -2 * sum(log(p_post_all));
 sum_p = 1-chi2cdf(X_2,2*length(p_post_all));
-fprintf('%d out of %d patients showed a significant pre-ictal change in cluster distribution.\n',...
+fprintf('%d out of %d patients showed a significant post-ictal change in cluster distribution.\n',...
     sum(p_post_all < 0.05/length(whichPts)),length(whichPts))
 fprintf('The group p value for change over time is %1.1e\n',sum_p);
 
 
 %% Distance change
-
+diff_dist_all
+diff_dist_all(p_post_all<0.05/length(whichPts))
+p_dist_all(p_post_all<0.05/length(whichPts))
 
 %% Clinical correlations
 

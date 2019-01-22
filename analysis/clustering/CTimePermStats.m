@@ -132,14 +132,12 @@ for whichPt = whichPts
     % SOZ
     soz = pt(whichPt).newSOZChs; 
     
-    if isempty(soz) == 1
-        spike_dist = [];
-    else
-        spike_dist = zeros(size(all_locs,1),1);
-        for i = 1:size(all_locs,1)
-            spike_dist(i) = min(vecnorm(all_locs(i,:) - locs(soz,:),2,2)); 
-        end
+    
+    spike_dist = zeros(size(all_locs,1),1);
+    for i = 1:size(all_locs,1)
+        spike_dist(i) = min(vecnorm(all_locs(i,:) - locs(soz,:),2,2)); 
     end
+    
     
     % Analysis 0
     dist = vecnorm(diff(C,1),2,2);
@@ -945,15 +943,13 @@ for whichPt = whichPts
             % Get distances
             locs_boot_post(ib,:) = mean(locs(all_spikes(fakePostIcSpikes),:),1);
             locs_boot_other(ib,:) = mean(locs(all_spikes(fakeOtherIcSpikes),:),1);
-            if isempty(soz) == 1
-                dist_diff_boot(ib) = nan;
-            else
-                boot_post_dist = mean(spike_dist(fakePostIcSpikes));
-                boot_other_dist = mean(spike_dist(fakeOtherIcSpikes));
-                dist_boot_post(ib) = boot_post_dist;
-                dist_boot_other(ib) = boot_other_dist;
-                dist_diff_boot(ib) = boot_post_dist-boot_other_dist;
-            end
+            
+            boot_post_dist = mean(spike_dist(fakePostIcSpikes));
+            boot_other_dist = mean(spike_dist(fakeOtherIcSpikes));
+            dist_boot_post(ib) = boot_post_dist;
+            dist_boot_other(ib) = boot_other_dist;
+            dist_diff_boot(ib) = boot_post_dist-boot_other_dist;
+            
             
         end
         
@@ -1026,19 +1022,15 @@ for whichPt = whichPts
         
         %% Distance analysis
         % Do it once for real
-        if isempty(soz) == 1
-            p_dist = [];
-            sorted_boot = [];
-            diff_dist_real = [];
-        else
-            post_dist = mean(spike_dist(realPostIcSpikes));
-            other_dist = mean(spike_dist(realOtherIcSpikes));
-            diff_dist_real = post_dist-other_dist;
+        
+        post_dist = mean(spike_dist(realPostIcSpikes));
+        other_dist = mean(spike_dist(realOtherIcSpikes));
+        diff_dist_real = post_dist-other_dist;
 
-            sorted_boot = sort(dist_diff_boot);
-            p_dist = (sum(abs(sorted_boot) > abs(diff_dist_real))+1)/...
-                (length(sorted_boot) + 1);
-        end
+        sorted_boot = sort(dist_diff_boot);
+        p_dist = (sum(abs(sorted_boot) > abs(diff_dist_real))+1)/...
+            (length(sorted_boot) + 1);
+        
         
         pDistAll = [pDistAll;p_dist];
         diffDistAll = [diffDistAll;diff_dist_real];

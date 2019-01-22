@@ -200,8 +200,8 @@ for whichPt = whichPts
             ' SOZ and alpha delta ratio is:\n %1.1f (p = %1.1e)\n'],...
             pt(whichPt).name,rho2,pval2);
     else
-        pval2 = [];
-        rho2 = [];
+        pval2 = nan;
+        rho2 = nan;
     end
 
     if isnan(pval) == 1
