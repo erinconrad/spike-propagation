@@ -40,6 +40,8 @@ allP = [];
 allRho = [];
 allP2 = [];
 allRho2 = [];
+allAD = [];
+allDist = [];
 
 for whichPt = whichPts
     
@@ -182,6 +184,8 @@ for whichPt = whichPts
         lsline
     end
     
+    allAD = [allAD;mean_ad'];
+    allDist = [allDist;soz_dist_bin];
 
     
     [rho,pval] = corr(mean_ad(~isnan(prop_pop))',prop_pop(~isnan(prop_pop)),'Type','Spearman');
@@ -396,26 +400,17 @@ sum_p = 1-chi2cdf(X_2,2*length(allP));
 fprintf('The group p value for change in location is %1.1e\n',sum_p);
 
 % Dist from SOZ
+nanAD = find(isnan(allAD));
+nanDist = find(isnan(allDist));
 
-fprintf('The range of rho for dist from SOZ was:\n%1.2f-%1.2f. The mean was %1.2f.\n',...
-    min(abs(allRho2)),max(abs(allRho2)),mean(abs(allRho2(~isnan(allRho2)))));
+% remove nans
+allAD([nanAD;nanDist]) = [];
+allDist([nanAD;nanDist]) = [];
 
-fprintf('There were %d of %d patients with significant p values for SOZ distance\n',...
-    sum(allP2 < 0.05/length(allP2)),length(allP2));
+figure
+scatter(allAD,allDist)
 
-
-X_2 = -2 * sum(log(allP2));
-sum_p2 = 1-chi2cdf(X_2,2*length(allP2));
-
-fprintf('The group p value for change in location is %1.1e\n',sum_p2);
-
-
-% Double check
-%group_pval = fisher_pvalue_meta_analysis(allP);
-
-
-%figure
-%plot(power(whichPt).times/3600,mean(power(whichPt).ad_rat,1));
+[rho_3,p_3] = corr(allAD,allDist,'Type','Spearman');
 
 
 end

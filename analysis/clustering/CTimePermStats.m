@@ -1000,6 +1000,10 @@ for whichPt = whichPts
         stats(whichPt).postIc.tbl = tbl_2;
         stats(whichPt).postIc.p = p_2;
         
+        if p_2 < 0.001 && whichPt == 9
+            error('what\n');
+        end
+        
         % Plot the result of the permuation test
         if doPermPlot == 1
             figure 
