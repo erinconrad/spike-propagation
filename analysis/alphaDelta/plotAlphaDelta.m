@@ -133,27 +133,23 @@ for whichPt = whichPts
         locs_bin(i,:) = mean(all_locs(whichSpikes,:),1);
         num_spikes(i) = length(whichSpikes);
         
-        if isempty(soz) == 1
-            
-            soz_dist_bin = [];
-            
-        else
         
-            % Get mean distance from spike to nearest SOZ
-            soz_dist = zeros(length(whichSpikes),1);
-
-            % Loop through all spikes in bin
-            for j = 1:length(whichSpikes)
-
-                % For each spike, get the distance between the spike and its
-                % nearest SOZ
-                soz_dist(j) = min(vecnorm(locs(all_spikes(whichSpikes(j)),:) - ...
-                    soz,2,2)); 
-            end
-            % Average that distance over all spikes in the bin
-            soz_dist_bin(i) = mean(soz_dist);
         
+        % Get mean distance from spike to nearest SOZ
+        soz_dist = zeros(length(whichSpikes),1);
+
+        % Loop through all spikes in bin
+        for j = 1:length(whichSpikes)
+
+            % For each spike, get the distance between the spike and its
+            % nearest SOZ
+            soz_dist(j) = min(vecnorm(locs(all_spikes(whichSpikes(j)),:) - ...
+                soz,2,2)); 
         end
+        % Average that distance over all spikes in the bin
+        soz_dist_bin(i) = mean(soz_dist);
+        
+        
         
     end
     
@@ -401,7 +397,6 @@ fprintf('The group p value for change in location is %1.1e\n',sum_p);
 
 % Dist from SOZ
 
-fprintf('Remember we are skipping HUP116 because no SOZ electrodes\n');
 fprintf('The range of rho for dist from SOZ was:\n%1.2f-%1.2f. The mean was %1.2f.\n',...
     min(abs(allRho2)),max(abs(allRho2)),mean(abs(allRho2(~isnan(allRho2)))));
 
