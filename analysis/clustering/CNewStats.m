@@ -10,7 +10,7 @@ I get statistics on spike cluster data
 
 % The post-ictal time period (how many hours after the seizure I am
 % defining to be post-ictal)
-intericTime = 4;
+intericTime = 1;
 
 % Plot the time periods to see what I am defining to be pre-, post-, and
 % interictal
@@ -146,14 +146,13 @@ for whichPt = whichPts
     %% Get the distance between each spike and the nearest SOZ
     soz = pt(whichPt).newSOZChs; 
     
-    if isempty(soz) == 1
-        spike_dist = [];
-    else
-        spike_dist = zeros(size(all_locs,1),1);
-        for i = 1:size(all_locs,1)
-            spike_dist(i) = min(vecnorm(all_locs(i,:) - locs(soz,:),2,2)); 
-        end
+    
+    spike_dist = zeros(size(all_locs,1),1);
+    for i = 1:size(all_locs,1)
+        spike_dist(i) = min(vecnorm(all_locs(i,:) - locs(soz,:),2,2)); 
     end
+    
+    
     
     %% Analysis 1: Does cluster distribution change from hour to hour? 
     test_t = 3600; % 60 minute chunks
@@ -644,6 +643,7 @@ for whichPt = whichPts
         n_spikes = length(all_s);
         chi2_boot = zeros(nboot,1);
         dist_diff_boot = zeros(nboot,1);
+        dispersion_diff_boot = zeros(nboot,1);
         time_boot_post = [];
         
         % Sort the post ic spike numbers in descending order. I do this
@@ -731,13 +731,26 @@ for whichPt = whichPts
             other_clust = idx(other_s);
             
             % Get distances
-            if isempty(soz) == 1
-                dist_diff_boot(ib) = nan;
-            else
-                boot_post_dist = mean(spike_dist(post_s));
-                boot_other_dist = mean(spike_dist(other_s));
-                dist_diff_boot(ib) = boot_post_dist-boot_other_dist;
-            end
+            boot_post_dist = mean(spike_dist(post_s));
+            boot_other_dist = mean(spike_dist(other_s));
+            dist_diff_boot(ib) = boot_post_dist-boot_other_dist;
+            
+            
+            % Get spatial dispersion
+            SD_post_boot = sqrt((...
+            sum(locs(post_s,1)-mean(locs(post_s,1),1))^2+...
+            sum(locs(post_s,2)-mean(locs(post_s,1),2))^2+...
+            sum(locs(post_s,3)-mean(locs(post_s,1),3))^2)...
+            /length(post_s));
+            
+            SD_other_boot = sqrt((...
+                sum(locs(other_s,1)-mean(locs(other_s,1),1))^2+...
+                sum(locs(other_s,2)-mean(locs(other_s,1),2))^2+...
+                sum(locs(other_s,3)-mean(locs(other_s,1),3))^2)...
+                /length(other_s));
+            
+            
+            dispersion_diff_boot(ib) = SD_post_boot-SD_other_boot;
             
             if 1== 0
             figure
@@ -818,27 +831,24 @@ for whichPt = whichPts
         
         %% Distance analysis
         % Do it once for real
-        if isempty(soz) == 1
-            p_dist = [];
-            sorted_boot = [];
-            diff_dist_real = [];
-        else
-            post_dist = mean(spike_dist(postIcSpikes));
-            other_dist = mean(spike_dist([preIcSpikes;interIcSpikes]));
-            diff_dist_real = post_dist-other_dist;
+        
+        post_dist = mean(spike_dist(postIcSpikes));
+        other_dist = mean(spike_dist([preIcSpikes;interIcSpikes]));
+        diff_dist_real = post_dist-other_dist;
 
-            sorted_boot = sort(dist_diff_boot);
-            p_dist = (sum(abs(sorted_boot) > abs(diff_dist_real))+1)/...
-                (length(sorted_boot) + 1);
-        end
+        sorted_boot = sort(dist_diff_boot);
+        p_dist = (sum(abs(sorted_boot) > abs(diff_dist_real))+1)/...
+            (length(sorted_boot) + 1);
+        
         
         pDistAll = [pDistAll;p_dist];
         diffDistAll = [diffDistAll;diff_dist_real];
         
         stats(whichPt).dist.p = p_dist;
         stats(whichPt).dist.dist_diff = diff_dist_real;
+
         
-        if doPermPlot == 1 && isempty(soz) == 0
+        if doPermPlot == 1 
             figure
             scatter(1:length(sorted_boot),sorted_boot)
             hold on
@@ -848,6 +858,22 @@ for whichPt = whichPts
             close(gcf)
             
         end
+        
+        %% Dispersion analysis
+        % Get spatial dispersion
+        post_s = postIcSpikes;
+        other_s = [preIcSpikes;interIcSpikes];
+            SD_post_real = sqrt((...
+            sum(locs(post_s,1)-mean(locs(post_s,1),1))^2+...
+            sum(locs(post_s,2)-mean(locs(post_s,1),2))^2+...
+            sum(locs(post_s,3)-mean(locs(post_s,1),3))^2)...
+            /length(post_s));
+            
+            SD_other_real = sqrt((...
+                sum(locs(other_s,1)-mean(locs(other_s,1),1))^2+...
+                sum(locs(other_s,2)-mean(locs(other_s,1),2))^2+...
+                sum(locs(other_s,3)-mean(locs(other_s,1),3))^2)...
+                /length(other_s));
         
         
         
