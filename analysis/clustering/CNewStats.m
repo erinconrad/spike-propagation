@@ -737,6 +737,7 @@ for whichPt = whichPts
             
             
             % Get spatial dispersion
+            %{
             SD_post_boot = sqrt((...
             sum(locs(post_s,1)-mean(locs(post_s,1),1))^2+...
             sum(locs(post_s,2)-mean(locs(post_s,1),2))^2+...
@@ -751,6 +752,7 @@ for whichPt = whichPts
             
             
             dispersion_diff_boot(ib) = SD_post_boot-SD_other_boot;
+            %}
             
             if 1== 0
             figure
@@ -861,6 +863,7 @@ for whichPt = whichPts
         
         %% Dispersion analysis
         % Get spatial dispersion
+        %{
         post_s = postIcSpikes;
         other_s = [preIcSpikes;interIcSpikes];
             SD_post_real = sqrt((...
@@ -874,6 +877,7 @@ for whichPt = whichPts
                 sum(locs(other_s,2)-mean(locs(other_s,1),2))^2+...
                 sum(locs(other_s,3)-mean(locs(other_s,1),3))^2)...
                 /length(other_s));
+        %}
         
         
         
