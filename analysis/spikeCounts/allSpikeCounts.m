@@ -108,4 +108,7 @@ fprintf('After clustering, the spike rate in spikes/ch/min was:\n%1.3f (range %1
 fprintf('The average time analyzed was %1.1f hours (range %1.1f-%1.1f).\n',...
     mean(times_all_pts)/3600,min(times_all_pts)/3600,max(times_all_pts)/3600);
 
+fprintf('After clustering, the mean number of spikes evaluated was:\n %d (range %d-%d).\n',...
+    round(mean(all_spike_num)),min(all_spike_num),max(all_spike_num));
+
 end

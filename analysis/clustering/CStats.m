@@ -9,9 +9,9 @@ This is my cleaned up file for getting statistics on the cluster data
 
 % Parameters
 plotQI = 0;
-intericTime = 1;
+intericTime = 4;
 doPermute = 0;
-doPlots = 1;
+doPlots = 0;
 
 % Save file location
 [~,~,~,resultsFolder,~] = fileLocations;
@@ -764,7 +764,7 @@ ylabel('Number of patients')
     onLTG(~isnan(onLTG)),'bin','bin',1);
 %}
 
-save([destFolder,'stats.mat','stats']);
+%save([destFolder,'stats.mat','stats']);
 
 
 end

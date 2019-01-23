@@ -305,8 +305,14 @@ for i = 1:size(loc_bin,1)
 end
 
 [p1,info1] = correlateClinically(allMinCapture,allOutcome,'num','num',1);
+fprintf(['The p-value for Spearman rank correlation of number of hours needed\n'...
+    'to capture variability and outcome is p = %1.2e.\n'],p1);
+
+
 [p2,info2] = correlateClinically(allMinCapture(~isnan(loc_bin)),...
 loc_bin(~isnan(loc_bin)),'num','bin',1);
+fprintf(['The p-value for Wilcoxon rank sum of number of hours needed\n'...
+    'to capture variability and temporal vs non temporal lobe is p = %1.2e.\n'],p2);
 
 allAEDs = cell(max(whichPts),1);
 onLTG = [];

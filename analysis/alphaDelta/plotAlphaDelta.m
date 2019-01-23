@@ -41,11 +41,10 @@ end
 
 allP = [];
 allRho = [];
-allP2 = [];
-allRho2 = [];
-allAD = [];
-allDist = [];
-allSD = [];
+allRhoSOZ = [];
+outcome_all = [];
+temp_lobe_all = [];
+
 
 for whichPt = whichPts
     
@@ -58,6 +57,19 @@ for whichPt = whichPts
     szTimes = pt(whichPt).newSzTimes;
     locs = pt(whichPt).electrodeData.locs(:,2:4);
     soz = locs(pt(whichPt).newSOZChs,:);
+    
+    % outcomes
+    outcome = getOutcome(pt,whichPt);
+    outcome_all = [outcome_all,outcome];
+    
+    % SOZ
+    szOnsetText = pt(whichPt).clinical.seizureOnset;
+    if contains(szOnsetText,'TL') == 1
+        tempLobe = 1;
+    else
+        tempLobe = 0;
+    end
+    temp_lobe_all = [temp_lobe_all,tempLobe];
 
     
     % Reorder seizure times if out of order
@@ -163,9 +175,9 @@ for whichPt = whichPts
         
         % Standard distance
         SD_bin(i) = sqrt((...
-            sum(locs_sp(:,1)-mean(locs_sp(:,1),1))^2+...
-            sum(locs_sp(:,2)-mean(locs_sp(:,1),2))^2+...
-            sum(locs_sp(:,3)-mean(locs_sp(:,1),3))^2)...
+            sum(locs_sp(:,1)-mean(locs_sp(:,1)))^2+...
+            sum(locs_sp(:,2)-mean(locs_sp(:,2)))^2+...
+            sum(locs_sp(:,3)-mean(locs_sp(:,3)))^2)...
             /n_spikes);
         
         
@@ -184,7 +196,7 @@ for whichPt = whichPts
     
     
     
-    if 1 == 1
+    if 1 == 0
         figure
         subplot(3,1,1)
         plot(power(whichPt).times/3600,mean_ad);
@@ -196,9 +208,7 @@ for whichPt = whichPts
         plot(power(whichPt).times/3600,SD_bin);
     end
     
-    allAD = [allAD;mean_ad'];
-    allDist = [allDist;soz_dist_bin];
-    allSD = [allSD;SD_bin];
+    
 
     
     [rho,pval] = corr(mean_ad(~isnan(prop_pop))',prop_pop(~isnan(prop_pop)),'Type','Spearman');
@@ -206,16 +216,13 @@ for whichPt = whichPts
         ' cluster and alpha delta ratio is:\n %1.1f (p = %1.1e)\n'],...
         pt(whichPt).name,rho,pval);
     
-    if isempty(soz) == 0
-        [rho2,pval2] = corr(mean_ad(~isnan(soz_dist_bin))',...
-            soz_dist_bin(~isnan(soz_dist_bin)),'Type','Spearman');
-        fprintf(['For %s, the correlation between distance from nearest'...
-            ' SOZ and alpha delta ratio is:\n %1.1f (p = %1.1e)\n'],...
-            pt(whichPt).name,rho2,pval2);
-    else
-        pval2 = nan;
-        rho2 = nan;
-    end
+    
+    [rhoSOZ,pval2] = corr(mean_ad(~isnan(soz_dist_bin))',...
+        soz_dist_bin(~isnan(soz_dist_bin)),'Type','Spearman');
+    fprintf(['For %s, the correlation between distance from nearest'...
+        ' SOZ and alpha delta ratio is:\n %1.1f (p = %1.1e)\n'],...
+        pt(whichPt).name,rhoSOZ,pval2);
+    
 
     if isnan(pval) == 1
         if k == length(bad_cluster) + 1
@@ -229,8 +236,7 @@ for whichPt = whichPts
     allP = [allP;pval];
     allRho = [allRho;rho];
     
-    allP2 = [allP2;pval2];
-    allRho2 = [allRho2;rho2];
+    allRhoSOZ = [allRhoSOZ;rhoSOZ];
     
     colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
     c_idx = zeros(size(idx,1),3);
@@ -413,15 +419,22 @@ sum_p = 1-chi2cdf(X_2,2*length(allP));
 fprintf('The group p value for change in location is %1.1e\n',sum_p);
 
 %% Distance from SOZ
+[~,p] = ttest(allRhoSOZ);
+fprintf(['P-value for correlation of AD ratio with dist from nearest'...
+    'SOZ:%1.2e.\nAverage r = %1.2f\n'],...
+    p,mean(allRhoSOZ));
 
-[rho_3,p_3] = corr(allAD(~isnan(allAD)&~isnan(allDist)),allDist(~isnan(allAD)&~isnan(allDist))...
-,'Type','Spearman');
+%% Correlation between change in location and outcome
+changeLoc = allP < 0.05/length(allP);
+[p,info] = correlateClinically(changeLoc,outcome_all,'bin','num',0);
+fprintf(['The p-value for Wilcoxon rank sum comparing outcome between\n'...
+    'patients with change and those without is:/n'...
+    'p = %1.2e\n'],p);
 
-
-%% Standard distance (spatial dispersion)
-
-[rho_4,p_4] = corr(allSD(~isnan(allSD)&~isnan(allAD)),allAD(~isnan(allSD)&~isnan(allAD)),...
-    'Type','Spearman')
-
+%% Correlation between change in location and temp lobe
+[p,info] = correlateClinically(changeLoc,temp_lobe_all,'bin','bin',0);
+fprintf(['The p-value for chi squared comparing temporal vs non-temporal lobe between\n'...
+    'patients with change and those without is:/n'...
+    'p = %1.2e\n'],p);
 
 end

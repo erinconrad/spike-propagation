@@ -34,6 +34,9 @@ allSpikers = [];
 allSF = [];
 allDegPref = [];
 allMaxSAs = [];
+outcome_all = [];
+temp_lobe_all = [];
+allMeanDist = [];
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
@@ -70,6 +73,19 @@ for whichPt = whichPts
     end
     
     seq_matrix = pt(whichPt).seq_matrix;
+    
+    % outcomes
+    outcome = getOutcome(pt,whichPt);
+    outcome_all = [outcome_all;outcome];
+    
+    % SOZ
+    szOnsetText = pt(whichPt).clinical.seizureOnset;
+    if contains(szOnsetText,'TL') == 1
+        tempLobe = 1;
+    else
+        tempLobe = 0;
+    end
+    temp_lobe_all = [temp_lobe_all;tempLobe];
     
     %% Remove ties
     if removeTies == 1
@@ -379,6 +395,7 @@ for whichPt = whichPts
     % freq
     
     allSAToFreqDist = [allSAToFreqDist;vecnorm(freqLoc-SALoc)];
+    allMeanDist = [allMeanDist;mean(allLocs)];
     
     if whichPt == 8, exampleSA = sa; end
     if whichPt == 8, exampleChInfluence = chInfluence; end
@@ -676,11 +693,21 @@ fprintf('The average largest area of influence was %1.1f cm squared (range %1.1f
 fprintf('The average distance between biggest SA electrode and nearest SOZ electrode is:\n%1.1f (range %1.1f-%1.1f)\n',...
     mean(allSADist), min(allSADist), max(allSADist));
 
+fprintf('The average distance between highest SF electrode and nearest SOZ electrode is:\n%1.1f\n',...
+    mean(allFreqDist));
+
+fprintf('The average distance between every electrode and nearest SOZ electrode is:\n%1.1f\n',...
+    mean(allAllDist));
+
 fprintf(['The average distance between the electrodes with max SA and\n'...
     'the electrodes with max frequency is: %1.1f (range %1.1f-%1.1f)\n and there were %d of %d ',...
     'patients where these electrodes were the same\n'],mean(allSAToFreqDist),...
     min(allSAToFreqDist),max(allSAToFreqDist),sum((allSAToFreqDist==0)),length(allSAToFreqDist==0));
 
+
+% Outcome correlation
+good_outcome = outcome_all < 2.5;
+ranksum((allSADist(good_outcome)),allFreqDist(good_outcome))
 
 
 end
