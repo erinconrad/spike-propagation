@@ -1,19 +1,31 @@
 function CNewStats(pt,cluster,whichPts)
 
-%{ 
-
-CStats
-This is my cleaned up file for getting statistics on the cluster data 
+%% CNewStats
+%{
+I get statistics on spike cluster data
 
 %}
 
-% Parameters
+%% Parameters
+
+% The post-ictal time period (how many hours after the seizure I am
+% defining to be post-ictal)
 intericTime = 4;
 
-plotQI = 1;
+% Plot the time periods to see what I am defining to be pre-, post-, and
+% interictal
+plotQI = 0;
+
+% Plot the result of the permutation test
 doPermPlot = 0;
+
+% Do main plots
 doPlots = 1;
+
+% Do the main analysis...
 doLongStuff = 1;
+
+% Do the pre-ictal analysis
 doPre = 1;
 
 % Save file location
@@ -21,6 +33,7 @@ doPre = 1;
 destFolder = [resultsFolder,'clustering/stats/'];
 mkdir(destFolder);
 
+%% Define which patients I am doing
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
@@ -31,15 +44,15 @@ if isempty(whichPts) == 1
         end
     end
     
+    % I should be doing all 20 of these patients
     if isequal(whichPts,[1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31]) == 0
         error('Warning, not doing correct patients!\n');
     end
-elseif whichPts == 100
-    whichPts = [1,4,6,8,9,12,15,17,18,19,20,22,24,25,27,30,31];
 end
 
 
 
+%% Initialize main variables
 allCounts = [];
 allPat = [];
 allChunk = [];
@@ -62,11 +75,13 @@ postIcDistMean = [];
 diffDistAll = [];
 pDistAll = [];
 
+%% Loop through patients
+
 for whichPt = whichPts
     
     fprintf('Doing %s\n',pt(whichPt).name);
     
-    % Get patient parameters
+    %% Get patient parameters
     locs = pt(whichPt).electrodeData.locs(:,2:4);
     szTimes = pt(whichPt).newSzTimes;
     soz = pt(whichPt).newSOZChs;
@@ -98,6 +113,7 @@ for whichPt = whichPts
         fprintf('WARNING!!! %s had duplicate seizure times\n',pt(whichPt).name);
     end
     
+    %% Get cluster info
     
     all_times_all = cluster(whichPt).all_times_all; % all spike times
     all_spikes = cluster(whichPt).all_spikes; % all spike channels
@@ -127,8 +143,7 @@ for whichPt = whichPts
     clusters = 1:k; clusters(bad_cluster) = [];
     C(bad_cluster,:) = [];
     
-    % For each spike, get the distance between the spike and the nearest
-    % SOZ
+    %% Get the distance between each spike and the nearest SOZ
     soz = pt(whichPt).newSOZChs; 
     
     if isempty(soz) == 1
@@ -140,17 +155,7 @@ for whichPt = whichPts
         end
     end
     
-    % Analysis 0
-    dist = vecnorm(diff(C,1),2,2);
-    allDist = [allDist;dist];
-    
-    
-    %%
-    %{
-    ------
-    Analysis 1: Does cluster distribution change from hour to hour? 
-    ------
-    %}
+    %% Analysis 1: Does cluster distribution change from hour to hour? 
     test_t = 3600; % 60 minute chunks
     
     % Divide run into 60 minute chunks
@@ -201,12 +206,7 @@ for whichPt = whichPts
     
     if doLongStuff == 1
     
-        %%
-        %{
-        -------
-        Analysis 2: Does cluster distribution differ between the pre-ictal and
-        inter-ictal period?
-        -------
+        %% Define pre-ictal, post-ictal, and inter-ictal spikes/times
         %}
         
         % Define important ranges
@@ -238,8 +238,11 @@ for whichPt = whichPts
             post_ic_spike_idx = (all_times_all >= postIcTimes(1) & ...
                 all_times_all <= postIcTimes(2));
             s = find(post_ic_spike_idx);
+            
             % Remove those that we've already included
             s(ismember(s,postIcSpikes)) = [];
+            
+            % Add these spikes to my list of post-ictal spikes
             postIcSpikes = [postIcSpikes;s];
             postIcSpikeTimes = [postIcSpikeTimes;all_times_all(s)];
             postIcSpikeNums = [postIcSpikeNums;length(s)];
@@ -343,7 +346,7 @@ for whichPt = whichPts
         end
 
         
-
+        %% Analysis 2: pre-ictal
        %{
         Analysis 2: Is the cluster distribution different in the pre-ictal
         compared to the interictal period?
@@ -351,17 +354,23 @@ for whichPt = whichPts
        %}
         
         if doPre == 1
+            
+        % I will consider all pre-ictal and interictal spikes
         all_s = [(preIcSpikes);(interIcSpikes)];
+        
+        % Their times (for sorting purposes)
         all_s_times = [preIcSpikeTimes;interIcSpikeTimes];
-        colors = [repmat([1,0,0],length(preIcSpikes),1);...
-            repmat([0,0,1],length(interIcSpikes),1)];
-        all_s_old = all_s;
-        [B,I] = sort(all_s_times);
+    
+        % Sort the spikes by time (sorting just by spike index would do the
+        % same thing...)
+        [all_s_times_sorted,I] = sort(all_s_times);
         all_s = all_s(I);
 
         % To test it, show the times of all the sorted pre and interictal
         % spikes and their cluster distributions
         if doPermPlot == 1
+            colors = [repmat([1,0,0],length(preIcSpikes),1);...
+            repmat([0,0,1],length(interIcSpikes),1)];
             new_colors = colors(I,:);
             figure
             scatter(B/3600,ones(length(B),1),50,new_colors);
@@ -374,11 +383,43 @@ for whichPt = whichPts
             close(gcf)
         end
         
+        % Remove interic times not in allRunTImes
+        allRunTimes = pt(whichPt).allTimes;
+        newInterIcTimes = [];
+        for i = 1:size(interIcTimesQI,1)
+            for j = 1:size(allRunTimes,1)
+                if interIcTimesQI(i,1) >= allRunTimes(j,1) && ...
+                        interIcTimesQI(i,1) <= allRunTimes(j,2)
+                    if interIcTimesQI(i,2) <= allRunTimes(j,2)
+                        newInterIcTimes = [newInterIcTimes;...
+                            interIcTimesQI(i,:)];
+                    else
+                        if j ~= size(allRunTimes,1)
+                            newInterIcTimes = [newInterIcTimes;...
+                               interIcTimesQI(i,1) allRunTimes(j,2);...
+                               allRunTimes(j+1,1) interIcTimesQI(i,2)];
+                        end
+                            
+                    end
+                end
+            end
+        end
+        
         % Now, for the permutation test, I will take random chunks of
-        % spikes equal in number to the original pre-ictal time periods
-        nboot = 1e3;
+        % sequential spikes equal in number to the original pre-ictal
+        % time periods. I will randomly pick a start time.
         n_spikes = length(all_s);
+        pt_all_times = [preIcTimesQI;newInterIcTimes];
+        pt_all_times = sortrows(pt_all_times);
+        
+        pt_dur = sum(diff(pt_all_times,1,2));
+        
+        nboot = 1e3;
+        
         chi2_boot = zeros(nboot,1);
+        time_boot_pre = [];
+        
+        % Loop through each random permutation
         for ib = 1:nboot
             
             if mod(ib,100) == 0
@@ -398,8 +439,33 @@ for whichPt = whichPts
                 % Try to generate a random set of spikes equal to that
                 % number
                 while 1
-                    % pick a start index
-                    start = randi(n_spikes);
+                    %% Pick a random start TIME
+                    
+                    % Get random time equal to total possible duration
+                    startSecondTemp = randi(round(pt_dur));
+                    
+                    % Loop through interictal and preictal times
+                    totSecs = 0;
+                    for x = 1:size(pt_all_times,1)
+                        
+                        % Get the duration of the current segment
+                        curDur = diff(pt_all_times(x,:),1);
+                        
+                        % If we're in this segment
+                        if startSecondTemp < totSecs + curDur
+                            
+                            % Get the start second
+                            startSecond = startSecondTemp-totSecs+pt_all_times(x,1);
+                            break
+                        else
+                            totSecs = totSecs + curDur;
+                        end
+                    end
+                    
+                    %% Find the closest spike
+                    [~,closestSpike] = min(abs(startSecond-all_s_times_sorted));
+                    start = closestSpike;
+
 
                     % See if it will run into one of the other chunks
                     if isempty(intersect(mod(start-1:start+n_chunk-1,n_spikes) + 1,...
@@ -411,6 +477,11 @@ for whichPt = whichPts
                 % If it doesn't run into one of the other chunks, add it to
                 % the new fake pre-ictal spikes
                 new_pre{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;
+                
+                if plotQI == 1
+                    % For QI purposes, get the times of the starting spike
+                    time_boot_pre = [time_boot_pre;all_times_all(all_s(start))];
+                end
                 
             end
             
@@ -450,11 +521,22 @@ for whichPt = whichPts
             [~,chi2_boot(ib)] = crosstab([ones(length(pre_clust),1);...
                 2*ones(length(inter_clust),1)],[pre_clust;inter_clust]);
             
+            
         end
 
-       
+        if plotQI == 1
+        % Plot a histogram to see if I have equal coverage
+        figure
+        histogram(time_boot_pre/3600,500)
+        hold on
+        for j = 1:size(szTimes,1)
+            plot([szTimes(j,1),szTimes(j,1)]/3600,ylim,'k--');
+        end
+        pause
+        close(gcf)
+        end
 
-        % Do it once for real
+        %% Do it once for real
         inter_clust = idx(interIcSpikes);
         pre_clust = idx(preIcSpikes);
         [tbl_2,chi2_real] = crosstab([ones(length(pre_clust),1);...
@@ -468,7 +550,7 @@ for whichPt = whichPts
         
         % The p value is the percentage larger 
         if isempty(allLarger) == 1
-            p_2 = 0;
+            p_2 = 1/(nboot+1);
         else
             firstLarger = allLarger(1);
             p_2 = (nboot-firstLarger+1)/(nboot+1);
@@ -477,9 +559,9 @@ for whichPt = whichPts
         % Plot the result of the permuation test
         if doPermPlot == 1
             figure 
-            scatter(1:length(sorted_boot),sorted_boot);
+            histogram(sorted_boot);
             hold on
-            plot(xlim,[chi2_real chi2_real]);
+            plot([chi2_real chi2_real],ylim);
             text(mean(xlim),mean(ylim),sprintf('%1.1e',p_2));
 
             pause
@@ -500,17 +582,45 @@ for whichPt = whichPts
         p_plot(whichPt) = p_2;
         end
 
-
-        %{
-        Analysis 3: post-ictal vs the rest
-        %}
+    
+        
+        %% Analysis 3: post-ictal vs the rest
+        
         all_s = [(preIcSpikes);(interIcSpikes);postIcSpikes];
         all_s_times = [preIcSpikeTimes;interIcSpikeTimes;postIcSpikeTimes];
         colors = [repmat([1,0,0],length(preIcSpikes),1);...
             repmat([0,0,1],length(interIcSpikes),1);...
             repmat([0,1,0],length(postIcSpikes),1)];
+        
+         % Remove interic times not in allRunTImes
+        allRunTimes = pt(whichPt).allTimes;
+        newInterIcTimes = [];
+        for i = 1:size(interIcTimesQI,1)
+            for j = 1:size(allRunTimes,1)
+                if interIcTimesQI(i,1) >= allRunTimes(j,1) && ...
+                        interIcTimesQI(i,1) <= allRunTimes(j,2)
+                    if interIcTimesQI(i,2) <= allRunTimes(j,2)
+                        newInterIcTimes = [newInterIcTimes;...
+                            interIcTimesQI(i,:)];
+                    else
+                        if j ~= size(allRunTimes,1)
+                            newInterIcTimes = [newInterIcTimes;...
+                               interIcTimesQI(i,1) allRunTimes(j,2);...
+                               allRunTimes(j+1,1) interIcTimesQI(i,2)];
+                        end
+                            
+                    end
+                end
+            end
+        end
+        
+        
+        pt_all_times = [preIcTimesQI;postIcTimesQI;newInterIcTimes];
+        pt_all_times = sortrows(pt_all_times);
 
-        [B,I] = sort(all_s_times);
+        pt_dur = sum(diff(pt_all_times,1,2));
+
+        [all_s_times_sorted,I] = sort(all_s_times);
         all_s = all_s(I);
 
         if doPermPlot == 1
@@ -534,6 +644,7 @@ for whichPt = whichPts
         n_spikes = length(all_s);
         chi2_boot = zeros(nboot,1);
         dist_diff_boot = zeros(nboot,1);
+        time_boot_post = [];
         
         % Sort the post ic spike numbers in descending order. I do this
         % because I am trying to fit a bunch of smaller chunks, non
@@ -544,7 +655,7 @@ for whichPt = whichPts
         postIcSpikeNums = sort(postIcSpikeNums,'descend');
         for ib = 1:nboot
             
-            if mod(ib,10) == 0
+            if mod(ib,100) == 0
                 fprintf('Doing %d of %d\n',ib,nboot);
             end
             
@@ -558,8 +669,32 @@ for whichPt = whichPts
 
 
                     while 1
-                        % pick a start index
-                        start = randi(n_spikes);
+                        %% Pick a random start TIME
+                    
+                        % Get random time equal to total possible duration
+                        startSecondTemp = randi(round(pt_dur));
+
+                        % Loop through interictal and preictal times
+                        totSecs = 0;
+                        for x = 1:size(pt_all_times,1)
+
+                            % Get the duration of the current segment
+                            curDur = diff(pt_all_times(x,:),1);
+
+                            % If we're in this segment
+                            if startSecondTemp < totSecs + curDur
+
+                                % Get the start second
+                                startSecond = startSecondTemp-totSecs+pt_all_times(x,1);
+                                break
+                            else
+                                totSecs = totSecs + curDur;
+                            end
+                        end
+
+                        %% Find the closest spike
+                        [~,closestSpike] = min(abs(startSecond-all_s_times_sorted));
+                        start = closestSpike;
 
                         % See if it will run into one of the other chunks
                         if isempty(intersect(mod(start-1:start+n_chunk-1,n_spikes) + 1,...
@@ -570,7 +705,12 @@ for whichPt = whichPts
                        
                     end
                     
-                    new_post{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;                 
+                    new_post{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;  
+                    
+                    if plotQI == 1
+                        % For QI purposes, get the times of the starting spike
+                        time_boot_post = [time_boot_post;all_times_all(all_s(start))];
+                    end
                 end
                 
                 
@@ -617,6 +757,18 @@ for whichPt = whichPts
             [~,chi2_boot(ib)] = crosstab([ones(length(post_clust),1);...
                 2*ones(length(other_clust),1)],[post_clust;other_clust]);
             
+        end
+        
+        if plotQI == 1
+        % Plot a histogram to see if I have equal coverage
+        figure
+        histogram(time_boot_post/3600,500)
+        hold on
+        for j = 1:size(szTimes,1)
+            plot([szTimes(j,1),szTimes(j,1)]/3600,ylim,'k--');
+        end
+        pause
+        close(gcf)
         end
   
         % Do it once for real

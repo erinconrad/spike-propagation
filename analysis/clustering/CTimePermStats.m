@@ -2,6 +2,8 @@ function CTimePermStats(pt,cluster,whichPts)
 
 %{ 
 
+% NEED TO FIX THIS FOR HUP80
+
 CStats
 This is my cleaned up file for getting statistics on the cluster data 
 
@@ -11,7 +13,7 @@ This is my cleaned up file for getting statistics on the cluster data
 intericTime = 4;
 
 saveStuff = 1;
-plotQI = 0;
+plotQI = 1;
 doPermPlot = 0;
 doPlots = 1;
 doLongStuff = 1;
@@ -306,8 +308,8 @@ for whichPt = whichPts
             for j = 1:size(szTimes,1)
                plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k--','LineWidth',5);
             end
-            pause
-            close(gcf)
+         %   pause
+         %   close(gcf)
         end
 
         
@@ -520,7 +522,7 @@ for whichPt = whichPts
             
             
             % Plot the new times
-            if 1 == 0
+            if 1 == 1
                 
                 f=figure;
                 
@@ -938,6 +940,10 @@ for whichPt = whichPts
             [~,chi2_boot(ib)] = crosstab([ones(length(fakePostIcClust),1);...
                 2*ones(length(fakeOtherIcClust),1)],...
                 [fakePostIcClust;fakeOtherIcClust]);  
+            
+            if isnan(chi2_boot(ib)) == 1
+                error('what\n');
+            end
             
            
             % Get distances

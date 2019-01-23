@@ -7,6 +7,9 @@ Analysis: does the alpha delta ratio correlate with cluster distribution?
 Spearman Rank correlation - alpha/delta ratio in a 2000 s bin
 against proportion of spikes in most popular cluster
 
+
+http://www.iasri.res.in/ebook/EBADAT/6-Other%20Useful%20Techniques/11-Spatial%20STATISTICAL%20TECHNIQUES.pdf
+
 %}
 
 
@@ -42,6 +45,7 @@ allP2 = [];
 allRho2 = [];
 allAD = [];
 allDist = [];
+allSD = [];
 
 for whichPt = whichPts
     
@@ -118,6 +122,7 @@ for whichPt = whichPts
     locs_bin = zeros(size(bin_times,1),3);
     soz_dist_bin = zeros(size(bin_times,1),1);
     num_spikes = zeros(size(bin_times,1),1);
+    SD_bin = zeros(size(bin_times,1),1);
     % Run through bin times and get proportion of spikes in most popular
     % cluster for that bin.
     for i = 1:size(bin_times,1)
@@ -152,6 +157,18 @@ for whichPt = whichPts
         soz_dist_bin(i) = mean(soz_dist);
         
         
+        % Now get a measure of spatial dispersion for the bin
+        n_spikes = length(whichSpikes); % number of spikes
+        locs_sp = all_locs(whichSpikes,:); % location of every spike in the bin
+        
+        % Standard distance
+        SD_bin(i) = sqrt((...
+            sum(locs_sp(:,1)-mean(locs_sp(:,1),1))^2+...
+            sum(locs_sp(:,2)-mean(locs_sp(:,1),2))^2+...
+            sum(locs_sp(:,3)-mean(locs_sp(:,1),3))^2)...
+            /n_spikes);
+        
+        
         
     end
     
@@ -167,25 +184,21 @@ for whichPt = whichPts
     
     
     
-    if 1 == 0
+    if 1 == 1
         figure
         subplot(3,1,1)
-        plot(power(whichPt).times/3600,prop_pop);
-        hold on
         plot(power(whichPt).times/3600,mean_ad);
-        plot(power(whichPt).times/3600,soz_dist_bin);
 
         subplot(3,1,2)
-        scatter(mean_ad,prop_pop)
-        lsline
+        plot(power(whichPt).times/3600,soz_dist_bin);
         
         subplot(3,1,3)
-        scatter(mean_ad,soz_dist_bin)
-        lsline
+        plot(power(whichPt).times/3600,SD_bin);
     end
     
     allAD = [allAD;mean_ad'];
     allDist = [allDist;soz_dist_bin];
+    allSD = [allSD;SD_bin];
 
     
     [rho,pval] = corr(mean_ad(~isnan(prop_pop))',prop_pop(~isnan(prop_pop)),'Type','Spearman');
@@ -399,18 +412,16 @@ sum_p = 1-chi2cdf(X_2,2*length(allP));
 
 fprintf('The group p value for change in location is %1.1e\n',sum_p);
 
-% Dist from SOZ
-nanAD = find(isnan(allAD));
-nanDist = find(isnan(allDist));
+%% Distance from SOZ
 
-% remove nans
-allAD([nanAD;nanDist]) = [];
-allDist([nanAD;nanDist]) = [];
+[rho_3,p_3] = corr(allAD(~isnan(allAD)&~isnan(allDist)),allDist(~isnan(allAD)&~isnan(allDist))...
+,'Type','Spearman');
 
-figure
-scatter(allAD,allDist)
 
-[rho_3,p_3] = corr(allAD,allDist,'Type','Spearman');
+%% Standard distance (spatial dispersion)
+
+[rho_4,p_4] = corr(allSD(~isnan(allSD)&~isnan(allAD)),allAD(~isnan(allSD)&~isnan(allAD)),...
+    'Type','Spearman')
 
 
 end
