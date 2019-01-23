@@ -10,7 +10,7 @@ I get statistics on spike cluster data
 
 % The post-ictal time period (how many hours after the seizure I am
 % defining to be post-ictal)
-intericTime = 1;
+intericTime = 4;
 
 % Plot the time periods to see what I am defining to be pre-, post-, and
 % interictal
@@ -72,8 +72,10 @@ preIcDistMean = [];
 interIcDistMean = [];
 postIcDistMean = [];
 
-diffDistAll = [];
-pDistAll = [];
+diffDistPost = [];
+diffDistPre = [];
+diffDisperPost = [];
+diffDisperPre = [];
 
 %% Loop through patients
 
@@ -579,6 +581,34 @@ for whichPt = whichPts
         stats(whichPt).preIc.p = p_2;
         chi_tables_plot{whichPt} = tbl_2;
         p_plot(whichPt) = p_2;
+        
+        
+        %% Get difference in distance from SOZ from pre-ic and interic
+        distPre = mean(spike_dist(preIcSpikes));
+        distInter = mean(spike_dist(interIcSpikes));
+        diffDistPre = [diffDistPre;distPre-distInter];
+        stats(whichPt).soz.pre.pre_dist = distPre;
+        stats(whichPt).soz.pre.inter_dist = distInter;
+        
+        %% Get difference in standard distance from pre-ic and interic
+        preIcChs = all_spikes(preIcSpikes);
+        SD_Pre = sqrt((...
+            sum(locs(preIcChs,1)-mean(locs(preIcChs,1)))^2+...
+            sum(locs(preIcChs,2)-mean(locs(preIcChs,2)))^2+...
+            sum(locs(preIcChs,3)-mean(locs(preIcChs,3)))^2)...
+            /length(preIcChs));
+        
+        interIcChs = all_spikes(interIcSpikes);
+        SD_Inter = sqrt((...
+            sum(locs(interIcChs,1)-mean(locs(interIcChs,1)))^2+...
+            sum(locs(interIcChs,2)-mean(locs(interIcChs,2)))^2+...
+            sum(locs(interIcChs,3)-mean(locs(interIcChs,3)))^2)...
+            /length(interIcSpikes));
+        
+        stats(whichPt).dispersion.pre.SD_pre = SD_Pre;
+        stats(whichPt).dispersion.pre.SD_inter = SD_Inter;
+        diffDisperPre = [diffDisperPre;SD_Pre-SD_Inter];
+        
         end
 
     
@@ -642,8 +672,6 @@ for whichPt = whichPts
         nboot = 1e3;
         n_spikes = length(all_s);
         chi2_boot = zeros(nboot,1);
-        dist_diff_boot = zeros(nboot,1);
-        dispersion_diff_boot = zeros(nboot,1);
         time_boot_post = [];
         
         % Sort the post ic spike numbers in descending order. I do this
@@ -730,12 +758,7 @@ for whichPt = whichPts
             post_clust = idx(post_s);
             other_clust = idx(other_s);
             
-            % Get distances
-            boot_post_dist = mean(spike_dist(post_s));
-            boot_other_dist = mean(spike_dist(other_s));
-            dist_diff_boot(ib) = boot_post_dist-boot_other_dist;
-            
-            
+             
             % Get spatial dispersion
             %{
             SD_post_boot = sqrt((...
@@ -836,49 +859,34 @@ for whichPt = whichPts
         
         post_dist = mean(spike_dist(postIcSpikes));
         other_dist = mean(spike_dist([preIcSpikes;interIcSpikes]));
-        diff_dist_real = post_dist-other_dist;
-
-        sorted_boot = sort(dist_diff_boot);
-        p_dist = (sum(abs(sorted_boot) > abs(diff_dist_real))+1)/...
-            (length(sorted_boot) + 1);
         
-        
-        pDistAll = [pDistAll;p_dist];
-        diffDistAll = [diffDistAll;diff_dist_real];
-        
-        stats(whichPt).dist.p = p_dist;
-        stats(whichPt).dist.dist_diff = diff_dist_real;
+        stats(whichPt).soz.post.post_dist = post_dist;
+        stats(whichPt).soz.post.other_dist = other_dist;
+        diffDistPost = [diffDistPost;post_dist-other_dist];
 
         
-        if doPermPlot == 1 
-            figure
-            scatter(1:length(sorted_boot),sorted_boot)
-            hold on
-            plot(xlim,[diff_dist_real diff_dist_real]);
-            text(mean(xlim),mean(ylim),sprintf('%1.1e',p_dist));
-            pause
-            close(gcf)
-            
-        end
         
         %% Dispersion analysis
         % Get spatial dispersion
-        %{
-        post_s = postIcSpikes;
-        other_s = [preIcSpikes;interIcSpikes];
-            SD_post_real = sqrt((...
-            sum(locs(post_s,1)-mean(locs(post_s,1),1))^2+...
-            sum(locs(post_s,2)-mean(locs(post_s,1),2))^2+...
-            sum(locs(post_s,3)-mean(locs(post_s,1),3))^2)...
-            /length(post_s));
-            
-            SD_other_real = sqrt((...
-                sum(locs(other_s,1)-mean(locs(other_s,1),1))^2+...
-                sum(locs(other_s,2)-mean(locs(other_s,1),2))^2+...
-                sum(locs(other_s,3)-mean(locs(other_s,1),3))^2)...
-                /length(other_s));
-        %}
         
+        post_s = all_spikes(postIcSpikes);
+        other_s = all_spikes([preIcSpikes;interIcSpikes]);
+        SD_post_real = sqrt((...
+        sum(locs(post_s,1)-mean(locs(post_s,1)))^2+...
+        sum(locs(post_s,2)-mean(locs(post_s,2)))^2+...
+        sum(locs(post_s,3)-mean(locs(post_s,3)))^2)...
+        /length(post_s));
+
+        SD_other_real = sqrt((...
+            sum(locs(other_s,1)-mean(locs(other_s,1)))^2+...
+            sum(locs(other_s,2)-mean(locs(other_s,2)))^2+...
+            sum(locs(other_s,3)-mean(locs(other_s,3)))^2)...
+            /length(other_s));
+            
+            
+        diffDisperPost = [diffDisperPost;SD_post_real-SD_other_real];
+        stats(whichPt).dispersion.post.SD_post = SD_post_real;
+        stats(whichPt).dispersion.post.SD_other = SD_other_real;
         
         
     end
