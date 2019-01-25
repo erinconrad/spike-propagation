@@ -706,8 +706,11 @@ fprintf(['The average distance between the electrodes with max SA and\n'...
 
 
 % Outcome correlation
-good_outcome = outcome_all < 2.5;
-ranksum((allSADist(good_outcome)),allFreqDist(good_outcome))
+
+good_outcome = outcome_all <= 2.25;
+p = ranksum((allSADist(good_outcome)),allFreqDist(good_outcome));
+fprintf(['When ILAE 1-3 considered, difference between most spikey and biggest SA:\n'...
+    '%1.1e\n'],p);
 
 
 end

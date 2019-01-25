@@ -12,23 +12,23 @@ outcome = pt(whichPt).clinical.outcome;
 
 if strcmp(outcome(1),'I') == 1
     % They are using ILAE definitions :(
-    if strcmp(outcome,'ILAE1') == 1
+    if contains(outcome,'ILAE1') == 1
         % completeley seizure free (I am calling this IA)
         new_outcome = 1;
-    elseif strcmp(outcome,'ILAE2') == 1
+    elseif contains(outcome,'ILAE2') == 1
         % only auras (I am calling this IB)
         new_outcome = 1.25;
-    elseif strcmp(outcome,'ILAE3') == 1
+    elseif contains(outcome,'ILAE3') == 1
         % 1-3 sz days per year (I am calling this IIB)
         new_outcome = 2.25;
-    elseif strcmp(outcome,'ILAE4') == 1
+    elseif contains(outcome,'ILAE4') == 1
         % 4 sz days per year to 50% reduction baseline (I am calling this
         % IIIA)
         new_outcome = 3;
-    elseif strcmp(outcome,'ILAE5') == 1
+    elseif contains(outcome,'ILAE5') == 1
         % Less than 50% reduction of sz days (I am calling this IVA)
         new_outcome = 4;
-    elseif strcmp(outcome,'ILAE6') == 1
+    elseif contains(outcome,'ILAE6') == 1
         % More than 100% increase of sz days (I am calling this IVC)
         new_outcome = 4.5;
     end

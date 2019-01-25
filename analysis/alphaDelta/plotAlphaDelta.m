@@ -42,8 +42,12 @@ end
 allP = [];
 allRho = [];
 allRhoSOZ = [];
+allRhoSD = [];
+allPSD = [];
 outcome_all = [];
 temp_lobe_all = [];
+allRhoConsistency = [];
+allPConsistency = [];
 
 
 for whichPt = whichPts
@@ -135,6 +139,9 @@ for whichPt = whichPts
     soz_dist_bin = zeros(size(bin_times,1),1);
     num_spikes = zeros(size(bin_times,1),1);
     SD_bin = zeros(size(bin_times,1),1);
+    std_z_bin = zeros(size(bin_times,1),1);
+    prop_pop_chunk = zeros(size(bin_times,1),1);
+    distNeeded = zeros(size(bin_times,1));
     % Run through bin times and get proportion of spikes in most popular
     % cluster for that bin.
     for i = 1:size(bin_times,1)
@@ -174,13 +181,22 @@ for whichPt = whichPts
         locs_sp = all_locs(whichSpikes,:); % location of every spike in the bin
         
         % Standard distance
-        SD_bin(i) = sqrt((...
-            sum(locs_sp(:,1)-mean(locs_sp(:,1)))^2+...
-            sum(locs_sp(:,2)-mean(locs_sp(:,2)))^2+...
-            sum(locs_sp(:,3)-mean(locs_sp(:,3)))^2)...
-            /n_spikes);
+        if size(locs_sp,1) < 20
+            SD_bin(i) = nan;
+        else
+            SD_bin(i) = standardDistance(locs_sp);
+        end
+        std_z_bin(i) = std(locs_sp(:,3));
         
+        % How many spikes are in most popular cluster for that chunk?
+        prop_pop_chunk(i) = sum(whichClust == mode(whichClust))/length(whichClust);
         
+        % distance from median to 60 percent of spikes in the chunk
+        if size(locs_sp,1) < 10
+            distNeeded(i) = nan;
+        else
+            distNeeded(i) = distToCaptureMost(locs_sp);
+        end
         
     end
     
@@ -205,7 +221,7 @@ for whichPt = whichPts
         plot(power(whichPt).times/3600,soz_dist_bin);
         
         subplot(3,1,3)
-        plot(power(whichPt).times/3600,SD_bin);
+        plot(power(whichPt).times/3600,prop_pop_chunk);
     end
     
     
@@ -223,6 +239,12 @@ for whichPt = whichPts
         ' SOZ and alpha delta ratio is:\n %1.1f (p = %1.1e)\n'],...
         pt(whichPt).name,rhoSOZ,pval2);
     
+    [rhoSD,pvalSD] = corr(mean_ad(~isnan(SD_bin))',...
+        SD_bin(~isnan(SD_bin)),'Type','Spearman');
+    
+    [rhoConsistency,pConsistency] = corr(mean_ad(~isnan(prop_pop_chunk))',...
+        prop_pop_chunk(~isnan(prop_pop_chunk)),'Type','Spearman');
+    
 
     if isnan(pval) == 1
         if k == length(bad_cluster) + 1
@@ -237,6 +259,11 @@ for whichPt = whichPts
     allRho = [allRho;rho];
     
     allRhoSOZ = [allRhoSOZ;rhoSOZ];
+    allRhoSD = [allRhoSD;rhoSD];
+    allPSD = [allPSD;pvalSD];
+    
+    allRhoConsistency = [allRhoConsistency;rhoConsistency];
+    allPConsistency = [allPConsistency;pConsistency];
     
     colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
     c_idx = zeros(size(idx,1),3);
@@ -419,22 +446,65 @@ sum_p = 1-chi2cdf(X_2,2*length(allP));
 fprintf('The group p value for change in location is %1.1e\n',sum_p);
 
 %% Distance from SOZ
-[~,p] = ttest(allRhoSOZ);
+[~,p] = ttest(atanh(allRhoSOZ));
 fprintf(['P-value for correlation of AD ratio with dist from nearest'...
     'SOZ:%1.2e.\nAverage r = %1.2f\n'],...
     p,mean(allRhoSOZ));
 
+%% Standard distance
+[~,p] = ttest(atanh(allRhoSD));
+fprintf(['P-value for correlation of AD ratio with standard distance'...
+    ':%1.2e.\nAverage r = %1.2f\n'],...
+    p,mean(allRhoSD));
+
+%% Consistency
+[~,p] = ttest(atanh(allRhoConsistency));
+fprintf(['P-value for correlation of AD ratio with consistency'...
+    ':%1.2e.\nAverage r = %1.2f\n'],...
+    p,mean(allRhoConsistency));
+
 %% Correlation between change in location and outcome
+%
 changeLoc = allP < 0.05/length(allP);
 [p,info] = correlateClinically(changeLoc,outcome_all,'bin','num',0);
 fprintf(['The p-value for Wilcoxon rank sum comparing outcome between\n'...
-    'patients with change and those without is:/n'...
+    'patients with change and those without is:\n'...
     'p = %1.2e\n'],p);
+
 
 %% Correlation between change in location and temp lobe
 [p,info] = correlateClinically(changeLoc,temp_lobe_all,'bin','bin',0);
 fprintf(['The p-value for chi squared comparing temporal vs non-temporal lobe between\n'...
-    'patients with change and those without is:/n'...
+    'patients with change and those without is:\n'...
     'p = %1.2e\n'],p);
 
+
+%% Table of stuff
+p_sleep_t = getPText(allP);
+T = table(p_sleep_t)
+
+end
+
+
+function p_text_cell = getPText(p_array)
+
+    p_text_cell = cell(length(p_array),1);
+    for i = 1:length(p_array)
+        if p_array(i) < 0.001
+            p_text_cell{i} = '<0.001';
+        else
+            p_text_cell{i} = sprintf('%1.3f',p_array(i));
+        end
+    
+        if p_array(i) < 0.001/length(p_array)
+            p_text_cell{i} = [p_text_cell{i},'***'];
+        elseif p_array(i) < 0.01/length(p_array)
+            p_text_cell{i} = [p_text_cell{i},'**'];
+        elseif p_array(i) < 0.05/length(p_array)
+            p_text_cell{i} = [p_text_cell{i},'*'];
+        end
+    
+    end
+        
+        
 end

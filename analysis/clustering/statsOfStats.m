@@ -45,27 +45,31 @@ for whichPt = 1:length(stats)
     p_post_all = [p_post_all,p_post];
     
     % Distance from SOZ
-    pre_dist = stats(whichPt).soz.pre.pre_dist;
-    inter_dist = stats(whichPt).soz.pre.inter_dist;
-    post_dist = stats(whichPt).soz.post.post_dist;
-    other_dist = stats(whichPt).soz.post.other_dist;
-    
-    soz_dist_pre_all = [soz_dist_pre_all,pre_dist];
-    soz_dist_inter_all = [soz_dist_inter_all,inter_dist];
-    soz_dist_post_all = [soz_dist_post_all,post_dist];
-    soz_dist_other_all = [soz_dist_other_all,other_dist];
+    if isfield(stats(whichPt),'soz') == 1
+        pre_dist = stats(whichPt).soz.pre.pre_dist;
+        inter_dist = stats(whichPt).soz.pre.inter_dist;
+        post_dist = stats(whichPt).soz.post.post_dist;
+        other_dist = stats(whichPt).soz.post.other_dist;
+
+        soz_dist_pre_all = [soz_dist_pre_all,pre_dist];
+        soz_dist_inter_all = [soz_dist_inter_all,inter_dist];
+        soz_dist_post_all = [soz_dist_post_all,post_dist];
+        soz_dist_other_all = [soz_dist_other_all,other_dist];
+    end
     
     
     % Standard distance (spatial dispersion)
-    SD_pre = stats(whichPt).dispersion.pre.SD_pre;
-    SD_inter = stats(whichPt).dispersion.pre.SD_inter;
-    SD_post = stats(whichPt).dispersion.post.SD_post;
-    SD_other = stats(whichPt).dispersion.post.SD_other;
-    
-    SD_pre_all = [SD_pre_all,SD_pre];
-    SD_inter_all = [SD_inter_all,SD_inter];
-    SD_post_all = [SD_post_all,SD_post];
-    SD_other_all = [SD_other_all,SD_other];
+    if isfield(stats(whichPt),'dispersion') == 1
+        SD_pre = stats(whichPt).dispersion.pre.SD_pre;
+        SD_inter = stats(whichPt).dispersion.pre.SD_inter;
+        SD_post = stats(whichPt).dispersion.post.SD_post;
+        SD_other = stats(whichPt).dispersion.post.SD_other;
+
+        SD_pre_all = [SD_pre_all,SD_pre];
+        SD_inter_all = [SD_inter_all,SD_inter];
+        SD_post_all = [SD_post_all,SD_post];
+        SD_other_all = [SD_other_all,SD_other];
+    end
     
     
     % outcomes
@@ -107,22 +111,32 @@ fprintf('The group p value for change over time is %1.1e\n',sum_p);
 
 
 %% Change in distance from SOZ
-[~,p] = ttest2(soz_dist_pre_all,soz_dist_inter_all);
-fprintf(['The p-value for change in distance from SOZ in the'...
-    'pre-ictal period is:\n%1.2e\n'],p);
+if isempty(soz_dist_pre_all) == 0
+    [~,p] = ttest2(soz_dist_pre_all,soz_dist_inter_all);
+    fprintf(['The p-value for change in distance from SOZ in the'...
+        'pre-ictal period is:\n%1.2e\n'],p);
 
-[~,p] = ttest2(soz_dist_post_all,soz_dist_other_all);
-fprintf(['The p-value for change in distance from SOZ in the'...
-    'post-ictal period is:\n%1.2e\n'],p);
+    [~,p] = ttest2(soz_dist_post_all,soz_dist_other_all);
+    fprintf(['The p-value for change in distance from SOZ in the'...
+        'post-ictal period is:\n%1.2e\n'],p);
+
+    [p] = kruskalwallis([soz_dist_pre_all',soz_dist_inter_all',...
+        soz_dist_post_all'],[],'off');
+    fprintf(['The p-value for change in distance from SOZ comparing'...
+        'pre/post/inter by K-W is:\n%1.2e\n'],p);
+end
+
 
 %% Change in SD
-[~,p] = ttest2(SD_pre_all,SD_inter_all);
-fprintf(['The p-value for the change in standard distance in the'...
-    'pre-ictal period is:\n%1.2e\n'],p);
+if isempty(SD_pre_all) == 0
+    [~,p] = ttest2(SD_pre_all',SD_inter_all');
+    fprintf(['The p-value for the change in standard distance in the'...
+        'pre-ictal period is:\n%1.2e\n'],p);
 
-[~,p] = ttest2(SD_post_all,SD_other_all);
-fprintf(['The p-value for the change in standard distance in the'...
-    'post-ictal period is:\n%1.2e\n'],p);
+    [~,p] = ttest2(SD_post_all',SD_other_all');
+    fprintf(['The p-value for the change in standard distance in the'...
+        'post-ictal period is:\n%1.2e\n'],p);
+end
 
 %% Clinical correlations
 
@@ -130,14 +144,61 @@ fprintf(['The p-value for the change in standard distance in the'...
 hourChange = p_hour_all < 0.05/length(p_hour_all);
 [p_hour_outcome,info_hour_outcome] = correlateClinically(hourChange,outcome_all,'bin','num',0);
 fprintf(['The p-value for Wilcoxon rank sum comparing outcome between\n'...
-    'patients with hour-to-hour change and those without is:/n'...
+    'patients with hour-to-hour change and those without is:\n'...
     'p = %1.2e\n'],p_hour_outcome);
 
 % correlate whether there is an hour-to-hour change with temporal/non
 % temporal lobe
 [p_hour_lobe,info_hour_lobe] = correlateClinically(hourChange,temp_lobe_all,'bin','bin',0);
 fprintf(['The p-value for chi squared comparing temporal vs non-temporal lobe between\n'...
-    'patients with hour-to-hour change and those without is:/n'...
+    'patients with hour-to-hour change and those without is:\n'...
     'p = %1.2e\n'],p_hour_lobe);
 
+% Correlate clinical outcome with post-ictal change
+postIcChange = p_post_all < 0.05/length(whichPts);
+[p_post_outcome,info_post_outcome] = correlateClinically(postIcChange,outcome_all,'bin','num',0);
+fprintf(['The p-value for Wilcoxon rank sum comparing outcome between\n'...
+    'patients with post-ictal change and those without is:\n'...
+    'p = %1.2e\n'],p_post_outcome);
+
+% correlate post-ictal change with temporal lobe onset
+[p_post_lobe,info_post_lobe] = correlateClinically(postIcChange,temp_lobe_all,'bin','bin',0);
+fprintf(['The p-value for chi squared comparing temporal vs non-temporal lobe between\n'...
+    'patients with post-ictal change and those without is:\n'...
+    'p = %1.2e\n'],p_post_lobe);
+
+
+%% Table of stuff
+p_hour_all_t = getPText(p_hour_all);
+p_pre_all_t = getPText(p_pre_all);
+p_post_all_t = getPText(p_post_all);
+
+T = table(names',p_hour_all_t,p_pre_all_t,p_post_all_t)
+
 end
+
+
+
+function p_text_cell = getPText(p_array)
+
+    p_text_cell = cell(length(p_array),1);
+    for i = 1:length(p_array)
+        if p_array(i) < 0.001
+            p_text_cell{i} = '<0.001';
+        else
+            p_text_cell{i} = sprintf('%1.3f',p_array(i));
+        end
+    
+        if p_array(i) < 0.001/length(p_array)
+            p_text_cell{i} = [p_text_cell{i},'***'];
+        elseif p_array(i) < 0.01/length(p_array)
+            p_text_cell{i} = [p_text_cell{i},'**'];
+        elseif p_array(i) < 0.05/length(p_array)
+            p_text_cell{i} = [p_text_cell{i},'*'];
+        end
+    
+    end
+        
+        
+end
+
