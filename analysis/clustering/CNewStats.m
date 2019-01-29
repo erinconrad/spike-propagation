@@ -757,6 +757,8 @@ for whichPt = whichPts
         time_boot_post = [];
         postIc_SL_boot = zeros(nboot,1);
         otherIc_SL_boot = zeros(nboot,1);
+        postIc_dist_boot = zeros(nboot,1);
+        otherIc_dist_boot = zeros(nboot,1);
         
         % Sort the post ic spike numbers in descending order. I do this
         % because I am trying to fit a bunch of smaller chunks, non
@@ -881,6 +883,11 @@ for whichPt = whichPts
             [~,chi2_boot(ib)] = crosstab([ones(length(post_clust),1);...
                 2*ones(length(other_clust),1)],[post_clust;other_clust]);
             
+            %% Get distance from SOZ
+            
+            postIc_dist_boot(ib) = mean(spike_dist(post_s));
+            otherIc_dist_boot(ib) = mean(spike_dist(other_s));
+            
             %% Get the sequence lengths
             % Get the time ranges of the spikes
             post_times_SL = sortrows(new_post_times);
@@ -967,6 +974,15 @@ for whichPt = whichPts
         stats(whichPt).soz.post.post_dist = post_dist;
         stats(whichPt).soz.post.other_dist = other_dist;
         diffDistPost = [diffDistPost;post_dist-other_dist];
+        
+        % Get a p-value
+        diff_dist_boot = sorted(postIc_dist_boot - otherIc_dist_boot);
+        real_diff_dist = post_dist - other_dist;
+        
+        % number more extreme
+        num_ex = sum(abs(diff_dist_boot) > abs(real_diff_dist));
+        p_dist = (num_ex+1)/(1+nboot);
+        stats(whichPt).soz.post.p = p_dist;
 
         
         

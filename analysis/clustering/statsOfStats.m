@@ -17,6 +17,12 @@ SD_other_all = [];
 SD_inter_all = [];
 outcome_all = [];
 temp_lobe_all = [];
+SL_pre_all = [];
+SL_post_all = [];
+SL_inter_all = [];
+SL_other_all = [];
+SL_p_pre_all = [];
+SL_p_post_all = [];
 
 %% Loop through patients and grab stats info
 for whichPt = 1:length(stats)
@@ -72,6 +78,25 @@ for whichPt = 1:length(stats)
     end
     
     
+    % Sequence length
+    if isfield(stats(whichPt),'SL') == 1
+        SL_pre = stats(whichPt).SL.pre.SL_pre;
+        SL_inter = stats(whichPt).SL.pre.SL_inter;
+        SL_p_pre = stats(whichPt).SL.pre.p;
+        
+        SL_post = stats(whichPt).SL.post.SL_post;
+        SL_other = stats(whichPt).SL.post.SL_other;
+        SL_p_post = stats(whichPt).SL.post.p;
+        
+        SL_pre_all = [SL_pre_all;SL_pre];
+        SL_inter_all = [SL_inter_all;SL_inter];
+        SL_post_all = [SL_post_all;SL_post];
+        SL_other_all = [SL_other_all;SL_other];
+        SL_p_pre_all = [SL_p_pre_all;SL_p_pre];
+        SL_p_post_all = [SL_p_post_all;SL_p_post];
+    end
+    
+    
     % outcomes
     outcome = getOutcome(pt,whichPt);
     outcome_all = [outcome_all,outcome];
@@ -84,6 +109,7 @@ for whichPt = 1:length(stats)
         tempLobe = 0;
     end
     temp_lobe_all = [temp_lobe_all,tempLobe];
+    
  
 end
 
@@ -173,7 +199,30 @@ p_hour_all_t = getPText(p_hour_all);
 p_pre_all_t = getPText(p_pre_all);
 p_post_all_t = getPText(p_post_all);
 
-T = table(names',p_hour_all_t,p_pre_all_t,p_post_all_t)
+T = table(names',p_hour_all_t,p_pre_all_t,p_post_all_t);
+
+
+
+%% SL
+
+if isempty(SL_pre_all) == 0
+    [~,p] = ttest2(SL_pre_all,SL_inter_all);
+    fprintf(['The p-value for change in SL in the'...
+        'pre-ictal period is:\n%1.2e\n'],p);
+
+    [~,p] = ttest2(SL_post_all,SL_other_all);
+    fprintf(['The p-value for change in SL in the'...
+        'post-ictal period is:\n%1.2e\n'],p);
+
+    
+    fprintf('%d of %d patients had a significant pre-ictal change in SL.\n',...
+        sum(SL_p_pre_all < 0.05/length(SL_p_pre_all)),length(SL_p_pre_all));
+    
+
+    fprintf('%d of %d patients had a significant post-ictal change in SL.\n',...
+        sum(SL_p_post_all < 0.05/length(SL_p_post_all)),length(SL_p_post_all));
+    
+end
 
 end
 
