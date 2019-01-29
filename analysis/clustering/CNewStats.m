@@ -29,8 +29,10 @@ doLongStuff = 1;
 doPre = 1;
 
 % Save file location
-[~,~,~,resultsFolder,~] = fileLocations;
+[~,~,scriptFolder,resultsFolder,~] = fileLocations;
 destFolder = [resultsFolder,'clustering/stats/'];
+p1 = genpath(scriptFolder);
+addpath(p1);
 mkdir(destFolder);
 
 %% Define which patients I am doing
