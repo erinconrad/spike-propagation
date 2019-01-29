@@ -976,7 +976,7 @@ for whichPt = whichPts
         diffDistPost = [diffDistPost;post_dist-other_dist];
         
         % Get a p-value
-        diff_dist_boot = sorted(postIc_dist_boot - otherIc_dist_boot);
+        diff_dist_boot = sort(postIc_dist_boot - otherIc_dist_boot);
         real_diff_dist = post_dist - other_dist;
         
         % number more extreme
