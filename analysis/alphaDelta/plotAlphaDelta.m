@@ -14,7 +14,7 @@ http://www.iasri.res.in/ebook/EBADAT/6-Other%20Useful%20Techniques/11-Spatial%20
 
 
 
-doPretty = 0;
+doPretty = 1;
 skipDone = 0;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -341,6 +341,7 @@ for whichPt = whichPts
         end
         %}
         
+        
         ylim([min(ylim) max(ylim)+70])
 
         set(gca,'xtick',[]);
@@ -387,6 +388,64 @@ for whichPt = whichPts
         
         title(sprintf('Alpha-delta power ratio averaged across all electrodes'))
         xlabel('Time (hours)');
+        
+        %% Re-label xticks
+        day0 = '01/01/00';
+        time0 = '10:58:42';
+        run_start_time = datetime([day0,' ',time0]);
+        
+      
+        
+        % get seconds between xlim start and start_time
+        xlim_time_start = run_start_time + seconds(plot_times(1));
+        
+        % get the datetime of the new rounded up xlim start time
+        start_round = xlim_time_start + hours(2) - ...
+            minutes(minute(xlim_time_start)) - ...
+            seconds(second(xlim_time_start));
+        
+        % get the position (the time in hours)
+        xpos_start = seconds(start_round- xlim_time_start)/3600;
+        
+        % now do the same thing for xlim end
+        xlim_time_end = run_start_time + seconds(plot_times(end));
+        end_round = xlim_time_end - hours(6)-...
+            minutes(minute(xlim_time_end)) - ...
+            seconds(second(xlim_time_end));
+        xpos_end = seconds(end_round- xlim_time_start)/3600;
+        
+        % get a linear spacing of xtick positions
+        x_pos = linspace(xpos_start,xpos_end,13);
+        
+        % get a linear spacing of times
+        xlim_times = linspace(start_round,end_round,13);
+        
+        % turn these into strings
+        xlim_days = xlim_times.Day - min(xlim_times.Day) + 1;
+        xlim_hours = xlim_times.Hour;
+        xlim_str = {};
+        for i = 1:length(xlim_times)
+            if xlim_hours(i) == 0
+                new_hour = 12;
+                pm = 'am';
+            elseif xlim_hours(i) ==12
+                new_hour = 12;
+                pm = 'pm';
+            elseif xlim_hours(i) >= 13
+                new_hour = xlim_hours(i) - 12;
+                pm = 'pm';
+            else
+                new_hour = xlim_hours(i);
+                pm = 'am';
+            end
+            
+            xlim_str{i} = sprintf('%d %s',new_hour,pm);
+            
+        end
+        xticks(x_pos)
+        xticklabels(xlim_str)
+        
+        
         set(gca,'FontSize',20);
         annotation('textbox',[0 0.18 0.2 0.2],'String','C','EdgeColor','none','fontsize',30);
 

@@ -77,6 +77,11 @@ diffDistPre = [];
 diffDisperPost = [];
 diffDisperPre = [];
 
+preIcSLAll = [];
+postIcSLAll = [];
+interIcSLAll = [];
+otherIcSLAll = [];
+
 %% Loop through patients
 
 for whichPt = whichPts
@@ -144,6 +149,11 @@ for whichPt = whichPts
     idx(bad_idx) = [];
     clusters = 1:k; clusters(bad_cluster) = [];
     C(bad_cluster,:) = [];
+    
+    %% Get the sequence lengths of all spikes
+    [seq_lengths,seq_times] = getSeqDist(pt,cluster,whichPt);
+
+    % confirm that there is the same number of 
     
     %% Get the distance between each spike and the nearest SOZ
     soz = pt(whichPt).newSOZChs; 
@@ -419,6 +429,8 @@ for whichPt = whichPts
         
         chi2_boot = zeros(nboot,1);
         time_boot_pre = [];
+        preIc_SL_boot = zeros(nboot,1);
+        interIc_SL_boot = zeros(nboot,1);
         
         % Loop through each random permutation
         for ib = 1:nboot
@@ -429,6 +441,9 @@ for whichPt = whichPts
             
             % The number of spikes in each pre-ictal period
             new_pre = cell(size(preIcSpikeNums,1),1);
+            
+            % Get the time ranges
+            new_pre_times = zeros(size(preIcSpikeNums,1),2);
             
             % Loop through pre-ictal periods
             for j = 1:size(preIcSpikeNums,1)
@@ -478,10 +493,13 @@ for whichPt = whichPts
                 % If it doesn't run into one of the other chunks, add it to
                 % the new fake pre-ictal spikes
                 new_pre{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;
+                new_pre_times(j,:) = [all_times_all(all_s(start)),...
+                    all_times_all(all_s(mod(start+n_chunk-1,n_spikes)+1))];
                 
                 if plotQI == 1
                     % For QI purposes, get the times of the starting spike
                     time_boot_pre = [time_boot_pre;all_times_all(all_s(start))];
+                    
                 end
                 
             end
@@ -502,7 +520,45 @@ for whichPt = whichPts
             pre_clust = idx(pre_s);
             inter_clust = idx(inter_s);
             
+            
+            %% Get the sequence lengths
+            % Get the time ranges of the spikes
+            pre_times_SL = sortrows(new_pre_times);
+            inter_times_SL = makeNonIntersectingTimeRanges(pt_all_times,...
+                pre_times_SL);
+
+            % Find the sequences in these time ranges
+            inter_seq = find(any(seq_times' >= inter_times_SL(:,1) & ...
+                seq_times' <= inter_times_SL(:,2)));
+            interIcSL = seq_lengths(inter_seq);
+            interIc_SL_boot(ib) = mean(interIcSL);
+            
+
+            pre_seq = find(any(seq_times' >= pre_times_SL(:,1) & ...
+                seq_times' <= pre_times_SL(:,2)));
+            preIcSL = seq_lengths(pre_seq);
+            preIc_SL_boot(ib) = mean(preIcSL);
+
             if 1==0
+            figure
+            scatter(interIcTimesSL,ones(size(interIcTimesSL)),'r')
+            hold on
+            scatter(preIcTimesSL,ones(size(preIcTimesSL)),'g')
+            pause
+            close(gcf)
+            end
+            
+            if 1==0
+                
+                figure
+                for j = 1:size(preIcTimesQI,1)
+                   area([new_pre_times(j,1) new_pre_times(j,2)]/3600,[1 1],'FaceColor','g');
+                   hold on
+                end
+                pause
+                close(gcf)
+                
+                %{
                 % test this by plotting the times of these fake pre-ictal
                 % and interictal spikes
                 figure
@@ -517,6 +573,7 @@ for whichPt = whichPts
                 text(mean(xlim),[1.5],sprintf('%d pre-ic spikes',length(pre_s)));
                 pause
                 close(gcf)
+                %}
             end
             
             [~,chi2_boot(ib)] = crosstab([ones(length(pre_clust),1);...
@@ -601,6 +658,37 @@ for whichPt = whichPts
         stats(whichPt).dispersion.pre.SD_inter = SD_Inter;
         diffDisperPre = [diffDisperPre;SD_Pre-SD_Inter];
         
+        %% Get the sequence lengths
+        % Get the time ranges of the spikes
+        pre_times_SL = preIcTimesQI;
+        inter_times_SL = newInterIcTimes;
+
+        % Find the sequences in these time ranges
+        inter_seq = find(any(seq_times' >= inter_times_SL(:,1) & ...
+            seq_times' <= inter_times_SL(:,2)));
+        interIcSL = mean(seq_lengths(inter_seq));
+        
+        pre_seq = find(any(seq_times' >= pre_times_SL(:,1) & ...
+            seq_times' <= pre_times_SL(:,2)));
+        preIcSL = mean(seq_lengths(pre_seq));
+        
+        %% Get a statistic for the permuation test
+        pre_diff_length = preIcSL - interIcSL;
+        boot_pre_diff_length = sort(preIc_SL_boot-interIc_SL_boot);
+        
+        % find the number of more extreme differences
+        num_more_extreme = sum(abs(boot_pre_diff_length) > abs(pre_diff_length));
+        
+        % Get a p-value
+        p_SL_pre = (num_more_extreme + 1)/(nboot + 1);
+        stats(whichPt).SL.pre.p = p_SL_pre;
+        stats(whichPt).SL.pre.SL_pre = preIcSL;
+        stats(whichPt).SL.pre.SL_inter = interIcSL;
+        
+        preIcSLAll = [preIcSLAll;preIcSL];
+        interIcSLAll = [interIcSLAll;interIcSL];
+        
+        
         end
 
     
@@ -665,6 +753,8 @@ for whichPt = whichPts
         n_spikes = length(all_s);
         chi2_boot = zeros(nboot,1);
         time_boot_post = [];
+        postIc_SL_boot = zeros(nboot,1);
+        otherIc_SL_boot = zeros(nboot,1);
         
         % Sort the post ic spike numbers in descending order. I do this
         % because I am trying to fit a bunch of smaller chunks, non
@@ -726,6 +816,8 @@ for whichPt = whichPts
                     end
                     
                     new_post{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;  
+                    new_post_times(j,:) = [all_times_all(all_s(start)),...
+                    all_times_all(all_s(mod(start+n_chunk-1,n_spikes)+1))];
                     
                     if plotQI == 1
                         % For QI purposes, get the times of the starting spike
@@ -786,6 +878,24 @@ for whichPt = whichPts
             
             [~,chi2_boot(ib)] = crosstab([ones(length(post_clust),1);...
                 2*ones(length(other_clust),1)],[post_clust;other_clust]);
+            
+            %% Get the sequence lengths
+            % Get the time ranges of the spikes
+            post_times_SL = sortrows(new_post_times);
+            other_times_SL = makeNonIntersectingTimeRanges(pt_all_times,...
+                post_times_SL);
+
+            % Find the sequences in these time ranges
+            other_seq = find(any(seq_times' >= other_times_SL(:,1) & ...
+                seq_times' <= other_times_SL(:,2)));
+            otherIcSL = seq_lengths(other_seq);
+            otherIc_SL_boot(ib) = mean(otherIcSL);
+            
+
+            post_seq = find(any(seq_times' >= post_times_SL(:,1) & ...
+                seq_times' <= post_times_SL(:,2)));
+            postIcSL = seq_lengths(post_seq);
+            postIc_SL_boot(ib) = mean(postIcSL);
             
         end
         
@@ -871,6 +981,36 @@ for whichPt = whichPts
         diffDisperPost = [diffDisperPost;SD_post_real-SD_other_real];
         stats(whichPt).dispersion.post.SD_post = SD_post_real;
         stats(whichPt).dispersion.post.SD_other = SD_other_real;
+        
+        %% Get the sequence lengths
+        % Get the time ranges of the spikes
+        post_times_SL = postIcTimesQI;
+        other_times_SL = [preIcTimesQI;newInterIcTimes];
+
+        % Find the sequences in these time ranges
+        other_seq = find(any(seq_times' >= other_times_SL(:,1) & ...
+            seq_times' <= other_times_SL(:,2)));
+        otherIcSL = mean(seq_lengths(other_seq));
+        
+        post_seq = find(any(seq_times' >= post_times_SL(:,1) & ...
+            seq_times' <= post_times_SL(:,2)));
+        postIcSL = mean(seq_lengths(post_seq));
+        
+        %% Get a statistic for the permuation test
+        post_diff_length = postIcSL - otherIcSL;
+        boot_post_diff_length = sort(postIc_SL_boot-otherIc_SL_boot);
+        
+        % find the number of more extreme differences
+        num_more_extreme = sum(abs(boot_post_diff_length) > abs(post_diff_length));
+        
+        % Get a p-value
+        p_SL_post = (num_more_extreme + 1)/(nboot + 1);
+        stats(whichPt).SL.post.p = p_SL_post;
+        stats(whichPt).SL.post.SL_post = postIcSL;
+        stats(whichPt).SL.post.SL_other = otherIcSL;
+        
+        postIcSLAll = [postIcSLAll;postIcSL];
+        otherIcSLAll = [otherIcSLAll;otherIcSL];
         
         
     end

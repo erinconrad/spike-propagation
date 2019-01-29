@@ -550,7 +550,7 @@ scatter(allSAs(allSpikers==1),allAllDist(allSpikers==1));
 [pAllSA,h4,stats4] = ranksum(allSADist,allAllDist);
 %pAllSA
 %[pSpikeSA,h5,stats5] = ranksum(allSADist,allSpikeDist);
-[pFreqAll,~,~] = ranksum(allFreqDist,allAllDist);
+[pFreqAll,h5,stats5] = ranksum(allFreqDist,allAllDist);
 
 
 
@@ -708,7 +708,7 @@ fprintf(['The average distance between the electrodes with max SA and\n'...
 % Outcome correlation
 
 good_outcome = outcome_all <= 2.25;
-p = ranksum((allSADist(good_outcome)),allFreqDist(good_outcome));
+[p,~,stats6] = ranksum((allSADist(good_outcome)),allFreqDist(good_outcome));
 fprintf(['When ILAE 1-3 considered, difference between most spikey and biggest SA:\n'...
     '%1.1e\n'],p);
 

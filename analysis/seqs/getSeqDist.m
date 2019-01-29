@@ -1,4 +1,4 @@
-function getSeqDist(pt,cluster,whichPts)
+function [seq_lengths,seq_times] = getSeqDist(pt,cluster,whichPts)
 
 %{
 Get the percentage of seqs that are all the same cluster
@@ -7,7 +7,10 @@ Could also get the order in which clusters get activated in sequences
 
 
 %}
+%% Parameters
+removeTies = 1;
 
+%% Pick Patients
 if isempty(whichPts) == 1
     for i = 1:length(pt)
         if isempty(pt(i).seq_matrix) == 0
@@ -30,8 +33,7 @@ for whichPt = whichPts
     nchs = size(locs,1);
     szTimes = pt(whichPt).newSzTimes;
     soz = pt(whichPt).newSOZChs; 
-    saveFolder = [destFolder,pt(whichPt).name,'/'];
-    mkdir(saveFolder);
+    
     
     if isempty(soz) == 1
         fprintf('WARNING, soz empty for %s, skipping\n',pt(whichPt).name);
@@ -154,18 +156,36 @@ for whichPt = whichPts
     fprintf('%d sequences remain\n',size(seq_matrix,2));
     
     
-    %% Go through all sequences and get cluster prop
-    clusters = 1:k; clusters(bad_cluster) = [];
-    n_seq = size(seq_matrix,2);
-    seq_clust = zeros(n_seq,length(clusters));
-    for s = 1:n_seq
-        seq = seq_matrix(:,s);
-        spike_chs = find(isnan(se
-        
+    %% Get sequence lengths
+    seq_lengths = zeros(size(seq_matrix,2),1);
+    seq_times = zeros(size(seq_matrix,2),1);
+    for s = 1:size(new_seq_matrix,2)
+        currSeq = seq_matrix(:,s);
+        seq_lengths(s) = sum(isnan(currSeq) == 0); 
+        seq_times(s) = min(currSeq);
     end
     
+    %{
+   %% Get average
+   run_times = pt(whichPt).runTimes;
+   seq_length_bin = zeros(size(run_times,1),1);
+   seq_time_bin = zeros(size(run_times,1),1);
+   for i = 1:size(run_times,1)
+        seq_idx = find(seq_times >= run_times(i,1) & seq_times <= run_times(i,2));
+        seq_length_bin(i) = mean(seq_lengths(seq_idx));
+        seq_time_bin(i) = mean(seq_times(seq_idx));
+   end
+   
+   figure
+   plot(seq_time_bin/3600,seq_length_bin);
+   hold on
+   for j = 1:size(szTimes,1) 
+        yl = ylim;
+        plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
+   end
     
-    
+    %}
+   
     
 end
 

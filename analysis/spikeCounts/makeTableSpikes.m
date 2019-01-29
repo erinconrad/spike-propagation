@@ -22,6 +22,7 @@ spike_rate_t = cell(length(whichPts),1);
 post_processing_t = cell(length(whichPts),1);
 post_cluster_t = cell(length(whichPts),1);
 all_spike_num_t = cell(length(whichPts),1);
+sz_num_t = zeros(length(whichPts),1);
 
 count = 0;
 for whichPt = whichPts
@@ -34,6 +35,9 @@ for whichPt = whichPts
     %% Basic info
     szTimes = pt(whichPt).newSzTimes;
     nchs = size(pt(whichPt).channels,1);
+    
+    %% Seizure number
+    sz_num_t(count) = length(pt(whichPt).sz);
     
     %% Get spike rate before processing; also get duration
     % Get number of spikes
@@ -119,5 +123,7 @@ fprintf(['Average duration:  %1.1f (range %1.1f-%1.1f)\n'...
     'Average final number:  %1.1f (range %d-%d)\n'],...
     mean(
     %}
+    
+    sz_num_t
     
 end

@@ -35,6 +35,7 @@ all_p_soz = [];
 
 for whichPt = whichPts
     
+    fprintf('Doing %s\n',pt(whichPt).name);
     %look = mean(power(whichPt).ad_rat,2);
     
     
@@ -146,6 +147,9 @@ for whichPt = whichPts
         
         % Get mean distance from spike to nearest SOZ
         soz_dist = zeros(length(whichSpikes),1);
+        
+        % Get soz mean
+        median_soz = median(soz,1);
 
         % Loop through all spikes in bin
         for j = 1:length(whichSpikes)
@@ -153,7 +157,7 @@ for whichPt = whichPts
             % For each spike, get the distance between the spike and its
             % nearest SOZ
             soz_dist(j) = min(vecnorm(locs(all_spikes(whichSpikes(j)),:) - ...
-                soz,2,2)); 
+                median_soz,2,2)); 
         end
         % Average that distance over all spikes in the bin
         soz_dist_bin(i) = mean(soz_dist);
@@ -207,39 +211,92 @@ for whichPt = whichPts
         continue
     end
     
-    %% Do initial regression
-    Y = prop_pop;
-    X = [ones(size(mean_ad)) mean_ad];
-    [b,~,resid] = regress(Y, X);
+    %% Do initial regression incorporating linear trend and Q24 hour trend
     
-    %% Get initial guess for autocorrelation term
+    % Get hours
+    hours = floor(mod(times,24*3600)/3600) + 1;
+    
+    % Get hours as a categorical variable
+    cat_hours = dummyvar(hours);
+    
+    % Y is the response variable, the proportion of sequences in the most
+    % popular cluster
+    Y = prop_pop;
+    
+    % X is the predictor. The first component of X is the alpha-delta
+    % ratio, the predictor I am interested in. The next component is a
+    % constant error term. The third component is just what time it is,
+    % reflecting a linear trend with time. The last is the categorical
+    % variable representing the hour of the day, reflecting a cyclical Q24
+    % hour trend.
+    %X = [mean_ad ones(size(mean_ad)) times cat_hours];
+    X = [mean_ad ones(size(mean_ad))];
+    
+    % Do the regression
+    [b,bint,resid,~,stats] = regress(Y, X);
+    
+    
+    %Y_fake = X*b;
+    %p = dwtest(resid,X);
+    
+    %{
+    figure
+    plot(resid)
+    pause
+    close(gcf)
+    %}
+    
+    %% Now correct for autocorrelation
+    
+    % Get initial guess for autocorrelation
     r = corr(resid(1:end-1),resid(2:end));  
     
-    %% Define anonymous function representing new fit including autocorrelation
+    % Define anonymous function representing new fit including autocorrelation
     f = @(c,x) [Y(1); c(1)*Y(1:end-1) + (x(2:end,:)- c(1)*x(1:end-1,:))*c(2:end)];
+    
+    % Do the new model 
     [c,~,~,CovB,~,~] = nlinfit(X,Y,f,[r;b]);
     mdl = fitnlm(X,Y,f,[r;b]);
     
     % c(1) is the autocorrelation term
-    % c(2) is b(1) which is the constant error term
-    % c(3) is b(2) which is the linear correlation term
+    % c(2) is b(1) which is the linear correlation term
+    % c(3) is b(2) which is the constant error term
+    % c(4) is b(3) which is linear trend
+    % c(5-end) is b(4-end) which are the seasonal components
     
-    p = linhyptest(c(3),CovB(3,3));
+   % p = linhyptest(c(3),CovB(3,3));
     
-    [~,p_old] = corr(mean_ad,prop_pop,'Type','Spearman');
-    
-    fprintf('For %s, the old p-value is %1.1e\nand the new is %1.1e.\n',...
-        pt(whichPt).name,p_old,p);
+    p = mdl.Coefficients.pValue(2);
+    r2 = mdl.Rsquared.Adjusted;
+    [~,p_rank] = corr(mean_ad,prop_pop,'Type','Spearman');
     
     if plotInfo == 1
         
-        disp(mdl);
+        
+        fprintf(['For %s, the rank p-value is %1.1e,\n'...
+            'and the non-linear is %1.1e.\n']...
+            ,pt(whichPt).name,p_rank,p);
         
         %Info about new residuals
         figure
+        subplot(1,3,1)
         u = Y - f(c,X);
         plot(u);
-        title('Residuals for correlation between prop_pop and alpha/delta');
+        title('Residuals');
+        
+        subplot(1,3,2)
+        plot(times,prop_pop,'b');
+        hold on
+        plot(times,X*b,'r');
+        legend('Real prop-pop','original model');
+        
+        subplot(1,3,3)
+        plot(times,prop_pop,'b');
+        hold on
+        fakeY = f(c,X);
+        plot(times,fakeY)
+        legend('Real prop-pop','non-linear model');
+        
         pause
         close(gcf)
     end
@@ -265,8 +322,17 @@ for whichPt = whichPts
     
     %% Do initial regression
     Y = soz_dist_bin;
-    X = [ones(size(mean_ad)) mean_ad];
-    [b,~,resid] = regress(Y, X);
+    
+    % X is the predictor. The first component of X is the alpha-delta
+    % ratio, the predictor I am interested in. The next component is a
+    % constant error term. The third component is just what time it is,
+    % reflecting a linear trend with time. The last is the categorical
+    % variable representing the hour of the day, reflecting a cyclical Q24
+    % hour trend.
+    %X = [mean_ad ones(size(mean_ad)) times cat_hours];
+    X = [mean_ad ones(size(mean_ad))];
+    
+    [b,~,resid,~,stats] = regress(Y, X);
     
     %% Get initial guess for autocorrelation term
     r = corr(resid(1:end-1),resid(2:end));  
@@ -275,32 +341,47 @@ for whichPt = whichPts
     f = @(c,x) [Y(1); c(1)*Y(1:end-1) + (x(2:end,:)- c(1)*x(1:end-1,:))*c(2:end)];
     [c,~,~,CovB,~,~] = nlinfit(X,Y,f,[r;b]);
     mdl = fitnlm(X,Y,f,[r;b]);
+    p = mdl.Coefficients.pValue(2);
+    r2 = mdl.Rsquared.Adjusted;
     
     % c(1) is the autocorrelation term
-    % c(2) is b(1) which is the constant error term
-    % c(3) is b(2) which is the linear correlation term
+    % c(2) is b(1) which is the linear correlation term
+    % c(3) is b(2) which is the constant error term
     
-    p = linhyptest(c(3),CovB(3,3));
+    %p = linhyptest(c(3),CovB(3,3));
     
-    [~,p_old] = corr(mean_ad,prop_pop,'Type','Spearman');
-    
-    fprintf('For %s, the old p-value for SOZ dist is %1.1e\n and the new is %1.1e.\n',...
-        pt(whichPt).name,p_old,p);
+    [~,p_rank] = corr(mean_ad,soz_dist_bin,'Type','Spearman');
     
     if plotInfo == 1
         
-        disp(mdl);
+        fprintf(['For %s, the rank p-value is %1.1e,\n'...
+            'and the non-linear is %1.1e.\n\n\n\n\n'],...
+            pt(whichPt).name,p_rank,p);
         
         %Info about new residuals
         figure
+        subplot(1,3,1)
         u = Y - f(c,X);
         plot(u);
-        title('Residuals for correlation between SOZ dist and alpha/delta');
+        title('Residuals');
+        
+        subplot(1,3,2)
+        plot(times,soz_dist_bin,'b');
+        hold on
+        plot(times,X*b,'r');
+        legend('Real dist from SOZ','original model');
+        
+        subplot(1,3,3)
+        fakeY = f(c,X);
+        plot(times,soz_dist_bin,'b');
+        hold on
+        plot(times,fakeY,'g');
+        legend('Real dist from SOZ','non linear model');
         pause
         close(gcf)
     end
     
-    all_b = [all_b;c(3)];
+    all_b = [all_b;c(2)];
     all_p_soz = [all_p_soz;p];
     
     
@@ -313,7 +394,7 @@ fprintf(['There are %d with significant correlation.\nThe combined p-value'...
     'is %1.1e.\n'],sum(allP<0.05/length(allP)),sum_p);
 
 %% Test that b significantly different from zero
-[~,p] = ttest(all_b);
+[~,p,ci,stats] = ttest(all_b);
 fprintf('P value for SOZ is %1.1e.\n',p);
 
 %% Correlation between change in location and outcome
