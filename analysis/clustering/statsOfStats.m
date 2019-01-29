@@ -222,6 +222,15 @@ if isempty(SL_pre_all) == 0
     fprintf('%d of %d patients had a significant post-ictal change in SL.\n',...
         sum(SL_p_post_all < 0.05/length(SL_p_post_all)),length(SL_p_post_all));
     
+    
+    sig_post_move = find(p_post_all < 0.05/length(whichPts));
+    names_post_move = names(sig_post_move)';
+    SL_post_move = SL_post_all(sig_post_move);
+    SL_other_move = SL_other_all(sig_post_move);
+    SL_p_move = SL_p_post_all(sig_post_move);
+    
+    table(names_post_move,SL_post_move,SL_other_move,SL_p_move)
+    
 end
 
 end
