@@ -54,12 +54,13 @@ for whichPt = whichPts
         
     end
     
-    grids{count} = n_grids;
-    strips{count} = n_strips;
-    depths{count} = n_depths;
+    grids{count} = num2str(n_grids);
+    strips{count} = num2str(n_strips);
+    depths{count} = num2str(n_depths);
 end
 
-T = table(name,sex,ageOnset,ageSurg,soz,path,outcome,grids,strips,depths);
+T = table(char(name),char(sex),char(ageOnset),char(ageSurg),char(soz),...
+    (path),char(outcome),char(grids),char(strips),char(depths))
 
 
 %% Get sex info

@@ -37,6 +37,9 @@ for whichPt = 1:length(stats)
     
     % Get stats on if it changes from hour to hour
     p_hour = stats(whichPt).hour.p;
+    if p_hour == 0
+        p_hour = 1/1001;
+    end
     p_hour_all = [p_hour_all,p_hour];
     hour_chi2_all = [hour_chi2_all,stats(whichPt).hour.chi2];
     
@@ -227,13 +230,13 @@ T = table(names',p_hour_all_t,p_pre_all_t,p_post_all_t);
 
 
 %% Table of hour long changes
-table(names,hour_chi2_all,p_hour_all_t,'VariableNames',{'Name','Chi2','P-value'})
+table(char(names'),num2str(hour_chi2_all','%1.1f\n'),char(p_hour_all_t),'VariableNames',{'Name','Chi2','P'})
 
 %% Table of pre-ictal changes
-table(names,pre_chi2_all,p_pre_all,'VariableNames',{'Name','Chi2','P-value'})
+table(char(names'),num2str(pre_chi2_all','%1.1f\n'),char(p_pre_all_t),'VariableNames',{'Name','Chi2','P'})
 
 %% Table of post-ictal changes
-table(names,post_chi2_all,p_post_all,'VariableNames',{'Name','Chi2','P-value'})
+table(char(names'),num2str(post_chi2_all','%1.1f\n'),char(p_post_all_t),'VariableNames',{'Name','Chi2','P'})
 
 
 %% SL
@@ -279,7 +282,7 @@ function p_text_cell = getPText(p_array)
 
     p_text_cell = cell(length(p_array),1);
     for i = 1:length(p_array)
-        if p_array(i) < 0.001
+        if p_array(i) < 0.0009
             p_text_cell{i} = '<0.001';
         else
             p_text_cell{i} = sprintf('%1.3f',p_array(i));

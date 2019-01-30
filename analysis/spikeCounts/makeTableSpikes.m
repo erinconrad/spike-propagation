@@ -106,12 +106,13 @@ for whichPt = whichPts
     
     %fprintf('%s had %d spikes post cluster.\n',pt(whichPt).name,length(all_spikes));
     all_spike_num = length(all_spikes);
-    all_spike_num_t{count} = sprintf('%1.1f',all_spike_num);
+    all_spike_num_t{count} = num2str(all_spike_num);
     
     
 end
 
-T = table(name,duration_t,spike_rate_t,post_processing_t,post_cluster_t,all_spike_num_t,...
+T = table(char(name),char(duration_t),char(spike_rate_t),char(post_processing_t),...
+    char(post_cluster_t),char(all_spike_num_t),...
     'VariableNames',{'ID','Duration','Raw_spike_rate',...
     'Post_processing_spike_rate','Post_clustering_spike_rate','Final_spike_number'})
 
