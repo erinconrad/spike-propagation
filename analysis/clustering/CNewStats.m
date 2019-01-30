@@ -10,7 +10,7 @@ I get statistics on spike cluster data
 
 % The post-ictal time period (how many hours after the seizure I am
 % defining to be post-ictal)
-intericTime = 4;
+intericTime = 1;
 
 % Plot the time periods to see what I am defining to be pre-, post-, and
 % interictal
