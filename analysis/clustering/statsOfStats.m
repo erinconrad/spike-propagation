@@ -24,6 +24,9 @@ SL_inter_all = [];
 SL_other_all = [];
 SL_p_pre_all = [];
 SL_p_post_all = [];
+hour_chi2_all = [];
+pre_chi2_all = [];
+post_chi2_all = [];
 
 %% Loop through patients and grab stats info
 for whichPt = 1:length(stats)
@@ -35,6 +38,7 @@ for whichPt = 1:length(stats)
     % Get stats on if it changes from hour to hour
     p_hour = stats(whichPt).hour.p;
     p_hour_all = [p_hour_all,p_hour];
+    hour_chi2_all = [hour_chi2_all,stats(whichPt).hour.chi2];
     
     % Get stats on if it changes in pre-ictal period
     p_pre = stats(whichPt).preIc.p;
@@ -43,6 +47,8 @@ for whichPt = 1:length(stats)
         p_pre = 1/1001;
     end
     p_pre_all = [p_pre_all,p_pre];
+    pre_chi2_all = [pre_chi2_all,stats(whichPt).preIc.chi2];
+
     
     % Get stats on if it changes in post ictal period
     p_post = stats(whichPt).postIc.p;
@@ -50,6 +56,7 @@ for whichPt = 1:length(stats)
         p_post = 1/1001;
     end
     p_post_all = [p_post_all,p_post];
+    post_chi2_all = [post_chi2_all,stats(whichPt).postIc.chi2];
     
     % Distance from SOZ
     if isfield(stats(whichPt),'soz') == 1
@@ -211,13 +218,22 @@ fprintf(['The p-value for chi squared comparing temporal vs non-temporal lobe be
     'p = %1.2e\n'],p_post_lobe);
 
 
-%% Table of stuff
+%% Table of all stuff
 p_hour_all_t = getPText(p_hour_all);
 p_pre_all_t = getPText(p_pre_all);
 p_post_all_t = getPText(p_post_all);
 
 T = table(names',p_hour_all_t,p_pre_all_t,p_post_all_t);
 
+
+%% Table of hour long changes
+table(names,hour_chi2_all,p_hour_all_t,'VariableNames',{'Name','Chi2','P-value'})
+
+%% Table of pre-ictal changes
+table(names,pre_chi2_all,p_pre_all,'VariableNames',{'Name','Chi2','P-value'})
+
+%% Table of post-ictal changes
+table(names,post_chi2_all,p_post_all,'VariableNames',{'Name','Chi2','P-value'})
 
 
 %% SL
