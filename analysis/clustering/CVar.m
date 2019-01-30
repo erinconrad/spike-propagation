@@ -24,7 +24,7 @@ width of the new range is >80% of the old range
 
 % Parameters
 chunkMethod = 1;
-doPlots = 0;
+doPlots = 1;
 alpha = 0.8;
 nboot = 1e3;
 
@@ -255,9 +255,9 @@ for whichPt = whichPts
             sprintf('Duration needed to capture %d%% of variability:\n%d hours (%1.1f%% of total dataset)', ...
             alpha*100,min_capture_var,min_capture_var/n_chunks*100),'FontSize',15);
 
-        xlabel('Number of sequential hours considered');
+        xlabel('Number of consecutive hours considered');
         ylabel(sprintf('Min and max proportion of spikes in\nthe most popular cluster across hour-long bins'));
-        title(sprintf('Dependence on sampling of apparent cluster variability for %s',...
+        title(sprintf('Dependence on sampling of spike location variability for %s',...
             pt(whichPt).name),'fontsize',25);
         set(gca,'fontsize',15);
         hold on

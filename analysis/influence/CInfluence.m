@@ -3,7 +3,6 @@ function CInfluence(pt,cluster,whichPts)
 %{
 
 SUPER important to make sure we align the spikes here!!!!!!
-SHould double check
 
 %}
 
@@ -645,7 +644,7 @@ set(gca,'FontSize',fontsizes)
 
 % Plot p-values
 if pFreqSA < 0.001
-    textFreqSA = 'p < 0.001';
+    textFreqSA = 'p < 0.001***';
 else
     textFreqSA = sprintf('p = %1.3f',pFreqSA);
 end
@@ -655,7 +654,7 @@ text(2.5,max(prices)+4,textFreqSA,'HorizontalAlignment','center',...
         'fontsize',fontsizes);
     
 if pAllSA < 0.001
-    textAllSA = 'p < 0.001';
+    textAllSA = 'p < 0.001***';
 else
     textAllSA = sprintf('p = %1.3f',pAllSA);
 end
@@ -667,7 +666,7 @@ text(1.5,max(prices)+4,textAllSA,'HorizontalAlignment','center',...
         'fontsize',fontsizes);
     
 if pFreqAll < 0.001
-    textFreqAll = 'p < 0.001';
+    textFreqAll = 'p < 0.001***';
 else
     textFreqAll = sprintf('p = %1.3f',pFreqAll);
 end

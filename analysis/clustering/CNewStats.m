@@ -638,6 +638,7 @@ for whichPt = whichPts
         % Save information 
         stats(whichPt).preIc.tbl = tbl_2;
         stats(whichPt).preIc.p = p_2;
+        stats(whichPt).preIc.chi2 = chi2_real;
         chi_tables_plot{whichPt} = tbl_2;
         p_plot(whichPt) = p_2;
         
@@ -961,6 +962,7 @@ for whichPt = whichPts
         % Save information into patient struct
         stats(whichPt).postIc.tbl = tbl_3;
         stats(whichPt).postIc.p = p_3;
+        stats(whichPt).postIc.chi2 = chi2_real;
         chi_tables_postIc{whichPt} = tbl_3;
         p_postIc(whichPt) = p_3;
         

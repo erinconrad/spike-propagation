@@ -11,6 +11,7 @@ soz_dist_pre_all = [];
 soz_dist_inter_all = [];
 soz_dist_post_all = [];
 soz_dist_other_all = [];
+soz_dist_post_p = [];
 SD_pre_all = [];
 SD_post_all = [];
 SD_other_all = [];
@@ -56,11 +57,13 @@ for whichPt = 1:length(stats)
         inter_dist = stats(whichPt).soz.pre.inter_dist;
         post_dist = stats(whichPt).soz.post.post_dist;
         other_dist = stats(whichPt).soz.post.other_dist;
+        post_p = stats(whichPt).soz.post.p;
 
         soz_dist_pre_all = [soz_dist_pre_all,pre_dist];
         soz_dist_inter_all = [soz_dist_inter_all,inter_dist];
         soz_dist_post_all = [soz_dist_post_all,post_dist];
         soz_dist_other_all = [soz_dist_other_all,other_dist];
+        soz_dist_post_p = [soz_dist_post_p,post_p];
     end
     
     
@@ -150,6 +153,20 @@ if isempty(soz_dist_pre_all) == 0
         soz_dist_post_all'],[],'off');
     fprintf(['The p-value for change in distance from SOZ comparing'...
         'pre/post/inter by K-W is:\n%1.2e\n'],p);
+    
+    fprintf('%d of %d patients had a significant post-ictal change in dist from SOZ.\n',...
+        sum(soz_dist_post_p < 0.05/length(soz_dist_post_p)),length(soz_dist_post_p));
+    
+    
+    sig_post_move = find(p_post_all < 0.05/length(whichPts));
+    names_post_move = names(sig_post_move)';
+    soz_post_move = soz_dist_post_all(sig_post_move);
+    soz_other_move = soz_dist_other_all(sig_post_move);
+    soz_p_move = soz_dist_post_p(sig_post_move);
+    
+    table(names_post_move,soz_post_move',soz_other_move',soz_p_move')
+    
+    
 end
 
 
@@ -221,6 +238,11 @@ if isempty(SL_pre_all) == 0
 
     fprintf('%d of %d patients had a significant post-ictal change in SL.\n',...
         sum(SL_p_post_all < 0.05/length(SL_p_post_all)),length(SL_p_post_all));
+    
+    [p,tbl_kw,stats_kw] = kruskalwallis([SL_post_all,SL_inter_all,...
+        SL_pre_all],[],'off');
+    fprintf(['The p-value for change in SL comparing'...
+        'pre/post/inter by K-W is:\n%1.2e\n'],p);
     
     
     sig_post_move = find(p_post_all < 0.05/length(whichPts));

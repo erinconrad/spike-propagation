@@ -31,6 +31,9 @@ temp_lobe_all = [];
 
 all_b = [];
 all_p_soz = [];
+all_b_SL = [];
+all_p_SL = [];
+names = {};
 
 
 for whichPt = whichPts
@@ -38,6 +41,7 @@ for whichPt = whichPts
     fprintf('Doing %s\n',pt(whichPt).name);
     %look = mean(power(whichPt).ad_rat,2);
     
+    names = [names;pt(whichPt).name];
     
     saveFolder = [destFolder,pt(whichPt).name,'/'];
     mkdir(saveFolder)
@@ -117,6 +121,21 @@ for whichPt = whichPts
     % Get most popular cluster
     popular = mode(idx);
     
+    
+    if length(clusters) == 1
+        fprintf('One cluster for %s, skipping\n',pt(whichPt).name);
+        p = 1;
+        allP =[allP;p];
+        all_b = [all_b;nan];
+        all_p_soz = [all_p_soz;nan];
+        all_b_SL = [all_b_SL;nan];
+        all_p_SL = [all_p_SL;nan];
+        continue
+    end
+    
+    %% Get the sequence lengths of all spikes
+    [seq_lengths,seq_times] = getSeqDist(pt,cluster,whichPt);
+    
     bin_times = pt(whichPt).runTimes;
     prop_pop = zeros(size(bin_times,1),1);
     locs_bin = zeros(size(bin_times,1),3);
@@ -125,7 +144,9 @@ for whichPt = whichPts
     SD_bin = zeros(size(bin_times,1),1);
     std_z_bin = zeros(size(bin_times,1),1);
     prop_pop_chunk = zeros(size(bin_times,1),1);
-    distNeeded = zeros(size(bin_times,1));
+    distNeeded = zeros(size(bin_times,1),1);
+    SL_bin = zeros(size(bin_times,1),1); 
+    
     % Run through bin times and get proportion of spikes in most popular
     % cluster for that bin.
     for i = 1:size(bin_times,1)
@@ -143,6 +164,11 @@ for whichPt = whichPts
         locs_bin(i,:) = mean(all_locs(whichSpikes,:),1);
         num_spikes(i) = length(whichSpikes);
         
+        
+        
+        % Get mean sequence length in these times
+        SL_bin(i) = mean(seq_lengths(seq_times > bin_times(i,1) & ...
+            seq_times < bin_times(i,2)));
         
         
         % Get mean distance from spike to nearest SOZ
@@ -204,12 +230,7 @@ for whichPt = whichPts
     prop_pop(nan_times) = [];
     
     
-    if length(clusters) == 1
-        fprintf('One cluster for %s, skipping\n',pt(whichPt).name);
-        p = 1;
-        allP =[allP;p];
-        continue
-    end
+    
     
     %% Do initial regression incorporating linear trend and Q24 hour trend
     
@@ -385,6 +406,84 @@ for whichPt = whichPts
     all_p_soz = [all_p_soz;p];
     
     
+    
+    %% Now do SL
+    
+    nan_times = find(isnan(SL_bin));
+    times = old_times;
+    mean_ad = old_mean_ad;
+    
+    times(nan_times) = [];
+    mean_ad(nan_times) = [];
+    SL_bin(nan_times) = [];
+    
+    %% Do initial regression
+    Y = SL_bin;
+    
+    % X is the predictor. The first component of X is the alpha-delta
+    % ratio, the predictor I am interested in. The next component is a
+    % constant error term. The third component is just what time it is,
+    % reflecting a linear trend with time. The last is the categorical
+    % variable representing the hour of the day, reflecting a cyclical Q24
+    % hour trend.
+    %X = [mean_ad ones(size(mean_ad)) times cat_hours];
+    X = [mean_ad ones(size(mean_ad))];
+    
+    [b,~,resid,~,stats] = regress(Y, X);
+    
+    %% Get initial guess for autocorrelation term
+    r = corr(resid(1:end-1),resid(2:end));  
+    
+    %% Define anonymous function representing new fit including autocorrelation
+    f = @(c,x) [Y(1); c(1)*Y(1:end-1) + (x(2:end,:)- c(1)*x(1:end-1,:))*c(2:end)];
+    [c,~,~,CovB,~,~] = nlinfit(X,Y,f,[r;b]);
+    mdl = fitnlm(X,Y,f,[r;b]);
+    p = mdl.Coefficients.pValue(2);
+    r2 = mdl.Rsquared.Adjusted;
+    
+    % c(1) is the autocorrelation term
+    % c(2) is b(1) which is the linear correlation term
+    % c(3) is b(2) which is the constant error term
+    
+    %p = linhyptest(c(3),CovB(3,3));
+    
+    [~,p_rank] = corr(mean_ad,SL_bin,'Type','Spearman');
+    
+    if plotInfo == 1
+        
+        fprintf(['For %s, the rank p-value is %1.1e,\n'...
+            'and the non-linear is %1.1e.\n\n\n\n\n'],...
+            pt(whichPt).name,p_rank,p);
+        
+        %Info about new residuals
+        figure
+        subplot(1,3,1)
+        u = Y - f(c,X);
+        plot(u);
+        title('Residuals');
+        
+        subplot(1,3,2)
+        plot(times,SL_bin,'b');
+        hold on
+        plot(times,X*b,'r');
+        legend('Real sequence length','original model');
+        
+        subplot(1,3,3)
+        fakeY = f(c,X);
+        plot(times,SL_bin,'b');
+        hold on
+        plot(times,fakeY,'g');
+        legend('Real sequence length','non linear model');
+        pause
+        close(gcf)
+    end
+    
+    all_b_SL = [all_b_SL;c(2)];
+    all_p_SL = [all_p_SL;p];
+    
+    
+    
+    
 end
 
 
@@ -393,9 +492,13 @@ sum_p = 1-chi2cdf(X_2,2*length(allP));
 fprintf(['There are %d with significant correlation.\nThe combined p-value'...
     'is %1.1e.\n'],sum(allP<0.05/length(allP)),sum_p);
 
-%% Test that b significantly different from zero
+%% Test that b significantly different from zero for SOZ
 [~,p,ci,stats] = ttest(all_b);
 fprintf('P value for SOZ is %1.1e.\n',p);
+changePos = find(allP<0.05/length(allP));
+all_b_changePos = all_b(changePos);
+all_p_soz_changePos = all_p_soz(changePos);
+table(names(changePos),all_b_changePos,all_p_soz_changePos)
 
 %% Correlation between change in location and outcome
 %
@@ -415,7 +518,16 @@ fprintf(['The p-value for chi squared comparing temporal vs non-temporal lobe be
 
 %% Table of stuff
 p_sleep_t = getPText(allP);
-T = table(p_sleep_t)
+T = table(p_sleep_t);
+
+
+%% Test that b significantly different from zero for SL
+[~,p,ci,stats] = ttest(all_b_SL);
+fprintf('P value for SL is %1.1e.\n',p);
+changePos = find(allP<0.05/length(allP));
+all_b_SL_changePos = all_b_SL(changePos);
+all_p_SL_changePos = all_p_SL(changePos);
+table(names(changePos),all_b_SL_changePos,all_p_SL_changePos)
 
 end
 
