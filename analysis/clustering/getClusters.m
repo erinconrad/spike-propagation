@@ -4,16 +4,28 @@ function cluster = getClusters(pt,whichPts)
 % Should we skip patients that are already done and merge the new patients
 % with the existing cluster?
 saveStruct = 0;
+
+% Merge with existing cluster struct?
 merge = 1; 
-allSpikes = 1;
-clustOpt = 0; % get optimal cluster numbers
+
+% get optimal cluster numbers?
+clustOpt = 0; 
+
+% Plot spikes over time? Can be 0 if doing as part of regular pipeline
 doPlots = 0;
+
+% Plot example sequences? Should be 1 if doing as part of regular pipeline
 doLongPlots = 1;
-removeTies = 1;
+
+
+removeTies = 1; % I DO remove ties for every part of analysis of the spike paper
 % My primary rationale for removing ties is that when I tested this for a
 % single patient (HUP106), when I don't remove ties there is a third
 % cluster that appears that is basically all artifact. This largely goes
 % away when I remove ties.
+
+% Get all spikes (not just lead spikes). This should be 1.
+allSpikes = 1;
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
@@ -169,9 +181,16 @@ for whichPt = whichPts
     cluster(whichPt).lead_locs = lead_locs;
     cluster(whichPt).lead_times = lead_times;
     
-    % Get all spike times and channels
+   
+    %% Get all spike times and channels
+    
+    % all spike channels
     all_spikes = [];
+    
+    % all spike times
     all_times_all = [];
+    
+    % which sequence they're in
     seq_index = [];
     for i = 1:size(seq_matrix,2)
         nonan = find(~isnan(seq_matrix(:,i)));
@@ -226,7 +245,6 @@ for whichPt = whichPts
                  for i = 1:k
                     % sum of square differences between each observation
                     % and its cluster's centroid
-                    % CHECK ME
                     if allSpikes == 1
                         SSE_temp(j) = SSE_temp(j) + ...
                             sum(sum((all_locs(idx_test == i,:) - ...

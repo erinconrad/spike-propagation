@@ -1,3 +1,11 @@
+%{
+
+This script detects spike sequences once we have a bunch of spike
+detections
+
+%}
+
+
 clear
 
 %% Do vanleer
@@ -32,7 +40,7 @@ end
 
 
 %% Loop through patients and seizures
-for i = 18
+for i = 1:31
     
     fprintf('Doing %s\n',pt(i).name);
     
@@ -126,7 +134,7 @@ for i = 18
    
    pt(i).removed = removed_all;
 
-    %% Cleaning
+    %% Cleaning (I don't do this for spike paper)
     %{
     dirty_seq = pt(i).sz(j).data.sequences;
     ss_thresh     = 15;              

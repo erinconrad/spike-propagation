@@ -1,4 +1,4 @@
-%% getDesiredRunTimes
+%% longRunTimes
 
 % This file, meant to be ported to Borel, loops through all the patients in
 % the json file containing basic patient info, and fills up a structure
@@ -16,7 +16,7 @@ addpath(p1);
 ptInfo = loadjson(jsonfile);
 ptnames = fieldnames(ptInfo.PATIENTS);
 
-% Do trickery
+% Remove patients that I will not run this on
 ptnames(strcmp(ptnames,'HUP111B')==1) = [];
 ptnames(strcmp(ptnames,'Study004')==1) = [];
 
@@ -126,7 +126,7 @@ for i = 1:length(ptnames)
     
     if isempty(pt(i).sz) ==1, continue; end
     
-    % If the time between seizures is less than 100 hours, run the whole time
+    % If the time between seizures is less than 200 hours, run the whole time
     if pt(i).sz(end).offset -  pt(i).sz(1).onset < 3600*200
         pt(i).allTimes = [max(0,pt(i).sz(1).onset - 3600*12),...
             pt(i).sz(end).offset + 3600*12];

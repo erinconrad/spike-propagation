@@ -2,8 +2,7 @@ function CInfluence(pt,cluster,whichPts)
 
 %{
 
-SUPER important to make sure we align the spikes here!!!!!!
-
+My area of influence analysis
 %}
 
 % Parameters
@@ -380,7 +379,7 @@ for whichPt = whichPts
     for i = 1:length(allLocs)
         allLocs(i) = min(vecnorm(locs(i,:) - locs(soz,:),2,2));
     end
-    allAllDist =[allAllDist;allLocs];
+    allAllDist =[allAllDist;(allLocs,1)];
     
     % Distance from electrodes with spikes to closest SOZ electrode
     spikeLocs = locs(ch_w_spikes,:);

@@ -1,6 +1,14 @@
 function AD_AR(pt,cluster,power,whichPts)
 
-plotInfo = 0;
+%{
+
+This calculates the correlation between the alpha delta power ratio and
+features of spike sequences
+
+%}
+
+% Plot info about the model?
+plotInfo = 1;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 p1 = genpath(scriptFolder);
@@ -8,6 +16,7 @@ addpath(p1);
 destFolder = [resultsFolder,'alphaDelta/plots/'];
 mkdir(destFolder);
 
+%% Get which patients
 if isempty(whichPts) == 1
     for i = 1:length(pt)
         if isempty(pt(i).seq_matrix) == 0
@@ -24,7 +33,7 @@ elseif whichPts == 100
     whichPts = [1,4,6,8,9,12,15,17,18,19,20,22,24,25,27,30,31];
 end
 
-
+%% initialize
 allP = [];
 allT = [];
 outcome_all = [];
@@ -36,7 +45,7 @@ all_b_SL = [];
 all_p_SL = [];
 names = {};
 
-
+%% Loop through patients
 for whichPt = whichPts
     
     fprintf('Doing %s\n',pt(whichPt).name);
@@ -51,11 +60,11 @@ for whichPt = whichPts
     locs = pt(whichPt).electrodeData.locs(:,2:4);
     soz = locs(pt(whichPt).newSOZChs,:);
     
-    % outcomes
+    %% outcomes
     outcome = getOutcome(pt,whichPt);
     outcome_all = [outcome_all,outcome];
     
-    % SOZ
+    %% SOZ
     szOnsetText = pt(whichPt).clinical.seizureOnset;
     if contains(szOnsetText,'TL') == 1
         tempLobe = 1;
@@ -65,14 +74,14 @@ for whichPt = whichPts
     temp_lobe_all = [temp_lobe_all,tempLobe];
 
     
-    % Reorder seizure times if out of order
+    %% Reorder seizure times if out of order
     oldSzTimes = szTimes;
     szTimes = sort(szTimes,1);
     if isequal(oldSzTimes,szTimes) == 0
         fprintf('WARNING!!! %s seizure times out of order\n',pt(whichPt).name);
     end
     
-    % Combine nearly equal seizure times
+    %% Combine nearly equal seizure times
     newIdx = 2;
     newSzTimes = [];
     newSzTimes(1,:) = szTimes(1,:);
@@ -92,6 +101,7 @@ for whichPt = whichPts
         fprintf('WARNING!!! %s had duplicate seizure times\n',pt(whichPt).name);
     end
     
+    %% Get clustering info
     all_times_all = cluster(whichPt).all_times_all; % all spike times
     all_spikes = cluster(whichPt).all_spikes; % all spike channels
     all_locs = cluster(whichPt).all_locs;
@@ -100,7 +110,7 @@ for whichPt = whichPts
     C = cluster(whichPt).C; % the centroids of the clusters
     bad_cluster = cluster(whichPt).bad_cluster; % which clusters are bad
     
-    % Confirm that I do not have any ictal spikes
+    %% Confirm that I do not have any ictal spikes
     t = find(any(all_times_all >= szTimes(:,1)' & all_times_all <= szTimes(:,2)',2));
     if isempty(t) == 0
         fprintf('WARNING: Remaining ictal spikes for %s!\n',pt(whichPt).name);
@@ -111,7 +121,7 @@ for whichPt = whichPts
     end
     
 
-    % Remove bad clusters
+    %% Remove bad clusters
     bad_idx = find(ismember(idx,bad_cluster));
     all_times_all(bad_idx) = [];
     all_spikes(bad_idx) = [];
@@ -119,7 +129,7 @@ for whichPt = whichPts
     idx(bad_idx) = [];
     clusters = 1:k; clusters(bad_cluster) = [];
     
-    % Get most popular cluster
+    %% Get most popular cluster
     popular = mode(idx);
     
    
@@ -214,7 +224,7 @@ for whichPt = whichPts
     
     
     %% DO SOZ ANALYSIS
-    
+    fprintf('Doing SOZ for %s\n',pt(whichPt).name);
     %% Remove nans for distance from SOZ analysis
     nan_times = find(isnan(soz_dist_bin));
     times = old_times;
@@ -224,7 +234,7 @@ for whichPt = whichPts
     mean_ad(nan_times) = [];
     soz_dist_bin(nan_times) = [];
     
-    %% Do initial regression
+    % Do model
     Y = soz_dist_bin;
     
     % X is the predictor. The first component of X is the alpha-delta
@@ -236,61 +246,15 @@ for whichPt = whichPts
     %X = [mean_ad ones(size(mean_ad)) times cat_hours];
     X = [mean_ad ones(size(mean_ad))];
     
-    [b,~,resid,~,stats] = regress(Y, X);
+    [p,~,b] = AR_model(X,Y,plotInfo);
     
-    %% Get initial guess for autocorrelation term
-    r = corr(resid(1:end-1),resid(2:end));  
-    
-    %% Define anonymous function representing new fit including autocorrelation
-    f = @(c,x) [Y(1); c(1)*Y(1:end-1) + (x(2:end,:)- c(1)*x(1:end-1,:))*c(2:end)];
-    [c,~,~,CovB,~,~] = nlinfit(X,Y,f,[r;b]);
-    mdl = fitnlm(X,Y,f,[r;b]);
-    p = mdl.Coefficients.pValue(2);
-    r2 = mdl.Rsquared.Adjusted;
-    
-    % c(1) is the autocorrelation term
-    % c(2) is b(1) which is the linear correlation term
-    % c(3) is b(2) which is the constant error term
-    
-    %p = linhyptest(c(3),CovB(3,3));
-    
-    [~,p_rank] = corr(mean_ad,soz_dist_bin,'Type','Spearman');
-    
-    if plotInfo == 1
-        
-        fprintf(['For %s, the rank p-value is %1.1e,\n'...
-            'and the non-linear is %1.1e.\n\n\n\n\n'],...
-            pt(whichPt).name,p_rank,p);
-        
-        %Info about new residuals
-        figure
-        subplot(1,3,1)
-        u = Y - f(c,X);
-        plot(u);
-        title('Residuals');
-        
-        subplot(1,3,2)
-        plot(times,soz_dist_bin,'b');
-        hold on
-        plot(times,X*b,'r');
-        legend('Real dist from SOZ','original model');
-        
-        subplot(1,3,3)
-        fakeY = f(c,X);
-        plot(times,soz_dist_bin,'b');
-        hold on
-        plot(times,fakeY,'g');
-        legend('Real dist from SOZ','non linear model');
-        pause
-        close(gcf)
-    end
-    
-    all_b_soz = [all_b_soz;c(2)];
+    all_b_soz = [all_b_soz;b];
     all_p_soz = [all_p_soz;p];
     
     
     
     %% Now do SL
+    fprintf('Doing SL for %s\n',pt(whichPt).name);
     
     nan_times = find(isnan(SL_bin));
     times = old_times;
@@ -300,7 +264,7 @@ for whichPt = whichPts
     mean_ad(nan_times) = [];
     SL_bin(nan_times) = [];
     
-    %% Do initial regression
+    % Do model
     Y = SL_bin;
     
     % X is the predictor. The first component of X is the alpha-delta
@@ -312,62 +276,17 @@ for whichPt = whichPts
     %X = [mean_ad ones(size(mean_ad)) times cat_hours];
     X = [mean_ad ones(size(mean_ad))];
     
-    [b,~,resid,~,stats] = regress(Y, X);
+    [p,~,b] = AR_model(X,Y,plotInfo);
     
-    %% Get initial guess for autocorrelation term
-    r = corr(resid(1:end-1),resid(2:end));  
-    
-    %% Define anonymous function representing new fit including autocorrelation
-    f = @(c,x) [Y(1); c(1)*Y(1:end-1) + (x(2:end,:)- c(1)*x(1:end-1,:))*c(2:end)];
-    [c,~,~,CovB,~,~] = nlinfit(X,Y,f,[r;b]);
-    mdl = fitnlm(X,Y,f,[r;b]);
-    p = mdl.Coefficients.pValue(2);
-    r2 = mdl.Rsquared.Adjusted;
-    t = mdl.Coefficients.tStat(2);
-    
-    % c(1) is the autocorrelation term
-    % c(2) is b(1) which is the linear correlation term
-    % c(3) is b(2) which is the constant error term
-    
-    %p = linhyptest(c(3),CovB(3,3));
-    
-    [~,p_rank] = corr(mean_ad,SL_bin,'Type','Spearman');
-    
-    if plotInfo == 1
-        
-        fprintf(['For %s, the rank p-value is %1.1e,\n'...
-            'and the non-linear is %1.1e.\n\n\n\n\n'],...
-            pt(whichPt).name,p_rank,p);
-        
-        %Info about new residuals
-        figure
-        subplot(1,3,1)
-        u = Y - f(c,X);
-        plot(u);
-        title('Residuals');
-        
-        subplot(1,3,2)
-        plot(times,SL_bin,'b');
-        hold on
-        plot(times,X*b,'r');
-        legend('Real sequence length','original model');
-        
-        subplot(1,3,3)
-        fakeY = f(c,X);
-        plot(times,SL_bin,'b');
-        hold on
-        plot(times,fakeY,'g');
-        legend('Real sequence length','non linear model');
-        pause
-        close(gcf)
-    end
-    
-    all_b_SL = [all_b_SL;c(2)];
+    all_b_SL = [all_b_SL;b];
     all_p_SL = [all_p_SL;p];
    
     
     
     %% DO PROP-POP ANALYSIS
+    fprintf('Doing prop-pop for %s\n',pt(whichPt).name);
+    
+    % Skip if only one cluster
     
     if length(clusters) == 1
         fprintf('One cluster for %s, skipping\n',pt(whichPt).name);
@@ -377,7 +296,7 @@ for whichPt = whichPts
         continue
     end
     
-    %% Remove nan time points for prop-pop analysis
+    % Remove nan time points for prop-pop analysis
     nan_times = find(isnan(prop_pop));
     times = old_times;
     mean_ad = old_mean_ad;
@@ -388,13 +307,13 @@ for whichPt = whichPts
     prop_pop(nan_times) = [];
     
     
-    %% Do initial regression incorporating linear trend and Q24 hour trend
-    
+    %{
     % Get hours
     hours = floor(mod(times,24*3600)/3600) + 1;
     
     % Get hours as a categorical variable
     cat_hours = dummyvar(hours);
+    %}
     
     % Y is the response variable, the proportion of sequences in the most
     % popular cluster
@@ -409,85 +328,13 @@ for whichPt = whichPts
     %X = [mean_ad ones(size(mean_ad)) times cat_hours];
     X = [mean_ad ones(size(mean_ad))];
     
-    % Do the regression
-    [b,bint,resid,~,stats] = regress(Y, X);
     
+    % Do model
     
-    %Y_fake = X*b;
-    %p = dwtest(resid,X);
-    
-    %{
-    figure
-    plot(resid)
-    pause
-    close(gcf)
-    %}
-    
-    %% Now correct for autocorrelation
-    
-    % Get initial guess for autocorrelation
-    r = corr(resid(1:end-1),resid(2:end));  
-    
-    % Define anonymous function representing new fit including autocorrelation
-    f = @(c,x) [Y(1); c(1)*Y(1:end-1) + (x(2:end,:)- c(1)*x(1:end-1,:))*c(2:end)];
-    
-    % Do the new model 
-    [c,~,~,CovB,~,~] = nlinfit(X,Y,f,[r;b]);
-    mdl = fitnlm(X,Y,f,[r;b]);
-    
-    % c(1) is the autocorrelation term
-    % c(2) is b(1) which is the linear correlation term
-    % c(3) is b(2) which is the constant error term
-    % c(4) is b(3) which is linear trend
-    % c(5-end) is b(4-end) which are the seasonal components
-    
-   % p = linhyptest(c(3),CovB(3,3));
-    
-    p = mdl.Coefficients.pValue(2);
-    t = mdl.Coefficients.tStat(2);
-    r2 = mdl.Rsquared.Adjusted;
+    [p,t,~] = AR_model(X,Y,plotInfo);
     
     allP = [allP;p];
     allT = [allT;t];
-    
-    [~,p_rank] = corr(mean_ad,prop_pop,'Type','Spearman');
-    
-    if plotInfo == 1
-        
-        
-        fprintf(['For %s, the rank p-value is %1.1e,\n'...
-            'and the non-linear is %1.1e.\n']...
-            ,pt(whichPt).name,p_rank,p);
-        
-        %Info about new residuals
-        figure
-        subplot(1,3,1)
-        u = Y - f(c,X);
-        plot(u);
-        title('Residuals');
-        
-        subplot(1,3,2)
-        plot(times,prop_pop,'b');
-        hold on
-        plot(times,X*b,'r');
-        legend('Real prop-pop','original model');
-        
-        subplot(1,3,3)
-        plot(times,prop_pop,'b');
-        hold on
-        fakeY = f(c,X);
-        plot(times,fakeY)
-        legend('Real prop-pop','non-linear model');
-        
-        pause
-        close(gcf)
-    end
-    
-    
-    
-    
-    
-    
     
     
     

@@ -1,5 +1,12 @@
 function statsOfStats(pt,stats)
 
+%{
+
+Does stats on the stats.mat structure that I get from running CNewStats
+(cluster statistics)
+
+%}
+
 %% Initialize stats variables for all patients
 names = {};
 p_pre_all = [];
@@ -179,7 +186,17 @@ if isempty(soz_dist_pre_all) == 0
     
 end
 
+%% Table of hour long changes
+table(char(names'),num2str(hour_chi2_all','%1.1f\n'),char(p_hour_all_t),'VariableNames',{'Name','Chi2','P'})
 
+%% Table of pre-ictal changes
+table(char(names'),num2str(pre_chi2_all','%1.1f\n'),char(p_pre_all_t),'VariableNames',{'Name','Chi2','P'})
+
+%% Table of post-ictal changes
+table(char(names'),num2str(post_chi2_all','%1.1f\n'),char(p_post_all_t),'VariableNames',{'Name','Chi2','P'})
+
+
+%{
 %% Change in SD
 if isempty(SD_pre_all) == 0
     [~,p] = ttest2(SD_pre_all',SD_inter_all');
@@ -190,6 +207,7 @@ if isempty(SD_pre_all) == 0
     fprintf(['The p-value for the change in standard distance in the'...
         'post-ictal period is:\n%1.2e\n'],p);
 end
+%}
 
 %% Clinical correlations
 
@@ -222,21 +240,15 @@ fprintf(['The p-value for chi squared comparing temporal vs non-temporal lobe be
 
 
 %% Table of all stuff
+%{
 p_hour_all_t = getPText(p_hour_all);
 p_pre_all_t = getPText(p_pre_all);
 p_post_all_t = getPText(p_post_all);
 
 T = table(names',p_hour_all_t,p_pre_all_t,p_post_all_t);
+%}
 
 
-%% Table of hour long changes
-table(char(names'),num2str(hour_chi2_all','%1.1f\n'),char(p_hour_all_t),'VariableNames',{'Name','Chi2','P'})
-
-%% Table of pre-ictal changes
-table(char(names'),num2str(pre_chi2_all','%1.1f\n'),char(p_pre_all_t),'VariableNames',{'Name','Chi2','P'})
-
-%% Table of post-ictal changes
-table(char(names'),num2str(post_chi2_all','%1.1f\n'),char(p_post_all_t),'VariableNames',{'Name','Chi2','P'})
 
 
 %% SL

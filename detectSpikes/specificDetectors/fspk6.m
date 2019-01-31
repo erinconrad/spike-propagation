@@ -2,6 +2,11 @@
 function [gdf,noise,removed] = fspk6(eeg,tmul,absthresh,n_chans,...
     srate,window,electrodes)
 
+
+%{
+This is the spike detector used for the spike project    
+%}
+
 % Check function input
 if ~exist('tmul')
     error('no tmul\n')

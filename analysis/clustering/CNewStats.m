@@ -3,18 +3,19 @@ function CNewStats(pt,cluster,whichPts)
 %% CNewStats
 %{
 I get statistics on spike cluster data
-
 %}
 
 %% Parameters
 
 % The post-ictal time period (how many hours after the seizure I am
-% defining to be post-ictal)
+% defining to be post-ictal) (4 for most analyses, but 1 as a sensitivity
+% analysis)
 intericTime = 1;
 
 % Plot the time periods to see what I am defining to be pre-, post-, and
-% interictal
-plotQI = 0;
+% interictal. Also do some quality checks for the coverage of the
+% permutation test
+plotQI = 1;
 
 % Plot the result of the permutation test
 doPermPlot = 0;
@@ -26,7 +27,7 @@ doPlots = 1;
 doLongStuff = 1;
 
 % Do the pre-ictal analysis
-doPre = 1;
+doPre = 0;
 
 % Save file location
 [~,~,scriptFolder,resultsFolder,~] = fileLocations;
@@ -152,10 +153,8 @@ for whichPt = whichPts
     clusters = 1:k; clusters(bad_cluster) = [];
     C(bad_cluster,:) = [];
     
-    %% Get the sequence lengths of all spikes
+    %% Get the sequence lengths and times of all sequences
     [seq_lengths,seq_times] = getSeqDist(pt,cluster,whichPt);
-
-    % confirm that there is the same number of 
     
     %% Get the distance between each spike and the nearest SOZ
     soz = pt(whichPt).newSOZChs; 
@@ -177,6 +176,7 @@ for whichPt = whichPts
     % this should not affect the cluster distribution. 
     n_chunks = ceil((max(all_times_all) - min(all_times_all))/test_t);
     which_chunk = zeros(length(all_times_all),1);
+    chunk_times = zeros(n_chunks,2);
     
     for i = 1:n_chunks
         
@@ -190,6 +190,8 @@ for whichPt = whichPts
         
         % Label these spikes with a chunk index
         which_chunk(chunk_spikes) = i;
+        
+        chunk_times(i,:) = [curr_times(1) curr_times(2)];
        
     end
     
@@ -220,6 +222,18 @@ for whichPt = whichPts
     if doLongStuff == 1
     
         %% Define pre-ictal, post-ictal, and inter-ictal spikes/times
+        
+        %{
+        This part defines what spikes and what time ranges are considered
+        pre-ictal, post-ictal, and inter-ictal.
+        
+        Pseudo-code for this section:
+        - Loop through seizures and find post-ictal and pre-ictal times,
+        and exclude any times/spikes that run into post-ictal times from
+        prior seizure
+        - Then add interictal times occurring before any seizures
+        - Then loop through and add interictal times after each seizure
+        
         %}
         
         % Define important ranges
@@ -363,6 +377,26 @@ for whichPt = whichPts
        %{
         Analysis 2: Is the cluster distribution different in the pre-ictal
         compared to the interictal period?
+        
+        Pseudocode for this section (post-ictal is essentially the same):
+        1) Remove interictal times that aren't in allRunTimes
+        2) Define allowable times and spikes (pre-ictal and inter-ictal in
+        this case)
+        3) Loop through permutations
+            - in each permutation, for each pre-ictal period, get a random
+            start time from the possible duration of all preictal and
+            interictal time periods
+            - define N spikes after the start time equal to the number of
+            spikes in the real preictal time
+            - if those spikes run into any of the other fake preictal
+            spikes, throw it out and try again
+            - do this until I have a full set of fake preictal spikes.
+            - redefine all other spikes in the preictal/interictal group to
+            be my fake interictal spikes
+            - get a chi_2 for that group
+        4) Get a chi2 for the difference in cluster distribution between
+        pre ictal and interictal, and compare this to the permutation test
+        chi squareds
 
        %}
         
@@ -462,7 +496,8 @@ for whichPt = whichPts
                     % Get random time equal to total possible duration
                     startSecondTemp = randi(round(pt_dur));
                     
-                    % Loop through interictal and preictal times
+                    % figure out which segment it is in and which time in
+                    % the segment
                     totSecs = 0;
                     for x = 1:size(pt_all_times,1)
                         
@@ -552,6 +587,7 @@ for whichPt = whichPts
             
             if 1==0
                 
+                %{
                 figure
                 for j = 1:size(preIcTimesQI,1)
                    area([new_pre_times(j,1) new_pre_times(j,2)]/3600,[1 1],'FaceColor','g');
@@ -559,14 +595,15 @@ for whichPt = whichPts
                 end
                 pause
                 close(gcf)
+                %}
                 
-                %{
+                
                 % test this by plotting the times of these fake pre-ictal
                 % and interictal spikes
                 figure
                 scatter(all_times_all(inter_s)/3600,ones(length(inter_s),1),50,'r');
                 hold on
-                scatter(all_times_all(pre_s)/3600,ones(length(pre_s),1),50,'b');
+                scatter(all_times_all(pre_s)/3600,ones(length(pre_s),1),50,'g');
 
 
                 for j = 1:size(szTimes,1)
@@ -585,7 +622,7 @@ for whichPt = whichPts
         end
 
         if plotQI == 1
-        % Plot a histogram to see if I have equal coverage
+        % Plot a histogram to see if I have equal coverage of start times
         figure
         histogram(time_boot_pre/3600,500)
         hold on
@@ -608,7 +645,7 @@ for whichPt = whichPts
         diff_s_chi = sorted_boot-chi2_real;
         allLarger = find(diff_s_chi>0);
         
-        % The p value is the percentage larger 
+        % The p value is the percentage larger (chi2 is not 2 sided) 
         if isempty(allLarger) == 1
             p_2 = 1/(nboot+1);
         else
@@ -698,6 +735,7 @@ for whichPt = whichPts
         
         %% Analysis 3: post-ictal vs the rest
         
+        % all spikes I am considering
         all_s = [(preIcSpikes);(interIcSpikes);postIcSpikes];
         all_s_times = [preIcSpikeTimes;interIcSpikeTimes;postIcSpikeTimes];
         colors = [repmat([1,0,0],length(preIcSpikes),1);...
@@ -726,7 +764,7 @@ for whichPt = whichPts
             end
         end
         
-        
+        % all times that I can pick from for my start time
         pt_all_times = [preIcTimesQI;postIcTimesQI;newInterIcTimes];
         pt_all_times = sortrows(pt_all_times);
 
@@ -789,7 +827,7 @@ for whichPt = whichPts
                         % Get random time equal to total possible duration
                         startSecondTemp = randi(round(pt_dur));
 
-                        % Loop through interictal and preictal times
+                        % Loop through chunks to find which one it is in
                         totSecs = 0;
                         for x = 1:size(pt_all_times,1)
 

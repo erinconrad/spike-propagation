@@ -5,26 +5,20 @@ The goal is to determine the amount of time needed to capture x% of the
 total variability in cluster distribution
 
 
-Do I need to fix for periods of missing data???
-
-One plan:
+Plan:
 - Look at most popular cluster and get the proportion in that cluster in
 each hour. Then take the range from min to max proportions across all hour
 long bins.
-- then take (random?) subsets of N hours, where I increase N such that the
+- then take all possible subsets of N consecutive hours, where I increase N such that the
 width of the new range is >80% of the old range
-- to grab subsets:
-   - I could just take N random subsets without replacement and do it a
-   bunch of times
-   - or I could take all combinations of N subsets (perhaps this is better)
-   - then get the mean width of the range (DOES THIS MAKE SENSE????)
+- get range from min to max in each subset
 
 
 %}
 
 % Parameters
 chunkMethod = 1;
-doPlots = 1;
+doPlots = 0;
 alpha = 0.8;
 nboot = 1e3;
 

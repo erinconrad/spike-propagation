@@ -1,7 +1,8 @@
 function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thresh,v)
 
 % This is my basic spike detector file which can call one of a number of
-% specific detectors
+% specific detectors. Detector 7 (fspk6) is the one used for the spike
+% project.
 
 %% Parameters
 
@@ -16,6 +17,7 @@ multiChLimit = 0.8;
 multiChTime = 0.4; 
 
 % Vanleer time to take snapshot (5 ms before to 50 ms after)
+% (I don't use this)
 vtime = [-0.005,0.05];
 
 %% Load file paths, etc.
@@ -195,6 +197,7 @@ elseif whichDetector == 6
         removed(:,2:3) = removed(:,2:3)/data.fs;
     end
 
+    %% Detector 7 (fspk6) is the one used for the spike project
 elseif whichDetector == 7
     
     window = 60*data.fs;
@@ -264,6 +267,7 @@ fprintf('Finished detection\n');
 
 
 %% Re-align the spike to be the peak (positive or negative)
+% I don't do this here because now I do it in the actual spike detector
 values = data.values;
 %{
 if 1 == 0

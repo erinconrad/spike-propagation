@@ -1,4 +1,4 @@
-%% make_gdf
+%% long_make_gdf
 
 % This script takes a patient structure with information about what times
 % to look for spikes over, and then this actually detects those spikes and
@@ -40,7 +40,7 @@ end
 
 %% Loop through patients, szs, run times
 % which patients to run over
-for i = 18
+for i = 1:31
     
     % load the info about which detector, the tmul, and the absthresh
     thresh =  pt(i).thresh;
