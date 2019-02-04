@@ -379,7 +379,7 @@ for whichPt = whichPts
     for i = 1:length(allLocs)
         allLocs(i) = min(vecnorm(locs(i,:) - locs(soz,:),2,2));
     end
-    allAllDist =[allAllDist;(allLocs,1)];
+    allAllDist =[allAllDist;(allLocs)];
     
     % Distance from electrodes with spikes to closest SOZ electrode
     spikeLocs = locs(ch_w_spikes,:);
@@ -706,9 +706,14 @@ fprintf(['The average distance between the electrodes with max SA and\n'...
 % Outcome correlation
 
 good_outcome = outcome_all <= 2.25;
+bad_outcome = outcome_all > 2.25;
 [p,~,stats6] = ranksum((allSADist(good_outcome)),allFreqDist(good_outcome));
 fprintf(['When ILAE 1-3 considered, difference between most spikey and biggest SA:\n'...
     '%1.1e\n'],p);
 
+
+[p,~,stats] = ranksum(allSADist(good_outcome),allSADist(bad_outcome));
+fprintf('SA dist between good outcome versus bad outcome is:\n%1.1e and ranksum %1.1f\n',...
+    p,stats.ranksum);
 
 end

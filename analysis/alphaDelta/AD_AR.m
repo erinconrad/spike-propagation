@@ -8,7 +8,7 @@ features of spike sequences
 %}
 
 % Plot info about the model?
-plotInfo = 1;
+plotInfo = 0;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 p1 = genpath(scriptFolder);
@@ -43,6 +43,8 @@ all_b_soz = [];
 all_p_soz = [];
 all_b_SL = [];
 all_p_SL = [];
+all_t_soz = [];
+all_t_SL = [];
 names = {};
 
 %% Loop through patients
@@ -246,10 +248,11 @@ for whichPt = whichPts
     %X = [mean_ad ones(size(mean_ad)) times cat_hours];
     X = [mean_ad ones(size(mean_ad))];
     
-    [p,~,b] = AR_model(X,Y,plotInfo);
+    [p,t,b] = AR_model(X,Y,plotInfo);
     
     all_b_soz = [all_b_soz;b];
     all_p_soz = [all_p_soz;p];
+    all_t_soz = [all_t_soz;t];
     
     
     
@@ -276,10 +279,11 @@ for whichPt = whichPts
     %X = [mean_ad ones(size(mean_ad)) times cat_hours];
     X = [mean_ad ones(size(mean_ad))];
     
-    [p,~,b] = AR_model(X,Y,plotInfo);
+    [p,t,b] = AR_model(X,Y,plotInfo);
     
     all_b_SL = [all_b_SL;b];
     all_p_SL = [all_p_SL;p];
+    all_t_SL = [all_t_SL;t];
    
     
     
@@ -352,13 +356,13 @@ p_text = getPText(allP);
 allT_text = num2str(allT,3);
 table(char(names),allT_text,char(p_text))
 
-%% Test that b significantly different from zero for SOZ
-[~,p,ci,stats] = ttest(all_b_soz);
-fprintf('P value for SOZ is %1.1e.\n',p);
+%% Test that t significantly different from zero for SOZ
+[~,p,ci,stats] = ttest(all_t_soz);
+fprintf('P value for SOZ is %1.1e, tstat, %1.2f.\n',p,stats.tstat);
 changePos = find(allP<0.05/length(allP));
-all_b_soz_changePos = all_b_soz(changePos);
+all_t_soz_changePos = all_t_soz(changePos);
 all_p_soz_changePos = all_p_soz(changePos);
-table(names(changePos),all_b_soz_changePos,all_p_soz_changePos)
+table(names(changePos),all_t_soz_changePos,all_p_soz_changePos)
 
 %% Correlation between change in location and outcome
 %
@@ -381,13 +385,13 @@ p_sleep_t = getPText(allP);
 T = table(p_sleep_t);
 
 
-%% Test that b significantly different from zero for SL
-[~,p,ci,stats] = ttest(all_b_SL);
-fprintf('P value for SL is %1.1e.\n',p);
+%% Test that t-stat significantly different from zero for SL
+[~,p,ci,stats] = ttest(all_t_SL);
+fprintf('P value for SL is %1.1e, tstat %1.2f.\n',p,stats.tstat);
 changePos = find(allP<0.05/length(allP));
-all_b_SL_changePos = all_b_SL(changePos);
+all_t_SL_changePos = all_t_SL(changePos);
 all_p_SL_changePos = all_p_SL(changePos);
-table(names(changePos),all_b_SL_changePos,all_p_SL_changePos)
+table(names(changePos),all_t_SL_changePos,all_p_SL_changePos)
 
 %% P
 
