@@ -17,6 +17,17 @@ p = mdl.Coefficients.pValue(2);
 t = mdl.Coefficients.tStat(2);
 b_out = c(2);
 
+%{
+- autocorr
+- AR model vs MA model
+
+- reviewer 
+- Tom Nichols at Oxford
+- Tim Johnson at Michigan in biostats
+- Hernando Ombao at Kaust
+
+%}
+
 if plotInfo == 1     
     
     fprintf('P-value for DW test: %1.1e.\n',p_AR);

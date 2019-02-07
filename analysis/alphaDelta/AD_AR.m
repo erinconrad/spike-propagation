@@ -248,7 +248,8 @@ for whichPt = whichPts
     %X = [mean_ad ones(size(mean_ad)) times cat_hours];
     X = [mean_ad ones(size(mean_ad))];
     
-    [p,t,b] = AR_model(X,Y,plotInfo);
+    %[p,t,b] = AR_model(X,Y,plotInfo);
+    [p,t,b] = determine_order(X,Y,plotInfo);
     
     all_b_soz = [all_b_soz;b];
     all_p_soz = [all_p_soz;p];
@@ -279,7 +280,8 @@ for whichPt = whichPts
     %X = [mean_ad ones(size(mean_ad)) times cat_hours];
     X = [mean_ad ones(size(mean_ad))];
     
-    [p,t,b] = AR_model(X,Y,plotInfo);
+    %[p,t,b] = AR_model(X,Y,plotInfo);
+    [p,t,b] = determine_order(X,Y,plotInfo);
     
     all_b_SL = [all_b_SL;b];
     all_p_SL = [all_p_SL;p];
@@ -334,8 +336,8 @@ for whichPt = whichPts
     
     
     % Do model
-    
-    [p,t,~] = AR_model(X,Y,plotInfo);
+    [p,t,~] = determine_order(X,Y,plotInfo);
+    %[p,t,~] = AR_model(X,Y,plotInfo);
     
     allP = [allP;p];
     allT = [allT;t];
@@ -370,14 +372,14 @@ changeLoc = allP < 0.05/length(allP);
 [p,info] = correlateClinically(changeLoc,outcome_all,'bin','num',0);
 fprintf(['The p-value for Wilcoxon rank sum comparing outcome between\n'...
     'patients with change and those without is:\n'...
-    'p = %1.2e\n'],p);
+    'p = %1.2e\nranksum = %1.1f\n'],p,info.stats.ranksum);
 
 
 %% Correlation between change in location and temp lobe
 [p,info] = correlateClinically(changeLoc,temp_lobe_all,'bin','bin',0);
 fprintf(['The p-value for chi squared comparing temporal vs non-temporal lobe between\n'...
     'patients with change and those without is:\n'...
-    'p = %1.2e\n'],p);
+    'p = %1.2e\nchi2 =  %1.2f\n'],p,info.chi2);
 
 
 %% Table of stuff

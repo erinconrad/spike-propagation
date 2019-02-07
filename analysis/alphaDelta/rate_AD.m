@@ -1,6 +1,8 @@
 function rate_AD(pt,cluster,power,whichPts)
 
-plotInfo = 0;
+
+
+plotInfo = 1;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 p1 = genpath(scriptFolder);
@@ -137,6 +139,17 @@ for whichPt = whichPts
     counts(nan_times) = [];
     mean_ad(nan_times) = [];
     
+    
+    %% Do model
+    Y = counts;
+    X = [mean_ad ones(size(mean_ad))];
+    [p,t,b] = determine_order(X,Y,plotInfo);
+    
+    all_b = [all_b;b];
+    all_p = [all_p;p];
+    all_t = [all_t;t];
+    
+    %{
      % Do model
     Y = counts;
     
@@ -156,13 +169,15 @@ for whichPt = whichPts
     all_p = [all_p;p];
     all_t = [all_t;t];
     
-    
+    %}
 end
+
+[h,p,~,stats] = ttest(all_t)
 
 all_b
 all_p
 
-[h,p,~,stats] = ttest(all_t)
+
 
 table(char(names(all_p<0.0025)),all_b(all_p<0.0025),all_p(all_p<0.0025))
 

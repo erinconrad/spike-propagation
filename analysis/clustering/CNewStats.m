@@ -18,7 +18,7 @@ intericTime = 4;
 plotQI = 1;
 
 % Plot the result of the permutation test
-doPermPlot = 0;
+doPermPlot = 1;
 
 % Do main plots
 doPlots = 1;
@@ -27,11 +27,12 @@ doPlots = 1;
 doLongStuff = 1;
 
 % Do the pre-ictal analysis
-doPre = 0;
+doPre = 1;
 
 % Save file location
 [~,~,scriptFolder,resultsFolder,~] = fileLocations;
 destFolder = [resultsFolder,'clustering/stats/'];
+fancyPlot = [resultsFolder,'pretty_plots/supp/'];
 p1 = genpath(scriptFolder);
 addpath(p1);
 mkdir(destFolder);
@@ -353,22 +354,42 @@ for whichPt = whichPts
         % purposes
         if plotQI == 1
             figure
+            set(gcf,'Position',[20,20,530,320]);
             for j = 1:size(preIcTimesQI,1)
-               area([preIcTimesQI(j,1) preIcTimesQI(j,2)]/3600,[1 1],'FaceColor','g');
+              preleg = area([preIcTimesQI(j,1) preIcTimesQI(j,2)]/3600,[1 1],'FaceColor','g');
                hold on
             end
             for j = 1:size(interIcTimesQI,1)
-               area([interIcTimesQI(j,1) interIcTimesQI(j,2)]/3600,[1 1],'FaceColor','r');
+             interleg = area([interIcTimesQI(j,1) interIcTimesQI(j,2)]/3600,[1 1],'FaceColor','r');
                hold on
             end
             for j = 1:size(postIcTimesQI,1)
-                area([postIcTimesQI(j,1) postIcTimesQI(j,2)]/3600,[1 1],'FaceColor','b');
+              postleg = area([postIcTimesQI(j,1) postIcTimesQI(j,2)]/3600,[1 1],'FaceColor','b');
             end
+            
             yl = ylim;
             for j = 1:size(szTimes,1)
-               plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k--','LineWidth',5);
+              szleg = plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k--','LineWidth',5);
             end
+            legend([preleg,interleg,postleg,szleg],...
+                'Pre-ictal','Interictal','Post-ictal','Seizures');
+            xlabel('Time (hours)');
+            yticklabels([])
+            yticks([])
+            set(gca,'FontSize',20)
+            
+            inter_clust = idx(interIcSpikes);
+            pre_clust = idx(preIcSpikes);
+            [tbl_2,chi2_real] = crosstab([ones(length(pre_clust),1);...
+                    2*ones(length(inter_clust),1)],[pre_clust;inter_clust]);
+            tbl_2
+            chi2_real
+            
             pause
+            print([fancyPlot,'orig'],'-depsc');
+            
+            
+            
             close(gcf)
         end
 
@@ -415,7 +436,7 @@ for whichPt = whichPts
 
         % To test it, show the times of all the sorted pre and interictal
         % spikes and their cluster distributions
-        if doPermPlot == 1
+        if 1==0
             colors = [repmat([1,0,0],length(preIcSpikes),1);...
             repmat([0,0,1],length(interIcSpikes),1)];
             new_colors = colors(I,:);
@@ -479,7 +500,7 @@ for whichPt = whichPts
             new_pre = cell(size(preIcSpikeNums,1),1);
             
             % Get the time ranges
-            new_pre_times = zeros(size(preIcSpikeNums,1),2);
+            new_pre_times = [];
             
             % Loop through pre-ictal periods
             for j = 1:size(preIcSpikeNums,1)
@@ -530,8 +551,17 @@ for whichPt = whichPts
                 % If it doesn't run into one of the other chunks, add it to
                 % the new fake pre-ictal spikes
                 new_pre{j} = mod(start-1:start+n_chunk-1,n_spikes) + 1;
-                new_pre_times(j,:) = [all_times_all(all_s(start)),...
+                temp_new_pre_times = [all_times_all(all_s(start)),...
                     all_times_all(all_s(mod(start+n_chunk-1,n_spikes)+1))];
+                if temp_new_pre_times(2) < temp_new_pre_times(1)
+                    temp_new_pre_times = [allRunTimes(1) temp_new_pre_times(2);...
+                        temp_new_pre_times(1) allRunTimes(end)];
+                end
+ 
+                new_pre_times = [new_pre_times;temp_new_pre_times];
+                new_pre_times = makeNonIntersectingTimeRanges(...
+                    new_pre_times,postIcTimesQI);
+
                 
                 if plotQI == 1
                     % For QI purposes, get the times of the starting spike
@@ -587,15 +617,36 @@ for whichPt = whichPts
             
             if 1==0
                 
-                %{
+                
                 figure
-                for j = 1:size(preIcTimesQI,1)
-                   area([new_pre_times(j,1) new_pre_times(j,2)]/3600,[1 1],'FaceColor','g');
+                set(gcf,'Position',[20,20,530,320]);
+                for j = 1:size(pre_times_SL,1)
+                   area([pre_times_SL(j,1) pre_times_SL(j,2)]/3600,[1 1],'FaceColor','g');
                    hold on
                 end
+                for j = 1:size(inter_times_SL,1)
+                   area([inter_times_SL(j,1) inter_times_SL(j,2)]/3600,[1 1],'FaceColor','r');
+                   hold on
+                end
+                yl = ylim;
+                for j = 1:size(szTimes,1)
+                   plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k--','LineWidth',5);
+                end
+                xlabel('Time (hours)');
+                yticklabels([])
+                yticks([])
+                set(gca,'FontSize',20)
+                
+                [tbl_fake,chi2_fake] = crosstab([ones(length(pre_clust),1);...
+                2*ones(length(inter_clust),1)],[pre_clust;inter_clust]);
+                tbl_fake
+                chi2_fake
+                
                 pause
+                print([fancyPlot,'new',ib],'-depsc');
                 close(gcf)
-                %}
+                
+                %{
                 
                 
                 % test this by plotting the times of these fake pre-ictal
@@ -658,11 +709,14 @@ for whichPt = whichPts
             figure 
             histogram(sorted_boot);
             hold on
-            plot([chi2_real chi2_real],ylim);
-            text(mean(xlim),mean(ylim),sprintf('%1.1e',p_2));
-
-            pause
-            close(gcf)
+            plot([chi2_real chi2_real],ylim,'k','linewidth');
+            xlabel('\chi^2')
+            ylabel('Number of permutations')
+            annotation('textarrow',[chi2_real + 20],...
+                [ylim(2)-30 ylim(2)-30],...
+                sprintf('%1.1e',p_2));
+            set(gca,'fontsize',20)
+            print([fancyPlot,'hist'],'-depsc');
         end
         %}
 
