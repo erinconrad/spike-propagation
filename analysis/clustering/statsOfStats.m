@@ -1,4 +1,4 @@
-function statsOfStats(pt,stats)
+function statsOfStats(pt,stats,cluster)
 
 %{
 
@@ -33,7 +33,12 @@ SL_p_pre_all = [];
 SL_p_post_all = [];
 hour_chi2_all = [];
 pre_chi2_all = [];
+hour_dof_all = [];
+pre_dof_all = [];
+post_dof_all = [];
 post_chi2_all = [];
+MTS_all = [];
+no_depths_all = [];
 
 %% Loop through patients and grab stats info
 for whichPt = 1:length(stats)
@@ -49,6 +54,8 @@ for whichPt = 1:length(stats)
     end
     p_hour_all = [p_hour_all,p_hour];
     hour_chi2_all = [hour_chi2_all,stats(whichPt).hour.chi2];
+    hour_dof_all = [hour_dof_all,...
+        (size(stats(whichPt).hour.tbl,1)-1)*(size(stats(whichPt).hour.tbl,2)-1)];
     
     % Get stats on if it changes in pre-ictal period
     p_pre = stats(whichPt).preIc.p;
@@ -58,6 +65,8 @@ for whichPt = 1:length(stats)
     end
     p_pre_all = [p_pre_all,p_pre];
     pre_chi2_all = [pre_chi2_all,stats(whichPt).preIc.chi2];
+    pre_dof_all = [pre_dof_all,...
+        (size(stats(whichPt).preIc.tbl,1)-1)*(size(stats(whichPt).preIc.tbl,2)-1)];
 
     
     % Get stats on if it changes in post ictal period
@@ -67,6 +76,8 @@ for whichPt = 1:length(stats)
     end
     p_post_all = [p_post_all,p_post];
     post_chi2_all = [post_chi2_all,stats(whichPt).postIc.chi2];
+    post_dof_all = [post_dof_all,...
+        (size(stats(whichPt).postIc.tbl,1)-1)*(size(stats(whichPt).postIc.tbl,2)-1)];
     
     % Distance from SOZ
     if isfield(stats(whichPt),'soz') == 1
@@ -130,6 +141,23 @@ for whichPt = 1:length(stats)
     end
     temp_lobe_all = [temp_lobe_all,tempLobe];
     
+    % Path
+    path = pt(whichPt).clinical.pathology;
+    if contains(path,'MTS') == 1
+        MTS = 1;
+    else
+        MTS = 0;
+    end
+    MTS_all = [MTS_all,MTS];
+    
+    % Electrode type
+    [n_grids_all,n_strips_all,n_depths_all] = getElectrodeInfo(pt,cluster,whichPt,0);
+    if n_depths_all == 0
+        no_depths = 1;
+    else
+        no_depths = 0;
+    end
+    no_depths_all = [no_depths_all,no_depths];
  
 end
 
@@ -154,6 +182,7 @@ sum_p = 1-chi2cdf(X_2,2*length(p_post_all));
 fprintf('%d out of %d patients showed a significant post-ictal change in cluster distribution.\n',...
     sum(p_post_all < 0.05/length(whichPts)),length(whichPts))
 fprintf('The group p value for change over time is %1.1e\n',sum_p);
+group_pval = fisher_pvalue_meta_analysis(p_post_all);
 
 
 %% Change in distance from SOZ
@@ -166,10 +195,17 @@ if isempty(soz_dist_pre_all) == 0
     fprintf(['The p-value for change in distance from SOZ in the'...
         'post-ictal period is:\n%1.2e\n'],p);
 
+    %{
     [p,tbl_kw,stats_kw] = kruskalwallis([soz_dist_pre_all',soz_dist_inter_all',...
         soz_dist_post_all'],[],'off');
     fprintf(['The p-value for change in distance from SOZ comparing'...
         'pre/post/inter by K-W is:\n%1.2e\n'],p);
+        %}
+        
+    [p,tbl,stats] = friedman([soz_dist_pre_all',soz_dist_inter_all',...
+        soz_dist_post_all'],1,'off');
+    fprintf(['The Friedman test comparing distance from SOZ is:\n'...
+        'p = %1.2e, Q = %1.1f\n'],p,tbl{2,5});
     
     fprintf('%d of %d patients had a significant post-ictal change in dist from SOZ.\n',...
         sum(soz_dist_post_p < 0.05/length(soz_dist_post_p)),length(soz_dist_post_p));
@@ -186,14 +222,6 @@ if isempty(soz_dist_pre_all) == 0
     
 end
 
-%% Table of hour long changes
-table(char(names'),num2str(hour_chi2_all','%1.1f\n'),char(p_hour_all_t),'VariableNames',{'Name','Chi2','P'})
-
-%% Table of pre-ictal changes
-table(char(names'),num2str(pre_chi2_all','%1.1f\n'),char(p_pre_all_t),'VariableNames',{'Name','Chi2','P'})
-
-%% Table of post-ictal changes
-table(char(names'),num2str(post_chi2_all','%1.1f\n'),char(p_post_all_t),'VariableNames',{'Name','Chi2','P'})
 
 
 %{
@@ -211,6 +239,13 @@ end
 
 %% Clinical correlations
 
+% Overall clinical info
+ilae_overall = getILAE(outcome_all);
+fprintf('Median ILAE is %1.1f, range %1.1f-%1.1f\n',median(ilae_overall),...
+    min(ilae_overall),max(ilae_overall));
+
+fprintf('%d patients had ILAE <= 3\n',sum(ilae_overall<=3));
+
 % correlate whether there is an hour-to-hour change with clinical outcome
 hourChange = p_hour_all < 0.05/length(p_hour_all);
 [p_hour_outcome,info_hour_outcome] = correlateClinically(hourChange,outcome_all,'bin','num',0);
@@ -218,12 +253,35 @@ fprintf(['The p-value for Wilcoxon rank sum comparing outcome between\n'...
     'patients with hour-to-hour change and those without is:\n'...
     'p = %1.2e\n'],p_hour_outcome);
 
+% Get average ILAE scores of those with a change and those without
+ilae_change = getILAE(outcome_all(hourChange == 1));
+ilae_no_change = getILAE(outcome_all(hourChange == 0));
+
+fprintf('Median ILAE for change is %1.1f and for no change is %1.1f\n',...
+    median(ilae_change),median(ilae_no_change));
+
 % correlate whether there is an hour-to-hour change with temporal/non
 % temporal lobe
 [p_hour_lobe,info_hour_lobe] = correlateClinically(hourChange,temp_lobe_all,'bin','bin',0);
 fprintf(['The p-value for chi squared comparing temporal vs non-temporal lobe between\n'...
     'patients with hour-to-hour change and those without is:\n'...
     'p = %1.2e\n'],p_hour_lobe);
+
+% correlate hour-to-hour change with MTS vs other pathology
+[p_hour_MTS,info_hour_MTS] = correlateClinically(hourChange,MTS_all,'bin','bin',0);
+fprintf(['The p-value for chi squared comparing MTS vs non-MTS lobe between\n'...
+    'patients with hour-to-hour change and those without is:\n'...
+    'p = %1.2e, chi2 = %1.2f\n'],p_hour_MTS,info_hour_MTS.chi2);
+
+
+% correlate hour-to-hour change with no depths vs yes depths
+[p_hour_depths,info_hour_depths] = correlateClinically(hourChange,no_depths_all,'bin','bin',0);
+fprintf(['The p-value for chi squared comparing depths vs no depths between\n'...
+    'patients with hour-to-hour change and those without is:\n'...
+    'p = %1.2e, chi2 = %1.2f\n'],p_hour_depths,info_hour_depths.chi2);
+
+
+
 
 % Correlate clinical outcome with post-ictal change
 postIcChange = p_post_all < 0.05/length(whichPts);
@@ -240,14 +298,22 @@ fprintf(['The p-value for chi squared comparing temporal vs non-temporal lobe be
 
 
 %% Table of all stuff
-%{
+
 p_hour_all_t = getPText(p_hour_all);
 p_pre_all_t = getPText(p_pre_all);
 p_post_all_t = getPText(p_post_all);
 
 T = table(names',p_hour_all_t,p_pre_all_t,p_post_all_t);
-%}
 
+
+%% Table of hour long changes
+table(char(names'),num2str(hour_chi2_all','%1.1f\n'),num2str(hour_dof_all','%d\n'),char(p_hour_all_t),'VariableNames',{'Name','Chi2','dof','P'})
+
+%% Table of pre-ictal changes
+table(char(names'),num2str(pre_chi2_all','%1.1f\n'),num2str(pre_dof_all','%d\n'),char(p_pre_all_t),'VariableNames',{'Name','Chi2','dof','P'})
+
+%% Table of post-ictal changes
+table(char(names'),num2str(post_chi2_all','%1.1f\n'),num2str(post_dof_all','%d\n'),char(p_post_all_t),'VariableNames',{'Name','Chi2','dof','P'})
 
 
 
@@ -270,10 +336,17 @@ if isempty(SL_pre_all) == 0
     fprintf('%d of %d patients had a significant post-ictal change in SL.\n',...
         sum(SL_p_post_all < 0.05/length(SL_p_post_all)),length(SL_p_post_all));
     
+    %{
     [p,tbl_kw,stats_kw] = kruskalwallis([SL_post_all,SL_inter_all,...
         SL_pre_all],[],'off');
     fprintf(['The p-value for change in SL comparing'...
         'pre/post/inter by K-W is:\n%1.2e\n'],p);
+        %}
+        
+    [p,tbl,stats] = friedman([SL_post_all,SL_inter_all,...
+        SL_pre_all],1,'off');
+fprintf(['The Friedman test comparing SL is:\n'...
+    'p = %1.2e, Q = %1.1f\n'],p,tbl{2,5});
     
     
     sig_post_move = find(p_post_all < 0.05/length(whichPts));

@@ -1,10 +1,7 @@
 function [p,t,b] = determine_order(X,Y,plotInfo)
 
 %{
-If no significant lags in the first 10, I don't do an AR model. If there
-are any significant lags, I do an AR(2) model. I did this because when I
-plotted the partial correlations, AR(2) was enough for most of the
-patients.
+I just do an AR(2) model
 %}
 
 %% Do linear regression (no AR)
@@ -19,9 +16,13 @@ sig_lags = lags(find(abs(pacf) > bounds(1)));
 sig_lags(sig_lags == 0) = [];
 n_lags = length(sig_lags);
 
+%{
 if n_lags > 0
     n_lags = 2;
 end
+%}
+% Just do AR(2)
+n_lags = 2;
 
 %% Plot the autocorrelation and partial correlation of the residuals
 if plotInfo == 1

@@ -2,7 +2,7 @@ function rate_AD(pt,cluster,power,whichPts)
 
 
 
-plotInfo = 1;
+plotInfo = 0;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 p1 = genpath(scriptFolder);

@@ -19,6 +19,10 @@ post_proc = [];
 post_clust = [];
 times_all_pts = [];
 all_spike_num = [];
+min_rate_pre = [];
+max_rate_pre = [];
+min_rate_post = [];
+max_rate_post = [];
 
 for whichPt = whichPts
     
@@ -37,6 +41,8 @@ for whichPt = whichPts
     % Spike rate
     spike_rate = n_spikes_all/all_times/nchs*60;
     all = [all;spike_rate];
+    
+    
     
     %% Get spike rate post-sequence detection, removal of ties, etc.
     % Get all sequences
@@ -91,6 +97,14 @@ for whichPt = whichPts
     spikes_post_cluster = length(all_spikes)/all_times/nchs*60;
     post_clust = [post_clust;spikes_post_cluster];
     
+    % Min and max across channels
+    rate_ch = zeros(length(pt(whichPt).channels),1);
+    for i = 1:length(pt(whichPt).channels)
+        rate_ch(i) = sum(all_spikes == i);
+    end
+    min_rate_post = [min_rate_post;min(rate_ch/all_times)*60];
+    max_rate_post = [max_rate_post;max(rate_ch/all_times)*60];
+    
     %fprintf('%s had %d spikes post cluster.\n',pt(whichPt).name,length(all_spikes));
     all_spike_num = [all_spike_num;length(all_spikes)];
     
@@ -99,6 +113,8 @@ end
 all = all*60;
 post_proc = post_proc * 60;
 post_clust = post_clust * 60;
+min_rate_post = mean(min_rate_post);
+max_rate_post = mean(max_rate_post);
 
 fprintf('Before processing, the spike rate in spikes/ch/hr was:\n%1.3f (range %1.3f-%1.3f)\n',...
     mean(all),min(all),max(all));
@@ -108,6 +124,10 @@ fprintf('After processing, the spike rate in spikes/ch/hr was:\n%1.3f (range %1.
 
 fprintf('After clustering, the spike rate in spikes/ch/hr was:\n%1.3f (range %1.3f-%1.3f)\n',...
     mean(post_clust),min(post_clust),max(post_clust));
+
+fprintf(['After clustering, the min and max channel spike rate in spikes/min'...
+    'was:\n%1.3f and %1.3f\n'],...
+    min_rate_post,max_rate_post);
 
 fprintf('The average time analyzed was %1.1f hours (range %1.1f-%1.1f).\n',...
     mean(times_all_pts)/3600,min(times_all_pts)/3600,max(times_all_pts)/3600);

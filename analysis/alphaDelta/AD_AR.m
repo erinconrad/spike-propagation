@@ -137,7 +137,7 @@ for whichPt = whichPts
    
     
     %% Get the sequence lengths of all spikes
-    [seq_lengths,seq_times] = getSeqDist(pt,cluster,whichPt);
+    [seq_lengths,seq_times,seq_areas] = getSeqDist(pt,cluster,whichPt);
     
     bin_times = pt(whichPt).runTimes;
     prop_pop = zeros(size(bin_times,1),1);
@@ -149,6 +149,7 @@ for whichPt = whichPts
     prop_pop_chunk = zeros(size(bin_times,1),1);
     distNeeded = zeros(size(bin_times,1),1);
     SL_bin = zeros(size(bin_times,1),1); 
+    SA_bin = zeros(size(bin_times,1),1); 
     
     % Run through bin times and get proportion of spikes in most popular
     % cluster for that bin.
@@ -171,6 +172,10 @@ for whichPt = whichPts
         
         % Get mean sequence length in these times
         SL_bin(i) = mean(seq_lengths(seq_times > bin_times(i,1) & ...
+            seq_times < bin_times(i,2)));
+        
+        % Get mean sequence area in these times
+        SA_bin(i)  = mean(seq_areas(seq_times > bin_times(i,1) & ...
             seq_times < bin_times(i,2)));
         
         
@@ -269,6 +274,7 @@ for whichPt = whichPts
     SL_bin(nan_times) = [];
     
     % Do model
+    
     Y = SL_bin;
     
     % X is the predictor. The first component of X is the alpha-delta
@@ -357,6 +363,11 @@ fprintf(['There are %d with significant correlation.\nThe combined p-value'...
 p_text = getPText(allP);
 allT_text = num2str(allT,3);
 table(char(names),allT_text,char(p_text))
+
+%% Test that t significantly different from zero for prop-pop
+[~,p,ci,stats] = ttest(allT);
+fprintf(['P value for consistent change in proportion of spikes in\n'...
+    'most popular cluster is %1.1e, tstat, %1.2f.\n'],p,stats.tstat);
 
 %% Test that t significantly different from zero for SOZ
 [~,p,ci,stats] = ttest(all_t_soz);

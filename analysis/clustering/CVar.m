@@ -17,9 +17,10 @@ width of the new range is >80% of the old range
 %}
 
 % Parameters
+percVarTrue = 95; % Define true variability as nth percentiles rather than min and max
 chunkMethod = 1;
 doPlots = 0;
-alpha = 0.8;
+alpha = 0.8; % Try to capture what percent of variability
 nboot = 1e3;
 
 % Save file location
@@ -169,7 +170,9 @@ for whichPt = whichPts
     plot(chunk_times,prop_pop)
     %}
     
-    true_range = [min(prop_pop) max(prop_pop)];
+    
+    true_range_old = [min(prop_pop) max(prop_pop)]
+    true_range = [prctile(prop_pop,100-percVarTrue),prctile(prop_pop,percVarTrue)]
     
     %% Now, start with 1 hour and go up, and get the new range
     sub_range = zeros(n_chunks,2);
@@ -187,7 +190,7 @@ for whichPt = whichPts
         for j = 1:size(allSubsets,1)
             subset = allSubsets(j,:);
             temp_prop_pop = prop_pop(subset);
-            temp_range(j,:) = [min(temp_prop_pop) max(temp_prop_pop)];
+            temp_range(j,:) = [prctile(temp_prop_pop,100-percVarTrue),prctile(temp_prop_pop,percVarTrue)];
         end
         sub_range(i,:) = mean(temp_range,1);
         
@@ -246,32 +249,32 @@ for whichPt = whichPts
             [(yPos(1) - (min(ylim)))/diff(ylim) * pos(4) + pos(2),...
             (yPos(2) - (min(ylim)))/diff(ylim) * pos(4) + pos(2)],...
             'String',...
-            sprintf('Duration needed to capture %d%% of variability:\n%d hours (%1.1f%% of total dataset)', ...
-            alpha*100,min_capture_var,min_capture_var/n_chunks*100),'FontSize',15);
+            sprintf('Duration needed to capture\n%d%% of variability: %d hours\n(%1.1f%% of total dataset)', ...
+            alpha*100,min_capture_var,min_capture_var/n_chunks*100),'FontSize',25);
 
-        xlabel('Number of consecutive hours considered');
-        ylabel(sprintf('Min and max proportion of spikes in\nthe most popular cluster across hour-long bins'));
-        title(sprintf('Dependence on sampling of spike location variability for %s',...
+        xlabel('Number of consecutive hours');
+        ylabel(sprintf('5th and 95th %%ile proportion of spikes in\nmost popular cluster across hour-long bins'));
+        title(sprintf('Dependence on sampling of\nspike location variability for %s',...
             pt(whichPt).name),'fontsize',25);
-        set(gca,'fontsize',15);
+        set(gca,'fontsize',25);
         hold on
-        cp = plot([min_capture_var, min_capture_var],get(gca,'ylim'),'k--','LineWidth',2);
-        cp = plot([min_capture_var, min_capture_var],get(gca,'ylim'),'k--','LineWidth',2); % needed for voodoo
+        cp = plot([min_capture_var, min_capture_var],get(gca,'ylim'),'k--','LineWidth',3);
+        cp = plot([min_capture_var, min_capture_var],get(gca,'ylim'),'k--','LineWidth',3); % needed for voodoo
        
-        ylim([min(ylim),1.2])
+        ylim([min(ylim),min(max(ylim),1.2)])
         pause
-        print(gcf,[saveFolder,'clustVar_',sprintf('%s',pt(whichPt).name)],'-depsc');
-        eps2pdf([saveFolder,'clustVar_',sprintf('%s',pt(whichPt).name),'.eps'])
+        print(gcf,[saveFolder,'clustVar_',sprintf('%d_%s',percVarTrue,pt(whichPt).name)],'-depsc');
+        eps2pdf([saveFolder,'clustVar_',sprintf('%d_%s',percVarTrue,pt(whichPt).name),'.eps'])
         close(gcf)
     end
     
 end
 
-fprintf('The mean number of hours needed to capture 80%% of the variability was %1.1f (range %d-%d)\n',...
-    mean(allMinCapture),min(allMinCapture),max(allMinCapture));
+fprintf('The mean number of hours needed to capture 80%% of the variability for %d%% was %1.1f (range %d-%d)\n',...
+    percVarTrue,mean(allMinCapture),min(allMinCapture),max(allMinCapture));
 
-fprintf('The mean percent of hours needed to capture 80%% of the variability was %1.1f (range %1.1f-%1.1f)\n',...
-    mean(allMinProp)*100,min(allMinProp)*100,max(allMinProp)*100);
+fprintf('The mean percent of hours needed to capture 80%% of the variability for %d%% was %1.1f (range %1.1f-%1.1f)\n',...
+    percVarTrue,mean(allMinProp)*100,min(allMinProp)*100,max(allMinProp)*100);
 
 %% Do stats correlating number needed to capture with outcome
 
@@ -308,6 +311,14 @@ loc_bin(~isnan(loc_bin)),'num','bin',0);
 fprintf(['The p-value for Wilcoxon rank sum of number of hours needed\n'...
     'to capture variability and temporal vs non temporal lobe is p = %1.2e.\n'],p2);
 
+% Get minimum hours needed to capture for temporal and extra-temporal
+% seizures
+min_capture_temp = allMinCapture(loc_bin ==1);
+min_capture_not_temp = allMinCapture(loc_bin ~= 1);
+
+fprintf('Mean hours for temp is %1.1f and for extra-temp is %1.1f\n',...
+    median(min_capture_temp),median(min_capture_not_temp));
+
 allAEDs = cell(max(whichPts),1);
 onLTG = [];
 for whichPt = whichPts
@@ -322,7 +333,7 @@ for whichPt = whichPts
     end
 end
 [p3,info3] = correlateClinically(allMinCapture(~isnan(onLTG)),...
-    onLTG(~isnan(onLTG)),'num','bin',1);
+    onLTG(~isnan(onLTG)),'num','bin',0);
 
 % Spearman correlation coefficient (non parametric rank)
 %{

@@ -53,7 +53,7 @@ elseif whichPts == 300
 end
 
 if isequal(whichPts,[1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31]) == 0
-   % error('Warning, not doing correct patients!\n');
+    error('Warning, not doing correct patients!\n');
 end
 
 for whichPt = whichPts
@@ -397,7 +397,6 @@ for whichPt = whichPts
     allMeanDist = [allMeanDist;mean(allLocs)];
     
     if whichPt == 8, exampleSA = sa; end
-    if whichPt == 8, exampleSF = seq_freq; end
     if whichPt == 8, exampleChInfluence = chInfluence; end
     
      % Get list of resected electrodes
@@ -413,20 +412,6 @@ for whichPt = whichPts
     [~,sf_max_ident] = max(seq_freq);
     sf_resected = [sf_resected;ismember(sf_max_ident,resec_elecs)];
     
-    %% Example plot to convince myself I am doing the resection analysis correctly
-%{
-    figure
-    scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k','linewidth',2);
-    hold on
-    scatter3(locs(sa_max_ident,1),locs(sa_max_ident,2),locs(sa_max_ident,3),100,'b','filled');
-    scatter3(locs(sf_max_ident,1),locs(sf_max_ident,2),locs(sf_max_ident,3),100,'r','filled');
-    scatter3(locs(resec_elecs,1),locs(resec_elecs,2),locs(resec_elecs,3),20,'k','filled');
-    fprintf('Was max SA resected? %d\n',ismember(sa_max_ident,resec_elecs));
-    fprintf('Was max SF resected? %d\n\n\n',ismember(sf_max_ident,resec_elecs));
-    pause
-    close(gcf)
-    
-    %}
     
     %{
     
@@ -580,12 +565,6 @@ fprintf(['P value for different outcome between resected max area of influence'.
     'and not is:\n%1.1e, ranksum = %1.1f\n'],...
     p_sa_resec,sa_stats_resec.ranksum);
 
-ilae_sa_resec = getILAE(outcome_all(sa_resected == 1));
-ilae_sa_noresec = getILAE(outcome_all(sa_resected == 0));
-
-fprintf('Median ilae for sa resec = %1.1f, for sa no resec %1.1f\n',...
-    median(ilae_sa_resec), median(ilae_sa_noresec));
-
 %% Compare clinical outcome for pts with resected max SF and those without
 [p_sf_resec,h_sf_resec,stats_sf_resec] = ...
     ranksum(outcome_all(sf_resected == 1),outcome_all(sf_resected == 0));
@@ -593,12 +572,6 @@ fprintf('Median ilae for sa resec = %1.1f, for sa no resec %1.1f\n',...
 fprintf(['P value for different outcome between resected max spike frequency'...
     'and not is:\n%1.1e, ranksum = %1.1f\n'],...
     p_sf_resec,stats_sf_resec.ranksum);
-
-ilae_sf_resec = getILAE(outcome_all(sf_resected == 1));
-ilae_sf_noresec = getILAE(outcome_all(sf_resected == 0));
-
-fprintf('Median ilae for sf resec = %1.1f, for sf no resec %1.1f\n',...
-    median(ilae_sf_resec), median(ilae_sf_noresec));
 
 %% Does SA do better than chance?
 %{
@@ -736,32 +709,31 @@ eps2pdf([destFolder,'influence_nonAA_poster','.eps'])
 fontsizes = 15;
 
 figure
-set(gcf,'Position',[107 12 946 793]);
-[ha,pos] = tight_subplot(3,3,[0.09 0.03],[0.03 0.03],[0.07 0.02]);
-set(ha(7),'Position',[pos{7}(1) pos{7}(2) pos{7}(3)*3 pos{7}(4)]);
-delete(ha(8));
-delete(ha(9));
+set(gcf,'Position',[270 12 817 793]);
+[ha,pos] = tight_subplot(3,2,[0.09 0.03],[0.03 0.03],[0.07 0.02]);
+set(ha(5),'Position',[pos{5}(1) pos{5}(2) pos{5}(3)*2 pos{5}(4)]);
+delete(ha(6));
 
 %% Plot downstream connections
 axes(ha(1))
 imagesc(exampleChCh)
 colorbar
-title('Downstream spike connections');
+title('Number of downstream spike connections');
 xlabel('Downstream electrode #');
 ylabel('Leading electrode #');
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.02 0.785 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
+annotation('textbox',[0.02 0.8 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
 
 %% Plot significant downstream connections
 axes(ha(2))
 imagesc(exampleChCh > exampleX)
 colormap(ha(2),flipud(gray));
-title('Frequent connections');
+title('Frequent downstream spike connections');
 xlabel('Downstream electrode #');
 %ylabel('Leading electrode #');
 set(gca,'FontSize',fontsizes)
 yticklabels([])
-annotation('textbox',[0.35 0.785 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
+annotation('textbox',[0.51 0.8 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
 
 %% Plot downstream connections for single electrode
 axes(ha(3));
@@ -783,9 +755,9 @@ xticklabels([])
 yticklabels([])
 zticklabels([])
 view(118.1000,2.8000);
-title(sprintf('Electrode %d''s downstream electrodes',I));
+title(sprintf('Downstream electrodes for electrode %d',I));
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.67 0.785 0.2 0.2],'String','C','EdgeColor','none','fontsize',25);
+annotation('textbox',[0.02 0.46 0.2 0.2],'String','C','EdgeColor','none','fontsize',25);
 
 %% Plot area of influence for a single electrode
 axes(ha(4));
@@ -806,37 +778,10 @@ zticklabels([])
 title(sprintf('Area of influence for electrode %d',I));
 view(118.1000,2.8000);
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.02 0.45 0.2 0.2],'String','D','EdgeColor','none','fontsize',25);
-
-%% Plot area of influence of all electrodes
-axes(ha(5));
-scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,'k','linewidth',2);
-hold on
-scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,exampleSA,'filled')
-xticklabels([])
-yticklabels([])
-zticklabels([])
-title(sprintf('Area of influence for all electrodes'));
-view(118.1000,2.8000);
-set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.35 0.45 0.2 0.2],'String','E','EdgeColor','none','fontsize',25);
-
-%% Plot spike frequency of all electrodes
-axes(ha(6));
-scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,'k','linewidth',2);
-hold on
-scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,exampleSF,'filled')
-xticklabels([])
-yticklabels([])
-zticklabels([])
-title(sprintf('Spike frequency for all electrodes'));
-view(118.1000,2.8000);
-set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.67 0.45 0.2 0.2],'String','F','EdgeColor','none','fontsize',25);
-
+annotation('textbox',[0.51 0.46 0.2 0.2],'String','D','EdgeColor','none','fontsize',25);
 
 %% Plot bar graph showing overall performance
-axes(ha(7));
+axes(ha(5));
 prices = [mean(allAllDist) mean(allSADist) mean(allFreqDist)];
 bar(prices)
 title(sprintf(['Average distance across patients from electrode of interest\n to closest ',...
@@ -888,7 +833,7 @@ text(2,max(prices)+11,textFreqAll,'HorizontalAlignment','center',...
         'fontsize',fontsizes);
     
 ylim([0 max(prices) + 15]);
-annotation('textbox',[0.02 0.11 0.2 0.2],'String','G','EdgeColor','none','fontsize',25);
+annotation('textbox',[0.02 0.11 0.2 0.2],'String','E','EdgeColor','none','fontsize',25);
 %pause
 print(gcf,[destFolder,'influence_nonAA'],'-depsc');
 eps2pdf([destFolder,'influence_nonAA','.eps'])

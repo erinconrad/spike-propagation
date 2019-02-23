@@ -6,7 +6,7 @@ function cluster = getClusters(pt,whichPts)
 saveStruct = 0;
 
 % Merge with existing cluster struct?
-merge = 1; 
+merge = 0; 
 
 % get optimal cluster numbers?
 clustOpt = 0; 
@@ -213,6 +213,16 @@ for whichPt = whichPts
     all_spikes(t) = [];
     seq_index(t) = [];
     fprintf('Removed %d ictal spikes \n',length(t));
+    
+    %{
+    I did not adjust seq_matrix after the ictal spike removal step. This
+    should only be an issue in the CInfluence script, where I address it
+    separately. Some of the sequences will not be accessed because I
+    removed them from the sequence index. For example, if the indices
+    1000-1010 are all ictal, and those belong to sequences 500 and 501,
+    then those sequence indices will go away, and so I will not access
+    those sequences for my example sequences.
+    %}
     
     % Get locations of spikes
     all_locs = locs(all_spikes,:);

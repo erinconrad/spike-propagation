@@ -11,7 +11,7 @@ outcome = pt(whichPt).clinical.outcome;
 %% Rename the outcome
 
 if strcmp(outcome(1),'I') == 1
-    % They are using ILAE definitions :(
+    % They are using ILAE definitions 
     if contains(outcome,'ILAE1') == 1
         % completeley seizure free (I am calling this IA)
         new_outcome = 1;

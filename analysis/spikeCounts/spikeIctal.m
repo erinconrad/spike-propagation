@@ -13,7 +13,7 @@ intericTime = 4;
 % permutation test
 plotQI = 0;
 
-plotTime = 1;
+plotTime = 0;
 
 %% Define which patients I am doing
 
@@ -242,14 +242,34 @@ for whichPt = whichPts
     end
     
     %% Get numbers of spikes in appropriate times
-    if 1 == 1
+    if 1 == 1 % all spikes
     num_preIc = sum(any(all_times_all' >= preIcTimesQI(:,1) & ...
         all_times_all' <= preIcTimesQI(:,2),1));
     num_interIc = sum(any(all_times_all' >= interIcTimesQI(:,1) & ...
         all_times_all' <= interIcTimesQI(:,2),1));
     num_postIc = sum(any(all_times_all' >= postIcTimesQI(:,1) & ...
         all_times_all' <= postIcTimesQI(:,2),1));
-    else
+    
+    
+    %% Get proportion of spikes in most popular cluster
+    
+    % Identify the most popular cluster
+    popular = mode(idx);
+    
+    % Get the cluster identities of pre-ictal, interictal, postictal spikes
+    preIc_clusters = idx(any(all_times_all' >= preIcTimesQI(:,1) & ...
+        all_times_all' <= preIcTimesQI(:,2),1));
+    interIc_clusters = idx(any(all_times_all' >= interIcTimesQI(:,1) & ...
+        all_times_all' <= interIcTimesQI(:,2),1));
+    postIc_clusters = idx(any(all_times_all' >= postIcTimesQI(:,1) & ...
+        all_times_all' <= postIcTimesQI(:,2),1));
+    
+    % Get the proportion of spikes in the most popular cluster
+    prop_pop_pre(whichPt) = sum(preIc_clusters == popular)/length(preIc_clusters);
+    prop_pop_inter(whichPt) = sum(interIc_clusters == popular)/length(interIc_clusters);
+    prop_pop_post(whichPt) = sum(postIc_clusters == popular)/length(postIc_clusters);
+    
+    else % just SOZ
     
     times_soz = all_times_all(ismember(all_spikes,soz));
     
@@ -259,6 +279,9 @@ for whichPt = whichPts
         times_soz' <= interIcTimesQI(:,2),1));
     num_postIc = sum(any(times_soz' >= postIcTimesQI(:,1) & ...
         times_soz' <= postIcTimesQI(:,2),1));
+    
+    
+    
     end
     
     %% Get spike rates
@@ -283,12 +306,17 @@ inter_all = [];
 post_all = [];
 p_post_all = [];
 temporal = [];
-
+prop_pop_pre_all = [];
+prop_pop_inter_all = [];
+prop_pop_post_all = [];
 
 for whichPt = whichPts
     pre_all = [pre_all;pre_rate(whichPt)];
     inter_all = [inter_all;inter_rate(whichPt)];
     post_all = [post_all;post_rate(whichPt)];
+    prop_pop_pre_all = [prop_pop_pre_all;prop_pop_pre(whichPt)];
+    prop_pop_inter_all = [prop_pop_inter_all;prop_pop_inter(whichPt)];
+    prop_pop_post_all = [prop_pop_post_all;prop_pop_post(whichPt)];
     % p_post_all = [p_post_all;p_post(whichPt)];
     if contains(pt(whichPt).clinical.seizureOnset,'TL') == 1
         temporal = [temporal;1];
@@ -299,11 +327,23 @@ end
 
 temporal = logical(temporal);
 
+[p,tbl,stats] = friedman([pre_all(temporal),...
+inter_all(temporal),post_all(temporal)],1,'off')
+
+[p,tbl,stats] = friedman([pre_all,...
+inter_all,post_all],1,'off')
+
+[p,tbl,stats] = friedman([prop_pop_pre_all,prop_pop_inter_all,...
+    prop_pop_post_all],1,'off')
+
+%{
 [p,tbl,stats] = kruskalwallis([pre_all,...
 inter_all,post_all],[],'off')
 
+
 [p,tbl,stats] = kruskalwallis([pre_all(temporal),...
 inter_all(temporal),post_all(temporal)],[],'off')
+%}
 
 
 end

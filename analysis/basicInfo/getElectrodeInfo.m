@@ -1,4 +1,4 @@
-function getElectrodeInfo(pt,cluster,whichPts)
+function [n_grids_all,n_strips_all,n_depths_all] = getElectrodeInfo(pt,cluster,whichPts,printStuff)
 
 
 if isempty(whichPts) == 1
@@ -45,6 +45,8 @@ for whichPt = whichPts
     
 end
 
+if printStuff == 1
+
 fprintf('There is an average of %1.1f electrodes (range %d-%d).\n',...
     mean(n_elecs_all),min(n_elecs_all),max(n_elecs_all));
 
@@ -56,5 +58,7 @@ fprintf('There is an average of %1.1f strips (range %d-%d).\n',...
 
 fprintf('There is an average of %1.1f depths (range %d-%d).\n',...
     mean(n_depths_all),min(n_depths_all),max(n_depths_all));
+
+end
 
 end

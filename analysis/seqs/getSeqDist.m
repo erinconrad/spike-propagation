@@ -1,4 +1,4 @@
-function [seq_lengths,seq_times] = getSeqDist(pt,cluster,whichPts)
+function [seq_lengths,seq_times,seq_areas] = getSeqDist(pt,cluster,whichPts)
 
 %{
 Get the percentage of seqs that are all the same cluster
@@ -156,14 +156,21 @@ for whichPt = whichPts
     fprintf('%d sequences remain\n',size(seq_matrix,2));
     
     
-    %% Get sequence lengths
+    %% Get sequence lengths and areas
     seq_lengths = zeros(size(seq_matrix,2),1);
     seq_times = zeros(size(seq_matrix,2),1);
+    seq_areas = zeros(size(seq_matrix,2),1);
     for s = 1:size(new_seq_matrix,2)
         currSeq = seq_matrix(:,s);
         seq_lengths(s) = sum(isnan(currSeq) == 0); 
         seq_times(s) = min(currSeq);
+        
+        chs = find(isnan(currSeq) == 0);
+        ch_locs = locs(chs,:);
+        seq_areas(s) = areaConnecting(ch_locs,0);
     end
+    
+    
     
     %{
    %% Get average

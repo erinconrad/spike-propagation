@@ -15,7 +15,7 @@ intericTime = 4;
 % Plot the time periods to see what I am defining to be pre-, post-, and
 % interictal. Also do some quality checks for the coverage of the
 % permutation test
-plotQI = 1;
+plotQI = 0;
 
 % Plot the result of the permutation test
 doPermPlot = 1;
@@ -356,15 +356,15 @@ for whichPt = whichPts
             figure
             set(gcf,'Position',[20,20,530,320]);
             for j = 1:size(preIcTimesQI,1)
-              preleg = area([preIcTimesQI(j,1) preIcTimesQI(j,2)]/3600,[1 1],'FaceColor','g');
+              preleg = area([preIcTimesQI(j,1) preIcTimesQI(j,2)]/3600,[1 1],'FaceColor',[0.4940 0.1840 0.5560]);
                hold on
             end
             for j = 1:size(interIcTimesQI,1)
-             interleg = area([interIcTimesQI(j,1) interIcTimesQI(j,2)]/3600,[1 1],'FaceColor','r');
+             interleg = area([interIcTimesQI(j,1) interIcTimesQI(j,2)]/3600,[1 1],'FaceColor',[0.9290 0.6940 0.1250]);
                hold on
             end
             for j = 1:size(postIcTimesQI,1)
-              postleg = area([postIcTimesQI(j,1) postIcTimesQI(j,2)]/3600,[1 1],'FaceColor','b');
+              postleg = area([postIcTimesQI(j,1) postIcTimesQI(j,2)]/3600,[1 1],'FaceColor',[0.4660 0.6740 0.1880]);
             end
             
             yl = ylim;
@@ -372,18 +372,20 @@ for whichPt = whichPts
               szleg = plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k--','LineWidth',5);
             end
             legend([preleg,interleg,postleg,szleg],...
-                'Pre-ictal','Interictal','Post-ictal','Seizures');
+                'Pre-ictal','Interictal','Post-ictal','Seizures',...
+                'Location','northwest');
             xlabel('Time (hours)');
             yticklabels([])
             yticks([])
-            set(gca,'FontSize',20)
+            set(gca,'FontSize',25)
             
             inter_clust = idx(interIcSpikes);
             pre_clust = idx(preIcSpikes);
-            [tbl_2,chi2_real] = crosstab([ones(length(pre_clust),1);...
+            [tbl_2,chi2_real,~,labels] = crosstab([ones(length(pre_clust),1);...
                     2*ones(length(inter_clust),1)],[pre_clust;inter_clust]);
             tbl_2
             chi2_real
+            labels
             
             pause
             print([fancyPlot,'orig'],'-depsc');
@@ -621,11 +623,11 @@ for whichPt = whichPts
                 figure
                 set(gcf,'Position',[20,20,530,320]);
                 for j = 1:size(pre_times_SL,1)
-                   area([pre_times_SL(j,1) pre_times_SL(j,2)]/3600,[1 1],'FaceColor','g');
+                   area([pre_times_SL(j,1) pre_times_SL(j,2)]/3600,[1 1],'FaceColor',[0.4940 0.1840 0.5560]);
                    hold on
                 end
                 for j = 1:size(inter_times_SL,1)
-                   area([inter_times_SL(j,1) inter_times_SL(j,2)]/3600,[1 1],'FaceColor','r');
+                   area([inter_times_SL(j,1) inter_times_SL(j,2)]/3600,[1 1],'FaceColor',[0.9290 0.6940 0.1250]);
                    hold on
                 end
                 yl = ylim;
@@ -635,11 +637,11 @@ for whichPt = whichPts
                 xlabel('Time (hours)');
                 yticklabels([])
                 yticks([])
-                set(gca,'FontSize',20)
+                set(gca,'FontSize',25)
                 
                 [tbl_fake,chi2_fake] = crosstab([ones(length(pre_clust),1);...
                 2*ones(length(inter_clust),1)],[pre_clust;inter_clust]);
-                tbl_fake
+                %tbl_fake
                 chi2_fake
                 
                 pause
@@ -709,13 +711,12 @@ for whichPt = whichPts
             figure 
             histogram(sorted_boot);
             hold on
-            plot([chi2_real chi2_real],ylim,'k','linewidth');
+            pl=plot([chi2_real chi2_real],ylim,'k','linewidth',4);
             xlabel('\chi^2')
             ylabel('Number of permutations')
-            annotation('textarrow',[chi2_real + 20],...
-                [ylim(2)-30 ylim(2)-30],...
-                sprintf('%1.1e',p_2));
-            set(gca,'fontsize',20)
+            legend(pl,'True \chi^2');
+            legend boxoff 
+            set(gca,'fontsize',25)
             print([fancyPlot,'hist'],'-depsc');
         end
         %}

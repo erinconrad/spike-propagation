@@ -182,19 +182,20 @@ for whichPt = whichPts
         
         %% Figure 
         
+        sparse_plot = plot_thing;
+        sparse_time = plot_times-min(plot_times);
+        sparse_cidx = c_idx;
+        %plotBrainPretty(saveFolder,szTimes,clusters,prop_c,colors,sparse_time,sparse_plot,sparse_cidx,plot_times,sum_times,locs,C,textLeg,pt,whichPt);
+        %plotHourBins(szTimes,clusters,prop_c,colors,sparse_time,plot_times,sum_times);
+        
         figure
         set(gcf,'Position',[71 241 1237 538])
-        [ha, ~] = tight_subplot(2, 1, [.06 .01],[.1 .05],[.03 .01]);
+        [ha, ~] = tight_subplot(2, 1, [.09 .03],[.14 .07],[.05 .01]);
         
         % Subplot 1: Plot the x, y, z over time
         axes(ha(1));
         ttext = {'x','y','z'};
         toAdd = 0;
-        
-        
-        sparse_plot = plot_thing;
-        sparse_time = plot_times-min(plot_times);
-        sparse_cidx = c_idx;
         
         
         
@@ -217,14 +218,17 @@ for whichPt = whichPts
             end
             if i ~=3
                 % Define the offset for each coordinate
-                toAdd = toAdd + 10+(max(sparse_plot(:,i)) - ...
-                    min(sparse_plot(:,i+1)));
+                toAdd = toAdd + 300;
+              %  toAdd = toAdd + 10+(max(sparse_plot(:,i)) - ...
+              %      min(sparse_plot(:,i+1)));
             end
         end
         ylim([minPoint maxPoint + 30])
         yticks(tickloc)
         yticklabels({'X','Y','Z'});
-        set(gca,'fontsize',20);
+        title(sprintf('X, Y, Z coordinates of all spikes for %s',...
+            pt(whichPt).name));
+        set(gca,'fontsize',25);
 
         % Plot the seizure times
         %{
@@ -246,7 +250,7 @@ for whichPt = whichPts
         
         
 
-        annotation('textbox',[0 0.8 0.2 0.2],'String','D','EdgeColor','none','fontsize',30);
+       % annotation('textbox',[0 0.8 0.2 0.2],'String','D','EdgeColor','none','fontsize',30);
 
         
         % Subplot 2: Plot the cluster distribution over time
@@ -271,9 +275,13 @@ for whichPt = whichPts
         'moving average']));
         %}
         xlabel('Time (hours)');
+        title(sprintf(['Proportion of spikes in given cluster '...
+        '(moving average)']))
+    
         
-        set(gca,'FontSize',20);
-        annotation('textbox',[0 0.347 0.2 0.2],'String','E','EdgeColor','none','fontsize',30);
+       
+        set(gca,'FontSize',25);
+       % annotation('textbox',[0 0.347 0.2 0.2],'String','E','EdgeColor','none','fontsize',30);
         
         axes(ha(1));
         % Plot the seizure times
@@ -291,16 +299,35 @@ for whichPt = whichPts
                 yl,'k','LineWidth',2);
         end
         
+        if whichPt == 9
+            legend(pl,textLeg,'Position',[0.65 0.35 0.15 0.1])
+            
+        elseif whichPt == 31
+            legend(pl,textLeg,'Position',[0.83 0.36 0.1 0.1])
+        end
+        
         % Add annotations
-        annotation('textarrow',[0.2 0.275],[0.93 0.93],'String','Seizure',...
-            'FontSize',20);
+        if whichPt == 31
+            annotation('textarrow',[0.2 0.275],[0.69 0.69],'String','Seizure',...
+                'FontSize',25);
+
+            annotation('textarrow',[0.49-.075 0.495],[0.69 0.69],'String','Seizure',...
+                'FontSize',25);
+
+            annotation('textarrow',[0.735-.075 0.74],[0.69 0.69],'String','Seizure',...
+                'FontSize',25);
+        elseif whichPt == 9
+            annotation('textarrow',[0.08+0.075 0.08],[0.69 0.69],'String','Seizure',...
+                'FontSize',25);
+
+            annotation('textarrow',[0.5-.075 0.5],[0.69 0.69],'String','2 Seizures',...
+                'FontSize',25);
+
+            annotation('textarrow',[0.955-.075 0.955],[0.69 0.69],'String','Seizure',...
+                'FontSize',25);
+        end
         
-        annotation('textarrow',[0.49-.075 0.495],[0.93 0.93],'String','Seizure',...
-            'FontSize',20);
-        
-        annotation('textarrow',[0.735-.075 0.74],[0.93 0.93],'String','Seizure',...
-            'FontSize',20);
-        
+        %{
         annotation('textbox',[0.32 0.95 0.5 0.05],'string',...
             sprintf('X, Y, Z coordinates of all spikes for %s',...
             pt(whichPt).name),'fontsize',23,'edgecolor','none');
@@ -308,6 +335,7 @@ for whichPt = whichPts
         annotation('textbox',[0.29 0.49 0.5 0.05],'string',...
             sprintf(['Proportion of spikes in given cluster, '...
         'moving average']),'fontsize',23,'edgecolor','none');
+            %|
         
         %pause
 

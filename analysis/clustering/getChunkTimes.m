@@ -1,7 +1,10 @@
 function [prop_pop,chunk_times,new_chunks] = getChunkTimes(allTimes,test_t,all_times_all,idx)
 
+% Divide into chunks of duration test_t and get proportion of spikes in
+% most popular cluster
+
 which_group = 1;
-popular = mode(idx);
+popular = mode(idx); % most prevalent cluster
     
 % fill up first one
 new_chunks = [];
