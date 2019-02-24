@@ -89,8 +89,8 @@ for i = 1:k
 end
 
 figure
-set(gcf,'Position',[1 248 1433 550]);
-[ha, pos] = tight_subplot(k, n_seqs, 0.01, [0.05 0.05], [0.05 0.01]);
+set(gcf,'Position',[1 248 1433 650]);
+[ha, pos] = tight_subplot(k, n_seqs, 0.01, [0.13 0.07], [0.065 0.01]);
 col = [0 0 1;1 0 0;0 1 0];
 for j = 1:k
     seq = nseq(j).seq;
@@ -112,7 +112,7 @@ for j = 1:k
             spikeamp = amps(round(fs*spiketimes));
             %spikeamp = ones(size(spiketimes,1),1)*max(seq(s).values(:,ch))-range;
 
-            scatter(spiketimes,spikeamp,80,'k','filled');
+            scatter(spiketimes,spikeamp,60,'b','filled');
             range = range + max(seq(s).values(:,ch)) - min(seq(s).values(:,ch));   
         end
         if j == k
@@ -127,12 +127,16 @@ for j = 1:k
         else
             set(gca,'YTickLabel',[]);
         end
+        set(gca,'FontSize',20);
         
-        set(gca,'FontSize',15);
         
     end 
 end
-annotation('textbox',[0.43 0.87 0.1 0.1],'String','Example sequences',...
+
+%suptitle('Example sequences',20);
+set(gca,'FontSize',20);
+
+annotation('textbox',[0.43 0.89 0.1 0.1],'String','Example sequences',...
     'FitBoxToText','on','FontSize',20,'LineStyle','none');
 
 print(gcf,'ex_seqs','-depsc')

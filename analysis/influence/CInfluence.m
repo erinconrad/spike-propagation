@@ -6,6 +6,7 @@ My area of influence analysis
 %}
 
 % Parameters
+doPoster = 1;
 doPlots = 0; %0 = no, 1=normal, 2=pretty
 plotConn = 0;
 removeTies = 1;
@@ -625,6 +626,7 @@ fprintf('P-value for max freq vs all is %1.1e, signed-rank = %1.1f\n',...
 
 %% Do Plots
 
+%{
 %% First, plot for poster
 fontsizes = 19;
 figure
@@ -729,16 +731,24 @@ ylim([0 max(prices) + 15]);
 %pause
 print(gcf,[destFolder,'influence_nonAA_poster'],'-depsc');
 eps2pdf([destFolder,'influence_nonAA_poster','.eps'])
-
+%}
 
 
 %% Parameters and plot initialization
-fontsizes = 15;
+fontsizes = 20;
 
 figure
-set(gcf,'Position',[107 12 946 793]);
-[ha,pos] = tight_subplot(3,3,[0.09 0.03],[0.03 0.03],[0.07 0.02]);
-set(ha(7),'Position',[pos{7}(1) pos{7}(2) pos{7}(3)*3 pos{7}(4)]);
+if doPoster == 1
+    set(gcf,'Position',[107 12 1200 793]);
+    [ha,pos] = tight_subplot(3,3,[0.11 0.05],[0.04 0.04],[0.06 0.04]);
+    set(ha(7),'Position',[pos{7}(1) pos{7}(2) pos{7}(3)*1.5 pos{7}(4)]);
+else
+    set(gcf,'Position',[107 12 946 793]);
+    [ha,pos] = tight_subplot(3,3,[0.09 0.03],[0.03 0.03],[0.07 0.02]);
+    set(ha(7),'Position',[pos{7}(1) pos{7}(2) pos{7}(3)*3 pos{7}(4)]);
+end
+
+
 delete(ha(8));
 delete(ha(9));
 
@@ -746,22 +756,26 @@ delete(ha(9));
 axes(ha(1))
 imagesc(exampleChCh)
 colorbar
-title('Downstream spike connections');
-xlabel('Downstream electrode #');
-ylabel('Leading electrode #');
+title('HUP078 spike connections');
+xlabel('Downstream electrode');
+ylabel('Leading electrode');
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.02 0.785 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
+if doPoster == 0
+    annotation('textbox',[0.02 0.785 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
+end
 
 %% Plot significant downstream connections
 axes(ha(2))
 imagesc(exampleChCh > exampleX)
 colormap(ha(2),flipud(gray));
 title('Frequent connections');
-xlabel('Downstream electrode #');
+xlabel('Downstream electrode');
 %ylabel('Leading electrode #');
 set(gca,'FontSize',fontsizes)
 yticklabels([])
+if doPoster == 0
 annotation('textbox',[0.35 0.785 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
+end
 
 %% Plot downstream connections for single electrode
 axes(ha(3));
@@ -785,7 +799,9 @@ zticklabels([])
 view(118.1000,2.8000);
 title(sprintf('Electrode %d''s downstream electrodes',I));
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.67 0.785 0.2 0.2],'String','C','EdgeColor','none','fontsize',25);
+if doPoster == 0
+    annotation('textbox',[0.67 0.785 0.2 0.2],'String','C','EdgeColor','none','fontsize',25);
+end
 
 %% Plot area of influence for a single electrode
 axes(ha(4));
@@ -806,7 +822,9 @@ zticklabels([])
 title(sprintf('Area of influence for electrode %d',I));
 view(118.1000,2.8000);
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.02 0.45 0.2 0.2],'String','D','EdgeColor','none','fontsize',25);
+if doPoster == 0
+    annotation('textbox',[0.02 0.45 0.2 0.2],'String','D','EdgeColor','none','fontsize',25);
+end
 
 %% Plot area of influence of all electrodes
 axes(ha(5));
@@ -816,10 +834,12 @@ scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,exampleSA,'filled')
 xticklabels([])
 yticklabels([])
 zticklabels([])
-title(sprintf('Area of influence for all electrodes'));
+title(sprintf('Area of influence, all electrodes'));
 view(118.1000,2.8000);
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.35 0.45 0.2 0.2],'String','E','EdgeColor','none','fontsize',25);
+if doPoster == 0
+    annotation('textbox',[0.35 0.45 0.2 0.2],'String','E','EdgeColor','none','fontsize',25);
+end
 
 %% Plot spike frequency of all electrodes
 axes(ha(6));
@@ -829,21 +849,23 @@ scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,exampleSF,'filled')
 xticklabels([])
 yticklabels([])
 zticklabels([])
-title(sprintf('Spike frequency for all electrodes'));
+title(sprintf('Spike frequency, all electrodes'));
 view(118.1000,2.8000);
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.67 0.45 0.2 0.2],'String','F','EdgeColor','none','fontsize',25);
+if doPoster == 0
+    annotation('textbox',[0.67 0.45 0.2 0.2],'String','F','EdgeColor','none','fontsize',25);
+end
 
 
 %% Plot bar graph showing overall performance
 axes(ha(7));
 prices = [mean(allAllDist) mean(allSADist) mean(allFreqDist)];
 bar(prices)
-title(sprintf(['Average distance across patients from electrode of interest\n to closest ',...
+title(sprintf(['All patients: Average distance to closest\n',...
     'seizure onset zone electrode']))
 ylabel(sprintf('Average distance (mm)'));
-
-xticklabels({'All electrodes','Max area of influence','Max spike frequency'})
+set(gca,'xlim',[0.7 3.3]);
+xticklabels({'All electrodes','Max area of influence','Max spike rate'})
 set(gca,'FontSize',fontsizes)
 %fix_xticklabels(gca,0.1,{'FontSize',fontsizes});
 
@@ -886,17 +908,23 @@ end
 plot([1 3], [max(prices)+8 max(prices)+8],'k');
 text(2,max(prices)+11,textFreqAll,'HorizontalAlignment','center',...
         'fontsize',fontsizes);
-    
+
 ylim([0 max(prices) + 15]);
+if doPoster == 0
 annotation('textbox',[0.02 0.11 0.2 0.2],'String','G','EdgeColor','none','fontsize',25);
+end
 %pause
-print(gcf,[destFolder,'influence_nonAA'],'-depsc');
-eps2pdf([destFolder,'influence_nonAA','.eps'])
+if doPoster == 1
+    print(gcf,[destFolder,'influence_nonAA_poster'],'-depsc');
+else
+    print(gcf,[destFolder,'influence_nonAA'],'-depsc');
+end
+%eps2pdf([destFolder,'influence_nonAA','.eps'])
 
 
 f2= myaa(2);
 %pause
-print(f2,[destFolder,'influence_AA'],'-dpng');
+%print(f2,[destFolder,'influence_AA'],'-dpng');
 %eps2pdf([destFolder,'influence_AA','.eps'])
 
 fprintf('The average largest area of influence was %1.1f cm squared (range %1.1f-%1.1f).\n',...

@@ -114,6 +114,13 @@ for i = 1:31
         gdf_all = removeChs(gdf_all,electrodeData,rmType);
     end
 
+    % Get stats on spike rates per channel
+    nchs = length(pt(i).channels);
+    npch = zeros(nchs,1);
+    for ich = 1:nchs
+        npch(ich) = sum(gdf(:,1) == ich);
+    end
+    rate(i).npch = npch;
     
     % Now that you have all the spikes for the desired patient and
     % seizure, calculate sequences
@@ -184,7 +191,8 @@ end
 %scatter(linspace(pt(5).sz(1).runTimes(1,1),pt(5).sz(1).runTimes(end,2),length(noise_all)),noise_all(:,1));
 
 
-save([resultsFolder,'ptStructs/',ptWithSeq],'pt');
+%save([resultsFolder,'ptStructs/',ptWithSeq],'pt');
+save([resultsFolder,'ptStructs/','rate.mat'],'rate');
 
 
 
