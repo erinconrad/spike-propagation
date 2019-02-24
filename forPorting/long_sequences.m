@@ -115,12 +115,14 @@ for i = 1:31
     end
 
     % Get stats on spike rates per channel
-    nchs = length(pt(i).channels);
-    npch = zeros(nchs,1);
-    for ich = 1:nchs
-        npch(ich) = sum(gdf_all(:,1) == ich);
+    if isempty(gdf_all) == 0
+        nchs = length(pt(i).channels);
+        npch = zeros(nchs,1);
+        for ich = 1:nchs
+            npch(ich) = sum(gdf_all(:,1) == ich);
+        end
+        rate(i).npch = npch;
     end
-    rate(i).npch = npch;
     
     % Now that you have all the spikes for the desired patient and
     % seizure, calculate sequences
