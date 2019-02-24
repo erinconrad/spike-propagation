@@ -118,7 +118,7 @@ for i = 1:31
     nchs = length(pt(i).channels);
     npch = zeros(nchs,1);
     for ich = 1:nchs
-        npch(ich) = sum(gdf(:,1) == ich);
+        npch(ich) = sum(gdf_all(:,1) == ich);
     end
     rate(i).npch = npch;
     
