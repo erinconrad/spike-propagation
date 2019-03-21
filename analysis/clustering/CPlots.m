@@ -218,9 +218,12 @@ for whichPt = whichPts
             end
             if i ~=3
                 % Define the offset for each coordinate
-                toAdd = toAdd + 300;
-              %  toAdd = toAdd + 10+(max(sparse_plot(:,i)) - ...
-              %      min(sparse_plot(:,i+1)));
+                toAdd = toAdd + 100;
+                if i == 2 && whichPt == 9
+                    toAdd = toAdd + 300;
+                end
+              % toAdd = toAdd + 10+(max(sparse_plot(:,i)) - ...
+              %     min(sparse_plot(:,i+1)));
             end
         end
         ylim([minPoint maxPoint + 30])
@@ -325,6 +328,7 @@ for whichPt = whichPts
 
             annotation('textarrow',[0.955-.075 0.955],[0.69 0.69],'String','Seizure',...
                 'FontSize',25);
+        elseif whichPt == 20
         end
         
         %{
@@ -446,6 +450,7 @@ for whichPt = whichPts
 
 
         %% Subplot 3: Plot locations of centroids
+        %{
         subplot(3,1,3)
         scatter3(locs(:,1),locs(:,2),locs(:,3),60,'k');
         hold on
@@ -465,6 +470,7 @@ for whichPt = whichPts
         print(gcf,[saveFolder,'clustTime_',sprintf('%s',pt(whichPt).name)],'-depsc');
         eps2pdf([saveFolder,'clustTime_',sprintf('%s',pt(whichPt).name),'.eps'])
         close(gcf)
+        %}
     end
 end
 

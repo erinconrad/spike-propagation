@@ -280,6 +280,11 @@ for whichPt = whichPts
     mean_ad(nan_times) = [];
     SL_bin(nan_times) = [];
     
+    %% Output x and y into a csv to be loaded into R to do the glarma model
+    M = [mean_ad,SL_bin,ones(size(SL_bin))];
+    fname = [resultsFolder,'for_r/',pt(whichPt).name,'_SL.csv'];
+    csvwrite(fname,M)
+    
     % Do model
     
     Y = SL_bin;
