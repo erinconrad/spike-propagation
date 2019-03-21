@@ -30,6 +30,9 @@ end
 all_b = [];
 all_p = [];
 all_t = [];
+all_p_glm = [];
+all_b_glm = [];
+all_t_glm = [];
 names = {};
 outcome_all = [];
 temp_lobe_all = [];
@@ -149,6 +152,51 @@ for whichPt = whichPts
     all_p = [all_p;p];
     all_t = [all_t;t];
     
+    %% Linear model
+    [b_lin,~,~,~,stats_lin] = regress(Y,X);
+    yfit_lin = X*b_lin;
+    
+    %% Do glm model
+    X = mean_ad;
+    Y = counts;
+    [b_glm,~,stats_glm] = glmfit(X,Y,'poisson','link','log');
+    yfit = glmval(b_glm, X,'log');
+    p_glm = stats_glm.p(2);
+    all_p_glm = [all_p_glm;p_glm];
+    all_b_glm = [all_b_glm;b_glm(2)];
+    all_t_glm = [all_t_glm;stats_glm.t(2)];
+    
+    %% Plot parcorr of residuals
+    parcorr(stats_glm.resid)
+    pause
+    close(gcf)
+    
+    %% Plot spike counts next to alpha delta ration
+    figure
+    subplot(2,1,1)
+    plot(counts)
+    subplot(2,1,2)
+    plot(1./mean_ad)
+    pause
+    close(gcf)
+    
+    %% Output x and y into a csv to be loaded into R to do the glarma model
+    M = [mean_ad,counts,ones(size(mean_ad))];
+    fname = [resultsFolder,'for_r/',pt(whichPt).name,'_rate_.csv'];
+    csvwrite(fname,M)
+    
+    %{
+    figure
+    plot(Y)
+    hold on
+    plot(yfit)
+    plot(yfit_lin);
+    legend('True','Poisson','Linear');
+    pause
+    close(gcf)
+    %}
+    
+    
     %{
      % Do model
     Y = counts;
@@ -177,7 +225,8 @@ end
 all_b
 all_p
 
-
+table(char(names),all_b_glm,all_p_glm)
+table(char(names),all_b,all_p)
 
 table(char(names(all_p<0.0025)),all_b(all_p<0.0025),all_p(all_p<0.0025))
 

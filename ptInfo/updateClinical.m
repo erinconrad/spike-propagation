@@ -3,7 +3,8 @@ function pt = updateClinical(pt)
 clinicalFile = 'Clinical.xls';
 T = readtable(clinicalFile);
 
-whichPts = [1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31];
+whichPts = 1:46;
+%[1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31];
 
 for whichPt = whichPts
     name = pt(whichPt).name;

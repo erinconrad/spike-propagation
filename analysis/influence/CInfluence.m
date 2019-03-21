@@ -267,6 +267,7 @@ for whichPt = whichPts
         max_size = nchs*nchs;
         chCh_all = zeros(nboot,nchs,nchs);
         chCh_diff_all = zeros(nboot,nchs,nchs);
+        chCh_diff = zeros(nchs,nchs);
         for ib = 1:nboot
             if mod(ib,100) == 0
                 fprintf('Doing %d of %d\n', ib,nboot);
@@ -287,7 +288,7 @@ for whichPt = whichPts
             
         end
         
-        if 1 == 1
+        if 1 == 0
             figure
             imagesc(squeeze(mean(chCh_diff_all,1)))
             colorbar
@@ -315,6 +316,8 @@ for whichPt = whichPts
     minCount = X;
     fprintf(['By poisson assumption, the number of counts is:\n'...
         '%d\n\n'],X);
+    
+    %if perc~=X, error('What\n'); end
     
     if whichPt == 8, exampleX = X; end
     
@@ -587,6 +590,11 @@ ilae_sa_noresec = getILAE(outcome_all(sa_resected == 0));
 fprintf('Median ilae for sa resec = %1.1f, for sa no resec %1.1f\n',...
     median(ilae_sa_resec), median(ilae_sa_noresec));
 
+
+[~,~, u_mat] = ranksum_erin(outcome_all(sa_resected == 1),outcome_all(sa_resected == 0));
+[~,~, u_erin] = ranksum_erin(outcome_all(sa_resected == 1),outcome_all(sa_resected == 0));
+fprintf('Ranksum matlab  = %1.1f, ranksum erin = %1.1f\n',u_mat,u_erin);
+
 %% Compare clinical outcome for pts with resected max SF and those without
 [p_sf_resec,h_sf_resec,stats_sf_resec] = ...
     ranksum(outcome_all(sf_resected == 1),outcome_all(sf_resected == 0));
@@ -601,6 +609,10 @@ ilae_sf_noresec = getILAE(outcome_all(sf_resected == 0));
 fprintf('Median ilae for sf resec = %1.1f, for sf no resec %1.1f\n',...
     median(ilae_sf_resec), median(ilae_sf_noresec));
 
+[~,~, u_mat] = ranksum_erin(outcome_all(sf_resected == 1),outcome_all(sf_resected == 0));
+[u_erin] = getStandardStats(outcome_all(sf_resected == 1),outcome_all(sf_resected == 0),'rs');
+fprintf('Ranksum matlab  = %1.1f, ranksum erin = %1.1f\n',u_mat,u_erin);
+
 %% Does SA do better than chance?
 %{
 [pFreqSA,h3,stats3] = ranksum(allFreqDist,allSADist);
@@ -611,16 +623,35 @@ fprintf('Median ilae for sf resec = %1.1f, for sf no resec %1.1f\n',...
 [pFreqAll,h5,stats5] = ranksum(allFreqDist,allAllDist);
 %}
 
+%% SA vs freq
 [pFreqSA,h3,stats3] = signrank(allFreqDist,allSADist);
-[pAllSA,h4,stats4] = signrank(allSADist',allAllDist);
-[pFreqAll,h5,stats5] = signrank(allFreqDist,allAllDist);
 
 fprintf('P-value for max freq vs max SA is %1.1e, signed-rank = %1.1f\n',...
     pFreqSA,stats3.signedrank);
+
+w_mat = signrank_erin(allFreqDist',allSADist');
+w_erin = getStandardStats(allFreqDist',allSADist','sr');
+fprintf('Signrank matlab  = %1.1f, signrank erin = %1.1f\n',w_mat,w_erin);
+
+
+%% SA vs all
+[pAllSA,h4,stats4] = signrank(allSADist',allAllDist);
+
 fprintf('P-value for max SA vs all is %1.1e, signed-rank = %1.1f\n',...
     pAllSA,stats4.signedrank);
+
+w_mat = signrank_erin(allSADist',allAllDist);
+w_erin = getStandardStats(allSADist',allAllDist,'sr');
+fprintf('Signrank matlab  = %1.1f, signrank erin = %1.1f\n',w_mat,w_erin);
+
+%% Freq vs all
+
+[pFreqAll,h5,stats5] = signrank(allFreqDist,allAllDist);
 fprintf('P-value for max freq vs all is %1.1e, signed-rank = %1.1f\n',...
     pFreqAll,stats5.signedrank);
+w_mat = signrank_erin(allFreqDist',allAllDist);
+w_erin = getStandardStats(allFreqDist',allAllDist,'sr');
+fprintf('Signrank matlab  = %1.1f, signrank erin = %1.1f\n',w_mat,w_erin);
 
 
 

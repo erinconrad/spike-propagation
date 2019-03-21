@@ -171,8 +171,8 @@ for whichPt = whichPts
     %}
     
     
-    true_range_old = [min(prop_pop) max(prop_pop)]
-    true_range = [prctile(prop_pop,100-percVarTrue),prctile(prop_pop,percVarTrue)]
+    true_range_old = [min(prop_pop) max(prop_pop)];
+    true_range = [prctile(prop_pop,100-percVarTrue),prctile(prop_pop,percVarTrue)];
     
     %% Now, start with 1 hour and go up, and get the new range
     sub_range = zeros(n_chunks,2);
@@ -308,8 +308,14 @@ fprintf(['The p-value for Spearman rank correlation of number of hours needed\n'
 
 [p2,info2] = correlateClinically(allMinCapture(~isnan(loc_bin)),...
 loc_bin(~isnan(loc_bin)),'num','bin',0);
+[p,~,u_mat] = ranksum_erin(allMinCapture(loc_bin == 1),...
+allMinCapture(loc_bin == 0));
+test_stat = getStandardStats(allMinCapture(loc_bin == 1),...
+allMinCapture(loc_bin == 0),'rs');
+
 fprintf(['The p-value for Wilcoxon rank sum of number of hours needed\n'...
-    'to capture variability and temporal vs non temporal lobe is p = %1.2e.\n'],p2);
+    'to capture variability and temporal vs non temporal lobe is p = %1.2e.\n'...
+    'Matlab U: %1.1f, my U: %1.1f\n'],p2,u_mat,test_stat);
 
 % Get minimum hours needed to capture for temporal and extra-temporal
 % seizures

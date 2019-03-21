@@ -45,7 +45,10 @@ all_b_SL = [];
 all_p_SL = [];
 all_t_soz = [];
 all_t_SL = [];
+all_b = [];
 names = {};
+all_b_glm = [];
+all_p_glm = [];
 
 %% Loop through patients
 for whichPt = whichPts
@@ -150,6 +153,8 @@ for whichPt = whichPts
     distNeeded = zeros(size(bin_times,1),1);
     SL_bin = zeros(size(bin_times,1),1); 
     SA_bin = zeros(size(bin_times,1),1); 
+    n_s = zeros(size(bin_times,1),1);
+    n_f = zeros(size(bin_times,1),1);
     
     % Run through bin times and get proportion of spikes in most popular
     % cluster for that bin.
@@ -160,7 +165,9 @@ for whichPt = whichPts
             all_times_all < bin_times(i,2));
         
         prop_pop(i) = sum(whichClust == popular)/length(whichClust);
-        
+        n_s(i) = sum(whichClust == popular);
+        n_f(i) = sum(whichClust ~= popular);
+
         
         % Get spike locs
         whichSpikes = find(all_times_all > bin_times(i,1) & ...
@@ -305,6 +312,9 @@ for whichPt = whichPts
         p = 1;
         allP =[allP;p];
         allT = [allT;nan];
+        all_b = [all_b;nan];
+        all_b_glm = [all_b_glm;nan];
+        all_p_glm = [all_p_glm;nan];
         continue
     end
     
@@ -317,6 +327,8 @@ for whichPt = whichPts
     times(nan_times) = [];
     mean_ad(nan_times) = [];
     prop_pop(nan_times) = [];
+    n_s(nan_times) = [];
+    n_f(nan_times) = [];
     
     
     %{
@@ -339,17 +351,69 @@ for whichPt = whichPts
     % hour trend.
     %X = [mean_ad ones(size(mean_ad)) times cat_hours];
     X = [mean_ad ones(size(mean_ad))];
-    
+   
+    %% Output x and y into a csv to be loaded into R to do the glarma model
+    M = [mean_ad,n_s,n_f,ones(size(prop_pop)),prop_pop];
+    fname = [resultsFolder,'for_r/',pt(whichPt).name,'.csv'];
+    csvwrite(fname,M)
     
     % Do model
-    [p,t,~] = determine_order(X,Y,plotInfo);
+    [p,t,b] = determine_order(X,Y,plotInfo);
     %[p,t,~] = AR_model(X,Y,plotInfo);
     
     allP = [allP;p];
     allT = [allT;t];
+    all_b = [all_b;b];
+    
+    %% GLM model
+    [b_glm,~,stats_glm] = glmfit(mean_ad,[n_s n_s+n_f],'binomial', 'link', 'logit');
+    yfit = glmval(b_glm, mean_ad, 'logit', 'size', n_s+n_f);
+    p_glm = stats_glm.p(2);
+    all_p_glm = [all_p_glm;p_glm];
+    all_b_glm = [all_b_glm;b_glm(2)];
+    
+    
+    %% Plot partial correlation of residuals
+    %{
+    parcorr(stats_glm.resid)
+    pause
+    close(gcf)
+    %}
+    
+    %% Linear model
+    [b_lin,~,~,~,stats_lin] = regress(n_s,X);
+    yfit_lin = X*b_lin;
     
     
     
+    %% Plot comparison
+   %{
+    figure
+    %plot(mean_ad,n_s./(n_s+n_f),'o',mean_ad,yfit./(n_s+n_f),'-');
+    plot(n_s./(n_s+n_f),'o')
+    hold on
+    plot(yfit./(n_s+n_f))
+    pause
+    close(gcf);
+   %}
+    
+   %{
+    figure
+    set(gcf,'position',[100 100 1000 500])
+    subplot(2,1,1)
+    plot(n_s./(n_s+n_f),'o')
+    hold on
+    plot(yfit./(n_s+n_f))
+    legend('Real proportion in most popular cluster','Logistic')
+    
+    subplot(2,1,2)
+    plot(n_s./(n_s+n_f),'o')
+    hold on
+    plot(yfit_lin./(n_s+n_f))
+    legend('Real proportion in most popular cluster','Linear')
+    pause
+    close(gcf)
+    %}
     
 end
 
@@ -362,7 +426,12 @@ fprintf(['There are %d with significant correlation.\nThe combined p-value'...
 %% Make table of p-values and t-statistics
 p_text = getPText(allP);
 allT_text = num2str(allT,3);
-table(char(names),allT_text,char(p_text))
+all_b_text = num2str(all_b,3);
+table(char(names),char(all_b_text),allT_text,char(p_text))
+
+all_b_glm_text = num2str(all_b_glm,3);
+all_p_glm_text = num2str(all_p_glm,3);
+table(char(names),char(all_b_glm_text),char(all_p_glm_text))
 
 %% Test that t significantly different from zero for prop-pop
 [~,p,ci,stats] = ttest(allT);

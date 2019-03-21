@@ -249,9 +249,12 @@ fprintf('%d patients had ILAE <= 3\n',sum(ilae_overall<=3));
 % correlate whether there is an hour-to-hour change with clinical outcome
 hourChange = p_hour_all < 0.05/length(p_hour_all);
 [p_hour_outcome,info_hour_outcome] = correlateClinically(hourChange,outcome_all,'bin','num',0);
+[~,~, u_mat] = ranksum_erin(outcome_all(hourChange==1)',outcome_all(hourChange==0)');
+test_stat = getStandardStats(outcome_all(hourChange==1)',outcome_all(hourChange==0)','rs');
 fprintf(['The p-value for Wilcoxon rank sum comparing outcome between\n'...
     'patients with hour-to-hour change and those without is:\n'...
-    'p = %1.2e\n'],p_hour_outcome);
+    'p = %1.2e\nMatlab U is %1.1f and my U is %1.1f\n'],p_hour_outcome,...
+    u_mat,test_stat);
 
 % Get average ILAE scores of those with a change and those without
 ilae_change = getILAE(outcome_all(hourChange == 1));

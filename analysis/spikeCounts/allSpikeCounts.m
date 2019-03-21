@@ -1,4 +1,4 @@
-function allSpikeCounts(pt,cluster,whichPts)
+function allSpikeCounts(pt,cluster,rate,whichPts)
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
@@ -38,11 +38,18 @@ for whichPt = whichPts
     all_times = sum(diff(pt(whichPt).allTimes,1,2));
     times_all_pts = [times_all_pts;all_times];
     
+    % Confirm that channel rates add up to total rates
+    if sum(rate(whichPt).npch) ~= n_spikes_all
+        error('What\n');
+    end
+    
     % Spike rate
     spike_rate = n_spikes_all/all_times/nchs*60;
     all = [all;spike_rate];
     
-    
+    % Get max and min channel spike rates before processing
+    min_rate_pre = [min_rate_pre;min(rate(whichPt).npch)/all_times*60];
+    max_rate_pre = [max_rate_pre;max(rate(whichPt).npch)/all_times*60];
     
     %% Get spike rate post-sequence detection, removal of ties, etc.
     % Get all sequences
@@ -115,9 +122,15 @@ post_proc = post_proc * 60;
 post_clust = post_clust * 60;
 min_rate_post = mean(min_rate_post);
 max_rate_post = mean(max_rate_post);
+min_rate_pre = mean(min_rate_pre);
+max_rate_pre = mean(max_rate_pre);
 
 fprintf('Before processing, the spike rate in spikes/ch/hr was:\n%1.3f (range %1.3f-%1.3f)\n',...
     mean(all),min(all),max(all));
+
+fprintf(['Before processing, the min and max channel spike rate in spikes/min'...
+    'was:\n%1.3f and %1.3f\n'],...
+    min_rate_pre,max_rate_pre);
 
 fprintf('After processing, the spike rate in spikes/ch/hr was:\n%1.3f (range %1.3f-%1.3f)\n',...
     mean(post_proc),min(post_proc),max(post_proc));

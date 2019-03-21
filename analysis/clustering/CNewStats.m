@@ -153,6 +153,7 @@ for whichPt = whichPts
     idx(bad_idx) = [];
     clusters = 1:k; clusters(bad_cluster) = [];
     C(bad_cluster,:) = [];
+    popular = mode(idx); %most popular cluster
     
     %% Get the sequence lengths and times of all sequences
     [seq_lengths,seq_times] = getSeqDist(pt,cluster,whichPt);
@@ -607,6 +608,8 @@ for whichPt = whichPts
                 seq_times' <= pre_times_SL(:,2)));
             preIcSL = seq_lengths(pre_seq);
             preIc_SL_boot(ib) = mean(preIcSL);
+            
+            
 
             if 1==0
             figure

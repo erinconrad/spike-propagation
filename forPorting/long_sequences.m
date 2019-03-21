@@ -193,7 +193,7 @@ end
 %scatter(linspace(pt(5).sz(1).runTimes(1,1),pt(5).sz(1).runTimes(end,2),length(noise_all)),noise_all(:,1));
 
 
-%save([resultsFolder,'ptStructs/',ptWithSeq],'pt');
+save([resultsFolder,'ptStructs/',ptWithSeq],'pt');
 save([resultsFolder,'ptStructs/','rate.mat'],'rate');
 
 
