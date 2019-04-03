@@ -46,7 +46,9 @@ end
 allMinCapture = [];
 allMinProp = [];
 allHours = [];
-
+nSzs = [];
+allNSpikes = [];
+allSRate = [];
 
 for whichPt = whichPts
     
@@ -55,6 +57,7 @@ for whichPt = whichPts
     % Get patient parameters
     locs = pt(whichPt).electrodeData.locs(:,2:4);
     szTimes = pt(whichPt).newSzTimes;
+    nSzs = [nSzs;size(szTimes,1)];
     soz = pt(whichPt).newSOZChs;
     saveFolder = [destFolder,pt(whichPt).name,'/'];
     mkdir(saveFolder);
@@ -125,7 +128,10 @@ for whichPt = whichPts
     clusters = 1:k; clusters(bad_cluster) = [];
     
     % Get most popular cluster
+    allNSpikes = [allNSpikes;length(idx)];
+    allSRate = [allSRate;length(idx)/sum(diff(pt(whichPt).allTimes,1,2),1)];
     
+    %sum(diff(pt(whichPt).allTimes,1,2),1)/3600
     
     %% Get actual time chunks
     test_t = 3600; % 60 minute chunks
@@ -229,7 +235,7 @@ for whichPt = whichPts
     allMinProp = [allMinProp; min_capture_var/n_chunks];
     allHours = [allHours;n_chunks];
     
-    outcome(whichPt) = getOutcome(pt,whichPt);
+    outcome(whichPt) = str2num(pt(whichPt).clinical.outcome(end));
     
     %% Plot
     if doPlots == 1
@@ -253,8 +259,8 @@ for whichPt = whichPts
             alpha*100,min_capture_var,min_capture_var/n_chunks*100),'FontSize',25);
 
         xlabel('Number of consecutive hours');
-        ylabel(sprintf('5th and 95th %%ile proportion of spikes in\nmost popular cluster across hour-long bins'));
-        title(sprintf('Dependence on sampling of\nspike location variability for %s',...
+        ylabel(sprintf('5th and 95th %%ile proportion of spikes in\npredominant cluster across hour-long bins'));
+        title(sprintf('Dependence on sampling of variability\nin spike spatial distribution for %s',...
             pt(whichPt).name),'fontsize',25);
         set(gca,'fontsize',25);
         hold on
@@ -276,10 +282,17 @@ fprintf('The mean number of hours needed to capture 80%% of the variability for 
 fprintf('The mean percent of hours needed to capture 80%% of the variability for %d%% was %1.1f (range %1.1f-%1.1f)\n',...
     percVarTrue,mean(allMinProp)*100,min(allMinProp)*100,max(allMinProp)*100);
 
+%% Correlate duration needed to capture with number of szs
+%rho_sz = corr(nSzs,allMinCapture,'Type','Spearman');
+
+%% Correlate duration needed to capture with spike rates
+[rho_spikes,p] = corr(allSRate,allMinCapture,'Type','Spearman')
+
 %% Do stats correlating number needed to capture with outcome
 
 allOutcome = [];
 allLoc = {};
+age_all = [];
 for whichPt = whichPts
     allOutcome = [allOutcome;outcome(whichPt)];
     allLoc = [allLoc;pt(whichPt).clinical.seizureOnset];
@@ -288,6 +301,20 @@ for whichPt = whichPts
         allLoc = [allLoc;nan];
     end
     %}
+    
+    % Age
+    age = pt(whichPt).clinical.ageSurgery;
+    if contains(age,'-') == 1
+        a = regexp(age,'-');
+        num1 = str2num(age(1:a-1));
+        num2 = str2num(age(a+1:end));
+        age = mean([num1,num2]);
+    elseif contains(age,'?')
+        age = nan;
+    else
+        age = str2num(age);
+    end
+    age_all = [age_all;age];
 end
 
 loc_bin = zeros(length(allLoc),1);
@@ -308,6 +335,7 @@ fprintf(['The p-value for Spearman rank correlation of number of hours needed\n'
 
 [p2,info2] = correlateClinically(allMinCapture(~isnan(loc_bin)),...
 loc_bin(~isnan(loc_bin)),'num','bin',0);
+%{
 [p,~,u_mat] = ranksum_erin(allMinCapture(loc_bin == 1),...
 allMinCapture(loc_bin == 0));
 test_stat = getStandardStats(allMinCapture(loc_bin == 1),...
@@ -316,9 +344,17 @@ allMinCapture(loc_bin == 0),'rs');
 fprintf(['The p-value for Wilcoxon rank sum of number of hours needed\n'...
     'to capture variability and temporal vs non temporal lobe is p = %1.2e.\n'...
     'Matlab U: %1.1f, my U: %1.1f\n'],p2,u_mat,test_stat);
+%}
+
+% Age
+[page,infoage] = correlateClinically(allMinCapture,age_all<=13,'num','bin',0);
+fprintf(['The p-value for Wilcoxon rank sum of number of hours needed\n'...
+    'to capture variability and child vs adult is p = %1.2e.\n'],...
+    page);
 
 % Get minimum hours needed to capture for temporal and extra-temporal
 % seizures
+
 min_capture_temp = allMinCapture(loc_bin ==1);
 min_capture_not_temp = allMinCapture(loc_bin ~= 1);
 

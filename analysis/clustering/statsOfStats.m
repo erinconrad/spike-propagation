@@ -39,6 +39,7 @@ post_dof_all = [];
 post_chi2_all = [];
 MTS_all = [];
 no_depths_all = [];
+age_all = [];
 
 %% Loop through patients and grab stats info
 for whichPt = 1:length(stats)
@@ -131,6 +132,20 @@ for whichPt = 1:length(stats)
     % outcomes
     outcome = getOutcome(pt,whichPt);
     outcome_all = [outcome_all,outcome];
+    
+    % Age
+    age = pt(whichPt).clinical.ageSurgery;
+    if contains(age,'-') == 1
+        a = regexp(age,'-');
+        num1 = str2num(age(1:a-1));
+        num2 = str2num(age(a+1:end));
+        age = mean([num1,num2]);
+    elseif contains(age,'?')
+        age = nan;
+    else
+        age = str2num(age);
+    end
+    age_all = [age_all;age];
     
     % SOZ
     szOnsetText = pt(whichPt).clinical.seizureOnset;
@@ -246,15 +261,24 @@ fprintf('Median ILAE is %1.1f, range %1.1f-%1.1f\n',median(ilae_overall),...
 
 fprintf('%d patients had ILAE <= 3\n',sum(ilae_overall<=3));
 
+
+
+
 % correlate whether there is an hour-to-hour change with clinical outcome
 hourChange = p_hour_all < 0.05/length(p_hour_all);
-[p_hour_outcome,info_hour_outcome] = correlateClinically(hourChange,outcome_all,'bin','num',0);
-[~,~, u_mat] = ranksum_erin(outcome_all(hourChange==1)',outcome_all(hourChange==0)');
-test_stat = getStandardStats(outcome_all(hourChange==1)',outcome_all(hourChange==0)','rs');
+[p_hour_outcome,info_hour_outcome] = correlateClinically(hourChange,ilae_overall,'bin','num',0);
+[~,~, u_mat] = ranksum_erin(ilae_overall(hourChange==1)',ilae_overall(hourChange==0)');
+test_stat = getStandardStats(ilae_overall(hourChange==1)',ilae_overall(hourChange==0)','rs');
 fprintf(['The p-value for Wilcoxon rank sum comparing outcome between\n'...
     'patients with hour-to-hour change and those without is:\n'...
     'p = %1.2e\nMatlab U is %1.1f and my U is %1.1f\n'],p_hour_outcome,...
     u_mat,test_stat);
+
+% correlate hour-to-hour change with age
+[p_hour_age,info_hour_age] = correlateClinically(hourChange,age_all<=13,'bin','bin',0);
+fprintf(['The p-value for chi squared comparing child vs adult between\n'...
+    'patients with hour-to-hour change and those without is:\n'...
+    'p = %1.2e\n'],p_hour_age);
 
 % Get average ILAE scores of those with a change and those without
 ilae_change = getILAE(outcome_all(hourChange == 1));
@@ -288,10 +312,16 @@ fprintf(['The p-value for chi squared comparing depths vs no depths between\n'..
 
 % Correlate clinical outcome with post-ictal change
 postIcChange = p_post_all < 0.05/length(whichPts);
-[p_post_outcome,info_post_outcome] = correlateClinically(postIcChange,outcome_all,'bin','num',0);
+[p_post_outcome,info_post_outcome] = correlateClinically(postIcChange,ilae_overall,'bin','num',0);
 fprintf(['The p-value for Wilcoxon rank sum comparing outcome between\n'...
     'patients with post-ictal change and those without is:\n'...
     'p = %1.2e\n'],p_post_outcome);
+
+% age with post-ictal change
+[p_post_age,info_post_age] = correlateClinically(postIcChange,age_all<=13,'bin','bin',0);
+fprintf(['The p-value for chi squared comparing age between\n'...
+    'patients with post-ictal change and those without is:\n'...
+    'p = %1.2e\n'],p_post_age);
     
 % correlate post-ictal change with temporal lobe onset
 [p_post_lobe,info_post_lobe] = correlateClinically(postIcChange,temp_lobe_all,'bin','bin',0);

@@ -10,9 +10,9 @@ ilae = zeros(size(outcomes));
 for i = 1:length(outcomes)
     if outcomes(i) == 1
         ilae(i) = 1;
-    elseif outcomes(i) == 1.25
+    elseif outcomes(i) == 1.25 || outcomes(i) == 1.5
         ilae(i) = 2;
-    elseif outcomes(i) == 2.25
+    elseif outcomes(i) == 2 || outcomes(i) == 2.25
         ilae(i) = 3;
     elseif outcomes(i) == 3
         ilae(i) = 4;

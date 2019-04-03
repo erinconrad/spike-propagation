@@ -113,7 +113,10 @@ for whichPt = whichPts
     C(bad_cluster,:) = [];
     
     %% Do plots
-    colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
+    %colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
+    %colors = [0 0 1;1 0 0;0.7 0.1840 0.6];
+    colors = [0 0 1;1 0 0;0.9290 0.540 0.1250];
+    
     c_idx = zeros(size(idx,1),3);
     
     
@@ -218,7 +221,11 @@ for whichPt = whichPts
             end
             if i ~=3
                 % Define the offset for each coordinate
-                toAdd = toAdd + 100;
+                if whichPt == 9
+                    toAdd = toAdd + 100;
+                elseif whichPt == 31
+                    toAdd = toAdd + 270;
+                end
                 if i == 2 && whichPt == 9
                     toAdd = toAdd + 300;
                 end
@@ -311,13 +318,13 @@ for whichPt = whichPts
         
         % Add annotations
         if whichPt == 31
-            annotation('textarrow',[0.2 0.275],[0.69 0.69],'String','Seizure',...
+            annotation('textarrow',[0.22 0.285],[0.69 0.69],'String','Seizure',...
                 'FontSize',25);
 
-            annotation('textarrow',[0.49-.075 0.495],[0.69 0.69],'String','Seizure',...
+            annotation('textarrow',[0.5-.075 0.5],[0.69 0.69],'String','Seizure',...
                 'FontSize',25);
 
-            annotation('textarrow',[0.735-.075 0.74],[0.69 0.69],'String','Seizure',...
+            annotation('textarrow',[0.74-.075 0.744],[0.69 0.69],'String','Seizure',...
                 'FontSize',25);
         elseif whichPt == 9
             annotation('textarrow',[0.08+0.075 0.08],[0.69 0.69],'String','Seizure',...
@@ -340,8 +347,9 @@ for whichPt = whichPts
             sprintf(['Proportion of spikes in given cluster, '...
         'moving average']),'fontsize',23,'edgecolor','none');
             %|
+        %}
         
-        %pause
+        pause
 
         print(gcf,[saveFolder,'clustTimePretty_',sprintf('%s',pt(whichPt).name)],'-depsc');
         eps2pdf([saveFolder,'clustTimePretty_',sprintf('%s',pt(whichPt).name),'.eps'])
@@ -418,6 +426,7 @@ for whichPt = whichPts
         % alternate method - try non-moving window
 
         % enough bins so that it's essentially 30 minute windows
+        %{
         nbins = round((max(plot_times)-min(plot_times))/(window));
         [Y,E] = discretize(plot_times,nbins);
         new_times = E(2:end);
@@ -447,6 +456,7 @@ for whichPt = whichPts
         title(sprintf(['Proportion of sequences in given cluster, '...
         '%d minute bins, %s'],window/60,pt(whichPt).name));
         set(gca,'FontSize',15);
+        %}
 
 
         %% Subplot 3: Plot locations of centroids

@@ -38,6 +38,7 @@ temp_lobe_all = [];
 allMeanDist = [];
 sa_resected = [];
 sf_resected = [];
+sa_sf_corr = [];
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
@@ -76,7 +77,8 @@ for whichPt = whichPts
     seq_matrix = pt(whichPt).seq_matrix;
     
     % outcomes
-    outcome = getOutcome(pt,whichPt);
+    %outcome = getOutcome(pt,whichPt);
+    outcome = str2num(pt(whichPt).clinical.outcome(end));
     outcome_all = [outcome_all;outcome];
     
     % SOZ
@@ -128,6 +130,7 @@ for whichPt = whichPts
     idx = cluster(whichPt).idx; % the cluster index for every spike
     C = cluster(whichPt).C; % the centroids of the clusters
     bad_cluster = cluster(whichPt).bad_cluster; % which clusters are bad
+    
     
     %% Compare number of spikes in cluster array and my data
     if sum(sum(~isnan(seq_matrix))) ~= length(all_times_all)
@@ -417,6 +420,9 @@ for whichPt = whichPts
     [~,sf_max_ident] = max(seq_freq);
     sf_resected = [sf_resected;ismember(sf_max_ident,resec_elecs)];
     
+    %% Calculate spearman rank correlation between SF and SA
+    sa_sf_corr = [sa_sf_corr;corr(seq_freq,sa,'Type','Spearman')];
+    
     %% Example plot to convince myself I am doing the resection analysis correctly
 %{
     figure
@@ -576,6 +582,11 @@ scatter(allSAs(allSpikers==1),allAllDist(allSpikers==1));
 [rho,pval] = corr(allSAs(allSpikers==1),allAllDist(allSpikers==1),'Type','Spearman')
 %}
 
+%% Get average SRC between SA and SF
+% I'll just do a plain average across patients since I am not doing
+% significance testing
+rho_sa_sf_avg = mean(sa_sf_corr);
+
 %% Compare clinical outcome for pts with resected max SA and those without
 [p_sa_resec,h_sa_resec,sa_stats_resec] = ...
     ranksum(outcome_all(sa_resected == 1),outcome_all(sa_resected == 0));
@@ -584,8 +595,8 @@ fprintf(['P value for different outcome between resected max area of influence'.
     'and not is:\n%1.1e, ranksum = %1.1f\n'],...
     p_sa_resec,sa_stats_resec.ranksum);
 
-ilae_sa_resec = getILAE(outcome_all(sa_resected == 1));
-ilae_sa_noresec = getILAE(outcome_all(sa_resected == 0));
+ilae_sa_resec = outcome_all(sa_resected == 1);%getILAE(outcome_all(sa_resected == 1));
+ilae_sa_noresec = outcome_all(sa_resected == 0);%getILAE(outcome_all(sa_resected == 0));
 
 fprintf('Median ilae for sa resec = %1.1f, for sa no resec %1.1f\n',...
     median(ilae_sa_resec), median(ilae_sa_noresec));
@@ -603,8 +614,8 @@ fprintf(['P value for different outcome between resected max spike frequency'...
     'and not is:\n%1.1e, ranksum = %1.1f\n'],...
     p_sf_resec,stats_sf_resec.ranksum);
 
-ilae_sf_resec = getILAE(outcome_all(sf_resected == 1));
-ilae_sf_noresec = getILAE(outcome_all(sf_resected == 0));
+ilae_sf_resec = outcome_all(sf_resected == 1);%getILAE(outcome_all(sf_resected == 1));
+ilae_sf_noresec = outcome_all(sf_resected == 0);%getILAE(outcome_all(sf_resected == 0));
 
 fprintf('Median ilae for sf resec = %1.1f, for sf no resec %1.1f\n',...
     median(ilae_sf_resec), median(ilae_sf_noresec));

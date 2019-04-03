@@ -9,6 +9,9 @@ delay = 0.2;
 
 outputFolder = [resultsFolder,'pretty_plots/'];
 file_out = [outputFolder,'aan.gif'];
+file_im_out = [outputFolder,'aan_im'];
+
+
 
 
 %% Get data
@@ -18,6 +21,18 @@ locs = pt(whichPt).electrodeData.locs(:,2:4);
 chs = 1:size(locs,1);
 szTimes = pt(whichPt).newSzTimes;
 soz = pt(whichPt).newSOZChs;
+
+
+%% Load brain file
+%{
+brain_file = '/Users/erinconrad/Desktop/residency stuff/R25/actual work/data/brains/Study029/lh.pial.native.obj';
+[V,F3,F4]=loadawobj(brain_file);
+
+A = makeNewElecData(pt,whichPt);
+%offset = [-0.4690 -50.8743 9.6682];
+offset = [-0.4690 -50.8743 150]; 
+locs = A*locs - offset;
+%}
 
 % Reorder seizure times if out of order
 oldSzTimes = szTimes;
@@ -116,26 +131,72 @@ end
 
 alpha_lin = linspace(0.1,1,max(max(ch_counts)));
 
+
+%% plot figure showing locations of spikes and clusters
+fig = figure;
+
+for k = 1:length(chs)
+    % get the appropriate cluster
+    for cl = 1:length(cl_locs)
+        if ismember(k,cl_locs{cl}) == 1
+            which_clust = cl;
+        end
+    end
+
+        if which_clust == 1
+            this_col = [0 0 1];
+        elseif which_clust == 2
+            this_col = [1 0 0];
+        elseif which_clust == 3
+            this_col = [0 1 0];
+        end
+
+        scatter3(locs(k,1),locs(k,2),locs(k,3),200,this_col,'filled');
+        hold on
+
+end
+scatter3(locs(:,1),locs(:,2),locs(:,3),200,'k','linewidth',2);
+view(75.6,-4.2)
+xticklabels([])
+yticklabels([])
+zticklabels([])
+grid off
+set(gca,'visible','off')
+pause
+print(fig,file_im_out,'-depsc');
+close(fig)
+
+
 %% Plot movie
 
 
 for tt = 1:nbins
     
     fig = figure;
+   % set(fig,'Position',[100 100 
+    set(gcf,'color','white');
+    
+    %{
+    % Plot the brain
+    patch('Vertices',V','Faces',F3','FaceColor',[0.9 0.75 0.75],'EdgeColor','None');
+    hold on
+    camlight(gca,-80,-10);
+    lighting(gca,'gouraud');
+    %}
+    
     % Get counts per channel in this time
     alpha_lin_time = linspace(1,0,max(ch_counts(tt,:)));
     
-    scatter3(locs(:,1),locs(:,2),locs(:,3),200,'k','linewidth',2);
-    view(75.6,-4.2)
+    scatter3(locs(:,1),locs(:,2),locs(:,3),350,'k','linewidth',2);
     hold on
+    view(75.6,-4.2)
+    
     for k = 1:length(chs)
         
         % get the appropriate cluster
         for cl = 1:length(cl_locs)
             if ismember(k,cl_locs{cl}) == 1
                 which_clust = cl;
-                
-                %this_col = cols(cl,:);
             end
         end
         
@@ -156,7 +217,7 @@ for tt = 1:nbins
         %alpha_temp = alpha_lin_time(max(1,n_counts));
 
         
-        scatter3(locs(k,1),locs(k,2),locs(k,3),200,this_col,'filled');
+        scatter3(locs(k,1),locs(k,2),locs(k,3),350,this_col,'filled');
         %alpha(p,alpha_temp);
         
         
@@ -165,7 +226,17 @@ for tt = 1:nbins
     yticklabels([])
     zticklabels([])
     grid off
+    set(gca,'visible','off')
     title(sprintf('Hour %d',new_times(tt)),'fontsize',20);
+    ax = gca;
+    outerpos = ax.OuterPosition;
+    ti = ax.TightInset; 
+    left = outerpos(1) + ti(1);
+    bottom = outerpos(2) + ti(2);
+    ax_width = outerpos(3) - ti(1) - ti(3);
+    ax_height = outerpos(4) - ti(2) - ti(4);
+    ax.Position = [left bottom ax_width ax_height];
+    
     
     F(tt) = getframe(fig);
     im = frame2im(F(tt));
