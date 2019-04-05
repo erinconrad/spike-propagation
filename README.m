@@ -86,6 +86,18 @@ info, a cluster struct with cluster info, and a power struct with
 alpha/delta power ratio and correlate spike location with alpha/delta
 ratio.
 
+- r_stats.r and r_lin.r (in analysis/r_stats): these r scripts take
+data returned from AD_AR and perform a generalized linear model with
+autoregressive errors for the analyses correlating alpha/delta ratio with
+the proportion of spikes in the predominant cluster as well as the spike
+rate.
+
+- r_stats.m and r_rate_stats.m (in analysis/r_stats): these Matlab scripts
+take the data returned from the R scripts and do aggregate level analyses
+to determine if there is overall a significant correlation between sleep
+and spike spatial distribution/spike rate
+
+
 %}
 
 %% 5: Area of influence analysis
