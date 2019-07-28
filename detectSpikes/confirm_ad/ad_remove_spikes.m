@@ -165,11 +165,14 @@ for whichPt = whichPts
             end
             
             % Sum the power
-            alpha_power_sum_ex = sum(alpha_power(~sp_exclusion_idx));
+            keep_idx = ones(length(alpha_power),1);
+            keep_idx(sp_exclusion_idx) = 0;
+            
+            alpha_power_sum_ex = sum(alpha_power(keep_idx));
             alpha_power_sum_in = sum(alpha_power);
             
             delta_power_sum_in = sum(delta_power);
-            delta_power_sum_ex = sum(delta_power(~sp_exclusion_idx));
+            delta_power_sum_ex = sum(delta_power(keep_idx));
             
             power(whichPt).alpha.rm_spike(dd,tt) = alpha_power_sum_ex;
             power(whichPt).alpha.keep_spike(dd,tt) = alpha_power_sum_in;
