@@ -9,7 +9,7 @@ saveStruct = 0;
 merge = 0; 
 
 % get optimal cluster numbers?
-clustOpt = 0; 
+clustOpt = 1; 
 
 % Plot spikes over time? Can be 0 if doing as part of regular pipeline
 doPlots = 0;
@@ -33,6 +33,8 @@ if isempty(whichPts) == 1
             whichPts = [whichPts,i];
         end
     end
+elseif whichPts == 100
+    whichPts = [1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31];
 end
 
 
@@ -115,6 +117,9 @@ if merge == 1 && exist([destFolder,'cluster.mat'],'file') ~= 0
     cluster = temp.cluster;
 end
 
+names = {};
+all_sse = [];
+
 for whichPt = whichPts
     
     % These are not actual patients
@@ -122,6 +127,7 @@ for whichPt = whichPts
         continue
     end
     
+    names = [names;pt(whichPt).name];
     
     cluster(whichPt).name = pt(whichPt).name;
     cluster(whichPt).allSpikes = allSpikes;
@@ -270,16 +276,21 @@ for whichPt = whichPts
             end  
             SSE(k) = min(SSE_temp);
         end
+        
+        if 0
         figure
         plot(1:10,SSE)
         pause
         close(gcf)
+        end
         
         % Silhouette method
         %E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
         
         % Gap method
         %E_G = evalclusters(all_locs,'kmeans','gap','KList',[1:10]);
+        all_sse = [all_sse;SSE'];
+        continue
  
     end
      
@@ -481,6 +492,37 @@ for whichPt = whichPts
     end
     
 end
+
+n_clusters=n_clusters(whichPts);
+
+
+figure
+set(gcf,'position',[821 0 1113 800]);
+[ha, pos] = tight_subplot(4, 5, [0.05 0.03], [0.08 0.04], [0.04 0.01])
+for i = 1:length(names)
+    axes(ha(i))
+    plot(1:10,all_sse(i,:),'k','linewidth',2)
+    hold on
+    plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
+        'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
+    text(n_clusters(i) - 1, all_sse(i,n_clusters(i)) - 5e4,...
+        sprintf('%d',n_clusters(i)),'fontsize',20);
+    title(sprintf('%s',names{i}))
+    yticklabels([])
+    if i<16
+        xticklabels([])
+    end
+    
+    if i == 18
+        xlabel('Cluster number')
+    end
+    
+    if i==11
+        ylabel('                              Sum squared error')
+    end
+    set(gca,'fontsize',20)
+end
+print([destFolder,'elbows'],'-depsc')
 
 
 end

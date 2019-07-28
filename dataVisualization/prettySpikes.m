@@ -57,8 +57,10 @@ for i = 1:length(times)
      plot(timePlot,plot_points{i}+toAdd,'color',c_idx(i,:),'linewidth',2);
      hold on
      textSp = sprintf('Spike %d',i);
+     %{
      text(timePlot(end)+0.02,plot_points{i}(end)+toAdd,textSp,...
          'fontsize',20,'color',c_idx(i,:));
+     %}
      toAdd = toAdd + min(plot_points{i}) - max(plot_points{i});
      timeAdd = timeAdd + 0.3;
      

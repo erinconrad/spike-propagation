@@ -276,6 +276,23 @@ for whichPt = whichPts
     
 end
 
+%% Make AAN plot
+figure
+set(gcf,'position',[440 245 948 553])
+bar(allMinCapture)
+hold on
+plot(get(gca,'xlim'),[median(allMinCapture) median(allMinCapture)],'k','linewidth',2)
+[start_x,start_y] = ds2nfu(6,50);
+[end_x,end_y] = ds2nfu(3,median(allMinCapture));
+annotation('textarrow',[start_x end_x],[start_y end_y],'String',...
+    sprintf('Median = %1.1f hours',median(allMinCapture)),...
+    'fontsize',20,'linewidth',2);
+xlabel('Which patient')
+ylabel({'Consecutive hours needed to capture','80% of dataset variability'})
+title('Hours needed to capture variability in spike spatial distribution');
+set(gca,'fontsize',20);
+print(gcf,[resultsFolder,'clustering/var/aan'],'-depsc');
+
 fprintf('The mean number of hours needed to capture 80%% of the variability for %d%% was %1.1f (range %d-%d)\n',...
     percVarTrue,mean(allMinCapture),min(allMinCapture),max(allMinCapture));
 

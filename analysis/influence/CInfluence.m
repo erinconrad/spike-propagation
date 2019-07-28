@@ -368,6 +368,34 @@ for whichPt = whichPts
     allSAs = [allSAs;sa];
     allMaxSAs = [allMaxSAs;(max(sa))];
     
+    %% Make AAN plot
+    if 1
+    figure
+    scatter3(locs(:,1),locs(:,2),locs(:,3),200,'k');
+    %parula_c = parula(2);
+    parula_c = [0 0.4470 0.7410;
+    0.8500 0.3250 0.0980];
+    hold on
+    seq_freq = sum(~isnan(seq_matrix),2);
+    [~,temp_max_sf] = max(seq_freq);
+    
+    h_soz = scatter3(locs(soz,1),locs(soz,2),locs(soz,3),200,parula_c(1,:),'filled');
+    h_sf = scatter3(locs(temp_max_sf,1),locs(temp_max_sf,2),...
+        locs(temp_max_sf,3),100,parula_c(2,:),'filled');
+    legend([h_soz,h_sf],{'Seizure onset zone','Max spike frequency'},'location',...
+        'northwest');
+    view(-14.7,30)
+    xlabel('X')
+    ylabel('Y')
+    zlabel('Z')
+    zticklabels([])
+    yticklabels([])
+    xticklabels([])
+    grid off
+    set(gca,'fontsize',25)
+    print(gcf,[destFolder,'brain_ex_AAN'],'-depsc');
+    end
+    
 
     % Distance from electrode with max SA to closest SOZ
     [~,I] = max(sa);
@@ -581,6 +609,41 @@ subplot(1,3,3)
 scatter(allSAs(allSpikers==1),allAllDist(allSpikers==1));
 [rho,pval] = corr(allSAs(allSpikers==1),allAllDist(allSpikers==1),'Type','Spearman')
 %}
+
+%% Make AAN plots
+figure
+np = size(allAllDist,1);
+%{
+scatter(ones(np,1) + ones(np,1).*randn(np,1)/15,allFreqDist,100,'filled');
+hold on
+scatter(2*ones(np,1) + ones(np,1).*randn(np,1)/15,allAllDist,100,'filled');
+%}
+h = boxplot([allFreqDist',allAllDist]);
+h2 = h(:);
+for ih = 1:length(h2)
+    set(h2(ih,:),'LineWidth',2);
+end
+hold on
+[pFreqAll,h5,stats5] = signrank(allFreqDist,allAllDist);
+if pFreqAll < 0.001
+    textFreqAll = 'p < 0.001***';
+elseif pFreqAll < 0.01
+    textFreqAll = sprintf('p = %1.3f** (Wilcoxon signed-rank)',pFreqAll);
+elseif pFreqAll < 0.05
+    textFreqAll = sprintf('p = %1.3f*',pFreqAll);
+else
+    textFreqAll = sprintf('p = %1.3f',pFreqAll);
+end
+max_point = max([allFreqDist,allAllDist']);
+plot([1 2],[max_point+2 max_point+2],'k','linewidth',2)
+text(1.5,max_point+7,textFreqAll,'HorizontalAlignment','Center','FontSize',20)
+xticks([1 2])
+xticklabels({'Max spike rate','All electrodes'})
+ylabel({'Distance from nearest','seizure onset zone (mm)'})
+set(gca,'fontsize',20)
+set(gca,'xlim',[0.7 2.3])
+set(gca,'ylim',[0 max_point+10])
+print([destFolder,'aan_soz'],'-depsc')
 
 %% Get average SRC between SA and SF
 % I'll just do a plain average across patients since I am not doing

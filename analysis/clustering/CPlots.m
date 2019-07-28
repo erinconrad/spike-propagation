@@ -148,40 +148,7 @@ for whichPt = whichPts
         
         possibleText = {'Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster 5','Cluster 6'};
         textLeg = possibleText(1:size(C,1));
-        
-        %% Centroid location
-        %{
-        figure
-        set(gcf,'Position',[50 100 1200 900]);
-        [ha, ~] = tight_subplot(3, 1, [.05 .01],[.06 .05],[.03 .01]);
-        axes(ha(1));
-        [gcapos] = get(gca,'Position');
-        set(gca,'Position',[gcapos(1),gcapos(2),gcapos(3)/2,gcapos(4)]);
-        
-        scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k');
-        hold on
-        plLeg = zeros(size(C,1),1);
-        
-        for k = 1:size(C,1)
-            plLeg(k) = scatter3(C(k,1),C(k,2),C(k,3),100,colors((k),:),'filled');
-        end
-        title(sprintf('Spike location centroids for %s',...
-            pt(whichPt).name))
-        set(gca,'FontSize',15);
-        set(gca,'xticklabel',[])
-        set(gca,'yticklabel',[])
-        set(gca,'zticklabel',[])
-        annotation('textbox',[0 0.77 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
-        legend(plLeg,textLeg,'Location','northeastoutside','fontsize',15);
-        %pause
-        %print(gcf,[saveFolder,'clustLocPretty_',sprintf('%s',pt(whichPt).name)],'-depsc');
-        %eps2pdf([saveFolder,'clustLocPretty_',sprintf('%s',pt(whichPt).name),'.eps'])
-        %close(gcf)
-        %}
-        
-        
-        
-        
+
         
         %% Figure 
         
@@ -229,12 +196,14 @@ for whichPt = whichPts
                 if i == 2 && whichPt == 9
                     toAdd = toAdd + 300;
                 end
-              % toAdd = toAdd + 10+(max(sparse_plot(:,i)) - ...
-              %     min(sparse_plot(:,i+1)));
+                if whichPt ~= 9 && whichPt ~= 31
+                    toAdd = toAdd + 10+(max(sparse_plot(:,i)) - ...
+                   min(sparse_plot(:,i+1)));
+                end
             end
         end
         ylim([minPoint maxPoint + 30])
-        yticks(tickloc)
+     %   yticks(tickloc)
         yticklabels({'X','Y','Z'});
         title(sprintf('X, Y, Z coordinates of all spikes for %s',...
             pt(whichPt).name));

@@ -381,7 +381,7 @@ for whichPt = whichPts
         
         
         axes(ha(3));
-        plot((power(whichPt).times-min(plot_times))/3600,mean(all_ad,1),...
+        plot((power(whichPt).times-min(plot_times))/3600,nanmean(all_ad,1),...
             'k','LineWidth',2);
         xlim([(plot_times(1)-min(plot_times))/3600-1 (plot_times(end)-min(plot_times))/3600+1])
         hold on

@@ -39,6 +39,10 @@ fprintf(['There are %d with significant correlation.\nThe combined p-value'...
 %% T test to see if the z-values are significantly different from zero
 [h,p,ci,stats] = ttest(glarma.z)
 
+
+%% Are the z-values for just the significant change ones consistent?
+[h,p,ci,stats] = ttest(glarma.z(glarma.p<0.05/20))
+
 %% Make pretty table
 
 new_table = table((glarma.all_names),glarma.b,(glarma.z),glarma.p);

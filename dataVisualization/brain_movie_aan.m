@@ -8,6 +8,7 @@ delay = 0.2;
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 
 outputFolder = [resultsFolder,'pretty_plots/'];
+other_file_out = [outputFolder,'elecs_aan.gif'];
 file_out = [outputFolder,'aan.gif'];
 file_im_out = [outputFolder,'aan_im'];
 
@@ -25,14 +26,24 @@ soz = pt(whichPt).newSOZChs;
 
 %% Load brain file
 %{
-brain_file = '/Users/erinconrad/Desktop/residency stuff/R25/actual work/data/brains/Study029/lh.pial.native.obj';
+brain_file = '/Users/erinconrad/Desktop/residency stuff/R25/actual work/data/brains/Study029/rh.pial.native.obj';
 [V,F3,F4]=loadawobj(brain_file);
-
 A = makeNewElecData(pt,whichPt);
+
+patch('Vertices',V','Faces',F3','FaceColor',[0.9 0.75 0.75],'EdgeColor','None');
+hold on
+camlight(gca,-80,-10);
+lighting(gca,'gouraud');
+
+
 %offset = [-0.4690 -50.8743 9.6682];
-offset = [-0.4690 -50.8743 150]; 
-locs = A*locs - offset;
+offset = [-0.4690 -50.8743 9.6682]; 
+new_locs = A*locs - offset;
+
+%scatter3(new_locs(:,1),new_locs(:,2),new_locs(:,3));
 %}
+
+
 
 % Reorder seizure times if out of order
 oldSzTimes = szTimes;
@@ -160,12 +171,67 @@ view(75.6,-4.2)
 xticklabels([])
 yticklabels([])
 zticklabels([])
+xlabel('X')
+ylabel('Y')
+zlabel('Z')
+set(gca,'fontsize',20)
 grid off
-set(gca,'visible','off')
+%set(gca,'visible','off')
 pause
 print(fig,file_im_out,'-depsc');
 close(fig)
 
+%% Movie showing locations
+
+for tt = 1:120
+    fig = figure;
+    set(gcf,'color','white');
+    for k = 1:length(chs)
+        % get the appropriate cluster
+        for cl = 1:length(cl_locs)
+            if ismember(k,cl_locs{cl}) == 1
+                which_clust = cl;
+            end
+        end
+
+            if which_clust == 1
+                this_col = [0 0 1];
+            elseif which_clust == 2
+                this_col = [1 0 0];
+            elseif which_clust == 3
+                this_col = [0 1 0];
+            end
+
+            scatter3(locs(k,1),locs(k,2),locs(k,3),200,this_col,'filled');
+            hold on
+
+    end
+    scatter3(locs(:,1),locs(:,2),locs(:,3),200,'k','linewidth',2);
+    view(135-3*tt,-4.2)
+    xticklabels([])
+    yticklabels([])
+    zticklabels([])
+    xlabel('X')
+    ylabel('Y')
+    zlabel('Z')
+    set(gca,'fontsize',20)
+    grid off
+    
+    F(tt) = getframe(fig);
+    im = frame2im(F(tt));
+    [imind,cm] = rgb2ind(im,256);
+    
+    if tt == 1
+        imwrite(imind,cm,other_file_out,'gif', 'Loopcount',inf,'DelayTime',0.1);
+    else
+        imwrite(imind,cm,other_file_out,'gif','WriteMode','append','DelayTime',0.1);
+    end
+
+    close(fig)
+    
+end
+
+F = 0;
 
 %% Plot movie
 
@@ -189,7 +255,7 @@ for tt = 1:nbins
     
     scatter3(locs(:,1),locs(:,2),locs(:,3),350,'k','linewidth',2);
     hold on
-    view(75.6,-4.2)
+    view(75.6 - tt*3,-4.2)
     
     for k = 1:length(chs)
         
@@ -225,9 +291,13 @@ for tt = 1:nbins
     xticklabels([])
     yticklabels([])
     zticklabels([])
+    xlabel('X')
+    ylabel('Y')
+    zlabel('Z')
     grid off
-    set(gca,'visible','off')
-    title(sprintf('Hour %d',new_times(tt)),'fontsize',20);
+    set(gca,'fontsize',20)
+    %set(gca,'visible','off')
+    %title(sprintf('Hour %d',new_times(tt)),'fontsize',20);
     ax = gca;
     outerpos = ax.OuterPosition;
     ti = ax.TightInset; 
