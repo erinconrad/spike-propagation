@@ -145,9 +145,16 @@ for whichPt = whichPts
             % Get spike exclusion indices
             sp_exclusion_idx = zeros(size(spikes_in_ch,1),sp_surround(2)*fs*2+1);
             for i = 1:size(spikes_in_ch,1)
-                sp_exclusion_idx(i,:) = max(round(spikes_in_ch(i,2) + ...
-                    sp_surround(1)*fs),0): min(round(spikes_in_ch(i,2) + ...
-                    sp_surround(2)*fs),length(alpha_power));
+                sp_exclusion_idx(i,:) = (round(spikes_in_ch(i,2) + ...
+                    sp_surround(1)*fs)): (round(spikes_in_ch(i,2) + ...
+                    sp_surround(2)*fs));
+                
+                % correction for spikes that are near the start or end of
+                % the run. If I would include negative indices or indices
+                % off the edge, instead just repeat the first allowable
+                % index.
+                sp_exclusion_idx(i,sp_exclusion_idx(i,:) < 1) = 1;
+                sp_exclusion_idx(i,sp_exclusion_idx(i,:) > length(alpha)) = length(alpha);
             end
 
             
