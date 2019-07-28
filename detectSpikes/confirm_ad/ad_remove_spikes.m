@@ -167,6 +167,7 @@ for whichPt = whichPts
             % Sum the power
             keep_idx = ones(length(alpha_power),1);
             keep_idx(sp_exclusion_idx) = 0;
+            keep_idx = logical(keep_idx);
             
             alpha_power_sum_ex = sum(alpha_power(keep_idx));
             alpha_power_sum_in = sum(alpha_power);
