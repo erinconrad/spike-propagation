@@ -16,7 +16,7 @@ preIcTime = 4;
 % Plot the time periods to see what I am defining to be pre-, post-, and
 % interictal. Also do some quality checks for the coverage of the
 % permutation test
-plotQI = 1;
+plotQI = 0;
 
 % Plot the result of the permutation test
 doPermPlot = 0;
@@ -496,7 +496,6 @@ for whichPt = whichPts
         % Loop through each random permutation
         for ib = 1:nboot
             
-            ib
             
             if mod(ib,100) == 0
                 fprintf('Doing %d of %d\n',ib,nboot);
