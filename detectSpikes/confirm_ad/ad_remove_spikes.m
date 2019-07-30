@@ -1,9 +1,10 @@
 function ad_remove_spikes(whichPts)
 
 %% Parameters
+do_save = 1;
 alpha_freq = [8 13];
 delta_freq = [1 4];
-sp_surround = [-0.5 0.5];
+sp_surround = [-0.5 0.5]; % seconds surrounding spike to remove
 
 %% Load file paths, etc.
 [~,~,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -14,6 +15,7 @@ structFolder = [resultsFolder,'ptStructs/'];
 seq_file = 'long_seq.mat';
 power_file = 'power_check.mat';
 
+% load patient file
 load([structFolder,seq_file])
 
 if exist([structFolder,power_file],'file') ~= 0
@@ -59,6 +61,9 @@ for whichPt = whichPts
     all_spike_times = seq_matrix(~isnan(seq_matrix));
     all_spike_chs = repmat([1:size(seq_matrix,1)],size(seq_matrix,2),1)';
     all_spike_chs = all_spike_chs(~isnan(seq_matrix));
+    
+    % This is an nx2 array where n is number of spikes, and the first
+    % column is the channel number and the second column is the spike time
     all_spikes = [all_spike_chs,all_spike_times];
     
     
@@ -79,7 +84,7 @@ for whichPt = whichPts
         % Get the desired indices
         desiredTimes = pt(whichPt).runTimes(tt,:);
         
-        % get times to clip
+        % get times to clip (remove ictal times)
         clipTime = [-1*60 0];
         szTimesPlusClip = szTimes + repmat(clipTime,size(szTimes,1),1);
         szTimesT = szTimesPlusClip';
@@ -145,6 +150,8 @@ for whichPt = whichPts
             % Get spike exclusion indices
             sp_exclusion_idx = zeros(size(spikes_in_ch,1),sp_surround(2)*fs*2+1);
             for i = 1:size(spikes_in_ch,1)
+                
+                % Add times surrounding spikes
                 sp_exclusion_idx(i,:) = (round(spikes_in_ch(i,2) + ...
                     sp_surround(1)*fs)): (round(spikes_in_ch(i,2) + ...
                     sp_surround(2)*fs));
@@ -161,20 +168,23 @@ for whichPt = whichPts
             % Look at the signal and plot the spike exclusion times
             if 0
                 figure
-                Y = delta;
+                Y = X;
                 plot(Y,'k')
                 hold on
                 for i = 1:size(sp_exclusion_idx,1)
                     plot(sp_exclusion_idx(i,:),Y(sp_exclusion_idx(i,:)),'r');
                 end
+                dd,size(spikes_in_ch)
                 pause
                 close(gcf)
             end
             
-            % Sum the power
+            % Decide which indices to ignore
             keep_idx = ones(length(alpha_power),1);
             keep_idx(sp_exclusion_idx) = 0;
             keep_idx = logical(keep_idx);
+            
+            % Sum the power
             
             alpha_power_sum_ex = sum(alpha_power(keep_idx));
             alpha_power_sum_in = sum(alpha_power);
@@ -191,7 +201,9 @@ for whichPt = whichPts
         end
         
         power(whichPt).finished(tt) = 1;
-        save([structFolder,power_file],'power')
+        if do_save == 1
+         save([structFolder,power_file],'power')
+        end
         
     end
     

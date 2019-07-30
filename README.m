@@ -22,7 +22,7 @@ following steps:
 %{
 To do this, you will need to run the following scripts in the following
 order (all in forPorting). It will output a pt structure with information
-on the spike sequences
+on the spike sequences.
 
 - longRunTimes: gets the files and times over which you want to run
 the pipeline

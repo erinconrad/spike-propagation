@@ -11,6 +11,7 @@ I get statistics on spike cluster data
 % defining to be post-ictal) (4 for most analyses, but 1 as a sensitivity
 % analysis)
 intericTime = 4;
+preIcTime = 1;
 
 % Plot the time periods to see what I am defining to be pre-, post-, and
 % interictal. Also do some quality checks for the coverage of the
@@ -18,10 +19,10 @@ intericTime = 4;
 plotQI = 0;
 
 % Plot the result of the permutation test
-doPermPlot = 1;
+doPermPlot = 0;
 
 % Do main plots
-doPlots = 1;
+doPlots = 0;
 
 % Do the main analysis...
 doLongStuff = 1;
@@ -239,7 +240,7 @@ for whichPt = whichPts
         %}
         
         % Define important ranges
-        preIcRange = [-60*60,-1*60]; % Between 1 hour to 1 minute before a seizure
+        preIcRange = [-60*60*preIcTime,-1*60*preIcTime]; % Between 1 hour to 1 minute before a seizure
         postIcTime = 60*60*intericTime; % 60 minutes after a seizure versus 4 hours
         % Interictal range will be anything else
 
@@ -1136,9 +1137,17 @@ for whichPt = whichPts
 end
 
 if intericTime == 4
-    save([destFolder,'stats4.mat'],'stats');
+    if preIcTime == 4
+        save([destFolder,'stats4_preic4.mat'],'stats');
+    elseif preIcTime == 1
+        save([destFolder,'stats4_preic1.mat'],'stats');
+    end
 elseif intericTime == 1
-    save([destFolder,'stats1.mat'],'stats');
+    if preIcTime == 4
+        save([destFolder,'stats1_preic4.mat'],'stats');
+    elseif preIcTime == 1
+        save([destFolder,'stats1_preic1.mat'],'stats');
+    end
 end
 
 %% Fisher's method to combine p values for change over time
