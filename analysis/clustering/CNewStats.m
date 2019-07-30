@@ -11,7 +11,7 @@ I get statistics on spike cluster data
 % defining to be post-ictal) (4 for most analyses, but 1 as a sensitivity
 % analysis)
 intericTime = 4;
-preIcTime = 1;
+preIcTime = 4;
 
 % Plot the time periods to see what I am defining to be pre-, post-, and
 % interictal. Also do some quality checks for the coverage of the
