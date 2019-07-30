@@ -10,13 +10,13 @@ I get statistics on spike cluster data
 % The post-ictal time period (how many hours after the seizure I am
 % defining to be post-ictal) (4 for most analyses, but 1 as a sensitivity
 % analysis)
-intericTime = 1;
+intericTime = 4;
 preIcTime = 4;
 
 % Plot the time periods to see what I am defining to be pre-, post-, and
 % interictal. Also do some quality checks for the coverage of the
 % permutation test
-plotQI = 0;
+plotQI = 1;
 
 % Plot the result of the permutation test
 doPermPlot = 0;
@@ -496,6 +496,8 @@ for whichPt = whichPts
         % Loop through each random permutation
         for ib = 1:nboot
             
+            ib
+            
             if mod(ib,100) == 0
                 fprintf('Doing %d of %d\n',ib,nboot);
             end
@@ -505,6 +507,9 @@ for whichPt = whichPts
             
             % Get the time ranges
             new_pre_times = [];
+            
+            % sort pre-ic numbers in descending order
+            preIcSpikeNums = sort(preIcSpikeNums,'descend');
             
             % Loop through pre-ictal periods
             for j = 1:size(preIcSpikeNums,1)
@@ -649,7 +654,7 @@ for whichPt = whichPts
                 chi2_fake
                 
                 pause
-                print([fancyPlot,'new',ib],'-depsc');
+              %  print([fancyPlot,'new',ib],'-depsc');
                 close(gcf)
                 
                 %{
