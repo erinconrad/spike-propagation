@@ -286,7 +286,9 @@ for whichPt = whichPts
         
         % Silhouette method
         for i = 1:10
+            tic
             E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10])
+            toc
         end
         
         % Gap method
