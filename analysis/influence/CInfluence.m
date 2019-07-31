@@ -10,10 +10,11 @@ doPoster = 1;
 doPlots = 0; %0 = no, 1=normal, 2=pretty
 plotConn = 0;
 removeTies = 1;
-doBootstrap = 0;
+doBootstrap = 1;
 alpha1 = 95;
 map_text = 'jet';
 fh_map = str2func(map_text);
+new_bootstrap = 0;
 
 [~,~,scriptFolder,resultsFolder,~] = fileLocations;
 p1 = genpath(scriptFolder);
@@ -251,6 +252,8 @@ for whichPt = whichPts
         colorbar
     end
     
+    spike_count_per_ch = sum(chCh,1);
+    
     if whichPt == 8, exampleChCh = chCh; end
     
     %% Do a test of symmetry
@@ -265,6 +268,7 @@ for whichPt = whichPts
         % Here, for each permutation, I am constructing a chCh matrix where
         % I am distributing the true total number of connections randomly
         % across all elements of the nch by nch matrix.
+        
         ncons = sum(sum(chCh));
         nboot = 1e3;
         max_size = nchs*nchs;
@@ -272,14 +276,36 @@ for whichPt = whichPts
         chCh_diff_all = zeros(nboot,nchs,nchs);
         chCh_diff = zeros(nchs,nchs);
         for ib = 1:nboot
+            ib
             if mod(ib,100) == 0
                 fprintf('Doing %d of %d\n', ib,nboot);
             end
             chCh_f = zeros(nchs,nchs);
-            for j = 1:ncons
-               chCh_f(randi(max_size)) = chCh_f(randi(max_size)) + 1;
+            if new_bootstrap == 0
+                for j = 1:ncons
+                    chCh_f(randi(max_size)) = chCh_f(randi(max_size)) + 1;
+
+                end
+                chCh_all(ib,:,:) = chCh_f;
+            elseif new_bootstrap == 1
+                % weight the probability of getting a connection by the
+                % spike rate
+               
+                    
+                rows = randsample(nchs,ncons,true,spike_count_per_ch);
+                cols = zeros(ncons,1);
+                for j = 1:ncons
+                    not_allowed = rows(j); % spike can't travel from one channel to same channel
+                    new_weights = spike_count_per_ch; new_weights(not_allowed) = 0;
+                    cols(j) = randsample(nchs,1,true,new_weights);  
+                end
+                
+                for j = 1:ncons
+                   chCh_all(ib,rows(j),cols(j)) = chCh_all(ib,rows(j),cols(j)) + 1;
+                end
+                
+               
             end
-            chCh_all(ib,:,:) = chCh_f;
             
             % Also calculate the difference between i,j and j,i
             for i = 1:size(chCh_f,1)
@@ -291,9 +317,9 @@ for whichPt = whichPts
             
         end
         
-        if 1 == 0
+        if 1 == 1
             figure
-            imagesc(squeeze(mean(chCh_diff_all,1)))
+            imagesc(squeeze(mean(chCh_all,1)))
             colorbar
         end
         
