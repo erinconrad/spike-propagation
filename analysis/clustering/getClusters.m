@@ -285,13 +285,15 @@ for whichPt = whichPts
         end
         
         % Silhouette method
-        E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
+        for i = 1:10
+            E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10])
+        end
         
         % Gap method
         %E_G = evalclusters(all_locs,'kmeans','gap','KList',[1:10]);
         all_sse = [all_sse;SSE'];
         
-        E_S
+        
         error('look\n');
         
         continue
