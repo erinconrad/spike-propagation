@@ -296,7 +296,7 @@ for tt = 1:nbins
     
     print([saveFolder,sprintf('clust_locs_hour_%d-%d',...
         round((bin_times(tt,1)-bin_times(1,1)+additive_time)/3600),...
-        round((bin_times(tt,2)-bin_times(1,1)+additive_time)/3600))],'-depsc');
+        round((bin_times(tt,2)-bin_times(1,1)+additive_time)/3600))],'-dpng');
     %pause
     close(gcf)
     
