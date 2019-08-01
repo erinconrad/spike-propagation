@@ -290,7 +290,7 @@ for whichPt = whichPts
             tic
             E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
             t = toc;
-            all_ES = [all_ES;E_S,t];
+            all_ES = [all_ES;E_S.OptimalK,t];
         end
         
         % Gap method
@@ -299,7 +299,7 @@ for whichPt = whichPts
             tic
             E_G = evalclusters(all_locs,'kmeans','gap','KList',[1:10]);
             t = toc;
-            all_EG = [all_EG;E_G,t];
+            all_EG = [all_EG;E_G.OptimalK,t];
         end
             
         all_sse = [all_sse;SSE'];
