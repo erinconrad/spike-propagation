@@ -286,7 +286,7 @@ for whichPt = whichPts
         
         % Silhouette method
         all_ES = [];
-        for i = 1:10
+        for i = 1:2
             tic
             E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
             t = toc;
@@ -295,7 +295,7 @@ for whichPt = whichPts
         
         % Gap method
         all_EG = [];
-        for i = 1:10
+        for i = 1:2
             tic
             E_G = evalclusters(all_locs,'kmeans','gap','KList',[1:10]);
             t = toc;
