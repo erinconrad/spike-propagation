@@ -154,9 +154,13 @@ for whichPt = whichPts
             for i = 1:size(spikes_in_ch,1)
 
                 % Add times surrounding spikes
-                sp_exclusion_idx(i,:) = (round(spikes_in_ch(i,2) + ...
+                times_I_want = (round(spikes_in_ch(i,2) + ...
                     sp_surround(1)*fs)): (round(spikes_in_ch(i,2) + ...
                     sp_surround(2)*fs));
+                if size(times_I_want,2) == size(sp_exclusion_idx,2) - 1
+                    times_I_want = [times_I_want,times_I_want(end) + 1];
+                end
+                sp_exclusion_idx(i,:) = times_I_want;
 
                 % correction for spikes that are near the start or end of
                 % the run. If I would include negative indices or indices
