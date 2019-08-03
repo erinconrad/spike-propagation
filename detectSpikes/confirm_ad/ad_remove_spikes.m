@@ -150,7 +150,7 @@ for whichPt = whichPts
             % Get spike exclusion indices
            
             
-            sp_exclusion_idx = zeros(size(spikes_in_ch,1),round((sp_surround(2)+sp_surround(1))*fs+1));
+            sp_exclusion_idx = zeros(size(spikes_in_ch,1),round((sp_surround(2)-sp_surround(1))*fs+1));
             for i = 1:size(spikes_in_ch,1)
 
                 % Add times surrounding spikes
@@ -189,7 +189,9 @@ for whichPt = whichPts
             % Decide which indices to ignore
             keep_idx = ones(length(alpha_power),1);
             keep_idx(sp_exclusion_idx) = 0;
+            amount_kept = sum(keep_idx)/length(keep_idx);
             keep_idx = logical(keep_idx);
+            
             
             % Sum the power
             
@@ -201,6 +203,7 @@ for whichPt = whichPts
             
             power(whichPt).alpha.rm_spike(dd,tt) = alpha_power_sum_ex;
             power(whichPt).alpha.keep_spike(dd,tt) = alpha_power_sum_in;
+            power(whichPt).amount_kept(dd,tt) = amount_kept;
             
             power(whichPt).delta.rm_spike(dd,tt) = delta_power_sum_ex;
             power(whichPt).delta.keep_spike(dd,tt) = delta_power_sum_in;
