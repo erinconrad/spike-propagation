@@ -148,26 +148,24 @@ for whichPt = whichPts
             delta_power = delta.^2;
             
             % Get spike exclusion indices
-            if isempty(spikes_in_ch) == 1
-                sp_exclusion_idx = [];
-            else
+           
             
-                sp_exclusion_idx = zeros(size(spikes_in_ch,1),sp_surround(2)*fs*2+1);
-                for i = 1:size(spikes_in_ch,1)
+            sp_exclusion_idx = zeros(size(spikes_in_ch,1),round(sp_surround(2)*fs*2+1));
+            for i = 1:size(spikes_in_ch,1)
 
-                    % Add times surrounding spikes
-                    sp_exclusion_idx(i,:) = (round(spikes_in_ch(i,2) + ...
-                        sp_surround(1)*fs)): (round(spikes_in_ch(i,2) + ...
-                        sp_surround(2)*fs));
+                % Add times surrounding spikes
+                sp_exclusion_idx(i,:) = (round(spikes_in_ch(i,2) + ...
+                    sp_surround(1)*fs)): (round(spikes_in_ch(i,2) + ...
+                    sp_surround(2)*fs));
 
-                    % correction for spikes that are near the start or end of
-                    % the run. If I would include negative indices or indices
-                    % off the edge, instead just repeat the first allowable
-                    % index.
-                    sp_exclusion_idx(i,sp_exclusion_idx(i,:) < 1) = 1;
-                    sp_exclusion_idx(i,sp_exclusion_idx(i,:) > length(alpha)) = length(alpha);
-                end
+                % correction for spikes that are near the start or end of
+                % the run. If I would include negative indices or indices
+                % off the edge, instead just repeat the first allowable
+                % index.
+                sp_exclusion_idx(i,sp_exclusion_idx(i,:) < 1) = 1;
+                sp_exclusion_idx(i,sp_exclusion_idx(i,:) > length(alpha)) = length(alpha);
             end
+           
 
             
             % Look at the signal and plot the spike exclusion times
