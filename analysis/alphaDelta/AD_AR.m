@@ -331,6 +331,18 @@ all_t_soz_changePos = all_t_soz(changePos);
 all_p_soz_changePos = all_p_soz(changePos);
 table(names(changePos),all_t_soz_changePos,all_p_soz_changePos)
 
+%% See if t significantly different from zero when only examining patients with significant relationship between a/d ratio and spike spatial distribution
+names_sig_rel = [{'HUP074'  }
+    {'HUP078'  }
+    {'HUP106'  }
+    {'HUP107'  }
+    {'Study016'}
+    {'Study019'}
+    {'Study022'}
+    {'Study029'}];
+sig_rel = ismember(names,names_sig_rel);
+[~,p,ci,stats] = ttest(all_t_soz(sig_rel))
+
 %% Correlation between change in location and outcome
 %
 changeLoc = allP < 0.05/length(allP);

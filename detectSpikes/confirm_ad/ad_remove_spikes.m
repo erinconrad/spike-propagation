@@ -1,7 +1,7 @@
 function ad_remove_spikes(whichPts)
 
 %% Parameters
-do_save = 0;
+do_save = 1;
 alpha_freq = [8 13];
 delta_freq = [1 4];
 sp_surround = [-0.5 1]; % seconds surrounding spike to remove
