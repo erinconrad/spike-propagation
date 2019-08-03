@@ -1,10 +1,10 @@
 function ad_remove_spikes(whichPts)
 
 %% Parameters
-do_save = 1;
+do_save = 0;
 alpha_freq = [8 13];
 delta_freq = [1 4];
-sp_surround = [-0.5 0.5]; % seconds surrounding spike to remove
+sp_surround = [-0.5 1]; % seconds surrounding spike to remove
 
 %% Load file paths, etc.
 [~,~,scriptFolder,resultsFolder,pwfile] = fileLocations;
@@ -150,7 +150,7 @@ for whichPt = whichPts
             % Get spike exclusion indices
            
             
-            sp_exclusion_idx = zeros(size(spikes_in_ch,1),round(sp_surround(2)*fs*2+1));
+            sp_exclusion_idx = zeros(size(spikes_in_ch,1),round((sp_surround(2)+sp_surround(1))*fs+1));
             for i = 1:size(spikes_in_ch,1)
 
                 % Add times surrounding spikes
