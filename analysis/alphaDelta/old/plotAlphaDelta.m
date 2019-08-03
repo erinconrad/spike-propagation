@@ -363,6 +363,17 @@ for whichPt = whichPts
                 'color',colors((i),:),'LineWidth',2);
         hold on
         end
+        
+        for j = 1:size(szTimes,1) 
+            yl = ylim;
+          szp = plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,...
+                yl,'k--','LineWidth',3);
+        end
+        
+        possibleText = {'Cluster 1','Cluster 2','Cluster 3','Cluster 4','Cluster 5','Cluster 6'};
+        textLeg = possibleText(1:size(C,1));
+        
+        
 
         %{
         for j = 1:size(szTimes,1) 
@@ -371,8 +382,10 @@ for whichPt = whichPts
         end
         %}
         xlim([sparse_time(1)/3600-1 sparse_time(end)/3600+1])
+        %{
         title(sprintf(['Proportion of spikes in given cluster, '...
         'moving average']));
+        %}
         set(gca,'xtick',[]);
         %xlabel('Time (hours)');
         
@@ -386,7 +399,7 @@ for whichPt = whichPts
         xlim([(plot_times(1)-min(plot_times))/3600-1 (plot_times(end)-min(plot_times))/3600+1])
         hold on
         
-        title(sprintf('Alpha-delta power ratio averaged across all electrodes'))
+       % title(sprintf('Alpha-delta power ratio averaged across all electrodes'))
         xlabel('Time (hours)');
         
         %% Re-label xticks
@@ -453,28 +466,33 @@ for whichPt = whichPts
         % Plot the seizure times
         for j = 1:size(szTimes,1) 
             yl = ylim;
-            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k','LineWidth',2);
+            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k--','LineWidth',3);
         end
         
         axes(ha(1));
         % Plot the seizure times
         for j = 1:size(szTimes,1) 
             yl = ylim;
-            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k','LineWidth',2);
+            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k--','LineWidth',3);
         end
         
         axes(ha(2));
         % Plot the seizure times
         for j = 1:size(szTimes,1) 
             yl = ylim;
-            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k','LineWidth',2);
+            plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,yl,'k--','LineWidth',3);
         end
         
+        if whichPt == 17
+            legend([pl',szp],[textLeg,'Seizures'],'Position',[0.4 0.46 0.1 0.1])
+        end
         
-        annotation('textarrow',[0.24 0.19],[0.92 0.92],'String','Seizures',...
+        %{
+        annotation('textarrow',[0.24 0.19],[0.52 0.52],'String','Seizures',...
             'FontSize',20);
-        annotation('textarrow',[0.84 0.89],[0.92 0.92],'String','Seizure',...
+        annotation('textarrow',[0.84 0.89],[0.52 0.52],'String','Seizure',...
             'FontSize',20);
+        %}
         
         
         %pause

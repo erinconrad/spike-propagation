@@ -159,6 +159,45 @@ for whichPt = whichPts
         %plotHourBins(szTimes,clusters,prop_c,colors,sparse_time,plot_times,sum_times);
         
         figure
+        set(gcf,'position',[1 409 1440 320]);
+        for i = 1:length(clusters)
+            pl(i)= plot((sum_times-min(plot_times))/3600,prop_c(i,:),...
+                'color',colors((i),:),'LineWidth',2);
+        hold on
+        end
+
+        
+        for j = 1:size(szTimes,1) 
+            yl = ylim;
+          szp = plot([szTimes(j,1)-min(plot_times) szTimes(j,1)-min(plot_times)]/3600,...
+                yl,'k--','LineWidth',3);
+        end
+        
+        xlim([sparse_time(1)/3600-1 sparse_time(end)/3600+1])
+        %{
+        title(sprintf(['Proportion of spikes in given cluster, '...
+        'moving average']));
+        %}
+        xlabel('Time (hours)');
+        %{
+        title(sprintf(['Proportion of spikes in given cluster '...
+        '(moving average)']))
+        %}
+        set(gca,'FontSize',25);
+        
+        if whichPt == 9
+            legend([pl,szp],[textLeg,'Seizures'],'Position',[0.65 0.35 0.15 0.1])
+            
+        elseif whichPt == 31
+            legend([pl,szp],[textLeg,'Seizures'],'Position',[0.83 0.36 0.1 0.1])
+        elseif whichPt == 17
+            legend([pl,szp],[textLeg,'Seizures'],'Position',[0.4 0.5 0.1 0.1])
+        end
+        
+        print(gcf,[saveFolder,'new_pretty_',sprintf('%s',pt(whichPt).name)],'-depsc');
+        
+        
+        figure
         set(gcf,'Position',[71 241 1237 538])
         [ha, ~] = tight_subplot(2, 1, [.09 .03],[.14 .07],[.05 .01]);
         
