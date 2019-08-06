@@ -167,7 +167,7 @@ for whichPt = whichPts
         
         chs = find(isnan(currSeq) == 0);
         ch_locs = locs(chs,:);
-        seq_areas(s) = areaConnecting(ch_locs,0);
+        seq_areas(s) = areaConnecting(ch_locs,0,locs);
     end
     
     

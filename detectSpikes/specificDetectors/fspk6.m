@@ -22,12 +22,12 @@ chan   = 1:n_chans;
 
 spkdur = 220;                % spike duration must be less than this
 spkdur = spkdur*rate/1000;   % convert to points;
-fr     = 40;  % high pass freq
-lfr    = 7;   % low pass freq
+fr     = 40; % low pass filter for spikey component
+lfr    = 7;  % low pass filter for slow wave component
 aftdur = 70;
 aftdur   = aftdur*rate/1000;   % convert to points;
 spikedur = 5; % minimum spike duration in points
-fn_fr  = 10;
+fn_fr  = 10; % high pass filter for spikey component
 
 num_segs = ceil(size(eeg,1)/window);
 
@@ -113,8 +113,8 @@ for dd = 1:n_chans
         spikes   = [];
         
         % first look at the high frequency data for the 'spike' component
-        fndata   = eegfilt(data, fn_fr, 'hp',srate);
-        HFdata    = eegfilt(fndata, fr, 'lp',srate);
+        fndata   = eegfilt(data, fn_fr, 'hp',srate); % high pass filter
+        HFdata    = eegfilt(fndata, fr, 'lp',srate); % low pass filter
        
         
         lthresh = mean(abs(HFdata));  % this is the smallest the initial part of the spike can be
@@ -234,14 +234,14 @@ for dd = 1:n_chans
 
         if ~isempty(out)
          %% Re-align spikes to peak of the spikey component
-         timeToPeak = [-.1,.15];
+         timeToPeak = [-.1,.15]; %Only look 100 ms before and 150 ms after the currently defined peak
          idxToPeak = timeToPeak*srate;
          for i = 1:size(out,1)
             currIdx = out(i,1);
             idxToLook = max(1,round(currIdx+idxToPeak(1))):...
-                    min(round(currIdx+idxToPeak(2)),length(HFdata));
-            snapshot = HFdata(idxToLook);
-            [~,I] = max(abs(snapshot));
+                    min(round(currIdx+idxToPeak(2)),length(HFdata));  
+            snapshot = HFdata(idxToLook); % Look at the high frequency data (where the mean is substracted already)
+            [~,I] = max(abs(snapshot)); % The peak is the maximum absolute value of this
             out(i,1) = out(i,1) + idxToPeak(1) + I;
          end
         end

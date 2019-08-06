@@ -184,8 +184,8 @@ for whichPt = whichPts
         SL_bin(i) = mean(seq_lengths(seq_times > bin_times(i,1) & ...
             seq_times < bin_times(i,2)));
         
-        % Get mean sequence area in these times
-        SA_bin(i)  = mean(seq_areas(seq_times > bin_times(i,1) & ...
+        % Get median sequence area in these times
+        SA_bin(i)  = median(seq_areas(seq_times > bin_times(i,1) & ...
             seq_times < bin_times(i,2)));
         
         
@@ -273,6 +273,7 @@ for whichPt = whichPts
     %% Now do SL
     fprintf('Doing SL for %s\n',pt(whichPt).name);
     
+    
     nan_times = find(isnan(SL_bin));
     mean_ad = old_mean_ad;
     
@@ -285,6 +286,18 @@ for whichPt = whichPts
     
     if save_csv == 1, csvwrite(fname,M); end
   
+    % Do arima model
+    if sum(abs(diff(SL_bin))) ~= 0
+        Y = SL_bin;
+        X = [mean_ad ones(size(mean_ad))];
+        [p,t,b] = determine_order(X,Y,0);
+    else
+        p = 1; t = 0; b = 0;
+    end
+    all_p_SL = [all_p_SL;p];
+    all_b_SL = [all_b_SL;b];
+    all_t_SL = [all_t_SL;t];
+    
     
     
     %% Do analysis for whether proportion of spikes in predominant cluster is related to alpha delta ratio

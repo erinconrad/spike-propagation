@@ -284,6 +284,7 @@ for whichPt = whichPts
         close(gcf)
         end
         
+        %
         % Silhouette method
         all_ES = [];
         for i = 1:10
@@ -301,13 +302,19 @@ for whichPt = whichPts
             t = toc;
             all_EG = [all_EG;E_G.OptimalK,t];
         end
-            
-        all_sse = [all_sse;SSE'];
         
         all_ES
         all_EG
         
         error('look\n');
+        
+        %}
+            
+        all_sse = [all_sse;SSE'];
+        
+        
+        
+        
         
         continue
  
@@ -522,15 +529,23 @@ for i = 1:length(names)
     axes(ha(i))
     plot(1:10,all_sse(i,:),'k','linewidth',2)
     hold on
-    plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
-        'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
-    text(n_clusters(i) - 1, all_sse(i,n_clusters(i)) - 5e4,...
-        sprintf('%d',n_clusters(i)),'fontsize',20);
-    title(sprintf('%s',names{i}))
-    yticklabels([])
-    if i<16
-        xticklabels([])
+    if i == 1
+        plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
+            'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
+        text(n_clusters(i) - 0.8, all_sse(i,n_clusters(i)) - 3.5e4,...
+            sprintf('%d',n_clusters(i)),'fontsize',20);
+    else
+        plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
+            'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
+        text(n_clusters(i) - 0.8, all_sse(i,n_clusters(i)) - 7e4,...
+            sprintf('%d',n_clusters(i)),'fontsize',20);
     end
+    title(sprintf('%s',names{i}))
+    xlim([1,10])
+    yticklabels([])
+   
+    xticks([1 10])
+    
     
     if i == 18
         xlabel('Cluster number')
@@ -543,5 +558,6 @@ for i = 1:length(names)
 end
 print([destFolder,'elbows'],'-depsc')
 
+fprintf('look\n');
 
 end

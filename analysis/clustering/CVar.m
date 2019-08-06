@@ -282,22 +282,25 @@ set(gcf,'position',[440 245 948 553])
 bar(allMinCapture)
 hold on
 plot(get(gca,'xlim'),[median(allMinCapture) median(allMinCapture)],'k','linewidth',2)
-[start_x,start_y] = ds2nfu(6,50);
+[start_x,start_y] = ds2nfu(5,50);
 [end_x,end_y] = ds2nfu(3,median(allMinCapture));
 annotation('textarrow',[start_x end_x],[start_y end_y],'String',...
     sprintf('Median = %1.1f hours',median(allMinCapture)),...
-    'fontsize',20,'linewidth',2);
+    'fontsize',25,'linewidth',2);
 xlabel('Which patient')
-ylabel({'Consecutive hours needed to capture','80% of dataset variability'})
-title('Hours needed to capture variability in spike spatial distribution');
-set(gca,'fontsize',20);
+ylabel(sprintf('Consecutive hours needed to capture\n80%% of dataset variability'))
+title(sprintf('Hours needed to capture variability\nin spike spatial distribution'));
+set(gca,'fontsize',25);
 print(gcf,[resultsFolder,'clustering/var/aan'],'-depsc');
 
-fprintf('The mean number of hours needed to capture 80%% of the variability for %d%% was %1.1f (range %d-%d)\n',...
-    percVarTrue,mean(allMinCapture),min(allMinCapture),max(allMinCapture));
+r = iqr(allMinCapture);
+fprintf('The interquartile range (the difference between 75th and 25th percentiles) is %1.1f\n',r);
 
-fprintf('The mean percent of hours needed to capture 80%% of the variability for %d%% was %1.1f (range %1.1f-%1.1f)\n',...
-    percVarTrue,mean(allMinProp)*100,min(allMinProp)*100,max(allMinProp)*100);
+fprintf('The median number of hours needed to capture 80%% of the variability for %d%% was %1.1f (range %d-%d)\n',...
+    percVarTrue,median(allMinCapture),min(allMinCapture),max(allMinCapture));
+
+fprintf('The median percent of hours needed to capture 80%% of the variability for %d%% was %1.1f (range %1.1f-%1.1f)\n',...
+    percVarTrue,median(allMinProp)*100,min(allMinProp)*100,max(allMinProp)*100);
 
 %% Correlate duration needed to capture with number of szs
 %rho_sz = corr(nSzs,allMinCapture,'Type','Spearman');

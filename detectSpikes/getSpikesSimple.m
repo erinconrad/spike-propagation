@@ -83,7 +83,7 @@ for i = 1:size(data.values,2)
    data.values(:,i) = filtfilt(f,data.values(:,i));   
 end
 
-if 1
+if 0
     figure
     set(gcf,'position',[1 650 1440 200])
     temp_ch = 24;
