@@ -20,11 +20,7 @@ old_power = old_power.power;
 load([structFolder,seq_file])
 
 if isempty(whichPts) == 1
-    for i = 1:length(pt)
-        if isempty(pt(i).seq_matrix) == 0
-            whichPts = [whichPts,i];
-        end
-    end
+     whichPts = [1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31];
 end
 
 for whichPt = whichPts
@@ -47,7 +43,7 @@ for whichPt = whichPts
     plot(ad_keep_spike)
     plot(old_ad)
     legend('Remove spike','Keep spike','old')
-    title(sprintf('Correlation: %1.4f',rho))
+    title(sprintf('%s correlation: %1.4f',pt(whichPt).name,rho))
     pause
     close(gcf)
     

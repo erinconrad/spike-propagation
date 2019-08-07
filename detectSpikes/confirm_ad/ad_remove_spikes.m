@@ -27,11 +27,7 @@ end
 
 
 if isempty(whichPts) == 1
-    for i = 1:length(pt)
-        if isempty(pt(i).seq_matrix) == 0
-            whichPts = [whichPts,i];
-        end
-    end
+    whichPts = [1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31];
 end
 
 for whichPt = whichPts
