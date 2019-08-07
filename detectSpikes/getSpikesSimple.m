@@ -65,13 +65,7 @@ fprintf('Retrieved data\n');
 data.values(isnan(data.values)) = 0;
 
 %% Notch filter to remove 60 Hz noise
-%{
-Example noisy data:
-- HUP078 414750 s, LG 51 (ch 71); 170015; HUP088 439163 LMST4 (ch 24)
 
-Example clean data:
-- HUP078 610096.64 s
-%}
 
 f = designfilt('bandstopiir','FilterOrder',2, ...
                'HalfPowerFrequency1',59,'HalfPowerFrequency2',61, ...
@@ -83,19 +77,29 @@ for i = 1:size(data.values,2)
    data.values(:,i) = filtfilt(f,data.values(:,i));   
 end
 
+%% Plot to show notch effect
+
+%{
+Example noisy data:
+- HUP078 LG 51 (ch 71) 170015; HUP088 439163 LMST4 (ch 24)
+
+Example clean data:
+- HUP078 610096.64 s
+%}
+
 if 0
     figure
     set(gcf,'position',[1 650 1440 200])
     temp_ch = 24;
     plot(linspace(0,15,15*512),old_values(1:15*512,temp_ch));
     hold on
-    plot(linspace(0,15,15*512),data.values(1:15*512,temp_ch)+1000);
+    plot(linspace(0,15,15*512),data.values(1:15*512,temp_ch)-1000);
     xlabel('Time (s)')
     yticklabels([])
-    legend('original','post-notch')
+    legend('Original','Post-notch')
     title(sprintf('%s',pt(whichPt).name))
     set(gca,'fontsize',20)
-    
+    print(gcf,sprintf('notch_example_%s',pt(whichPt).name),'-depsc')
 end
 
 %% Run spike detector

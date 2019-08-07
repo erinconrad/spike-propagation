@@ -97,6 +97,10 @@ take the data returned from the R scripts and do aggregate level analyses
 to determine if there is overall a significant correlation between sleep
 and spike spatial distribution/spike rate
 
+- glm_model.m (in analysis/alphaDelta): this Matlab script determines 
+whether there is a relationship between the proportion of spikes in the 
+predominant cluster and the alpha delta ratio, assuming a GLM model for the
+relationship, rather than a GLARMA model (for which you would need to use R).
 
 %}
 
