@@ -1,5 +1,11 @@
 function cluster = getClusters(pt,whichPts)
 
+%{
+This function clusters spikes using k-means clustering based on their XYZ
+coordinates of their spatial location. It also outputs sample spike
+sequences for each cluster.
+%}
+
 %% Parameters
 % Should we skip patients that are already done and merge the new patients
 % with the existing cluster?
@@ -8,7 +14,9 @@ saveStruct = 0;
 % Merge with existing cluster struct?
 merge = 0; 
 
-% get optimal cluster numbers?
+% get optimal cluster numbers? Set this to 1 if, instead of running the
+% clustering algorithm, you instead want to run the algorithm to detect the
+% optimal cluster number.
 clustOpt = 1; 
 
 % Plot spikes over time? Can be 0 if doing as part of regular pipeline
@@ -17,11 +25,10 @@ doPlots = 0;
 % Plot example sequences? Should be 1 if doing as part of regular pipeline
 doLongPlots = 1;
 
-
 removeTies = 1; % I DO remove ties for every part of analysis of the spike paper
 % My primary rationale for removing ties is that when I tested this for a
 % single patient (HUP106), when I don't remove ties there is a third
-% cluster that appears that is basically all artifact. This largely goes
+% cluster that appears that is basically all artifact. This goes
 % away when I remove ties.
 
 % Get all spikes (not just lead spikes). This should be 1.
@@ -39,6 +46,7 @@ end
 
 
 %% Optimal cluster numbers
+% These were chosen by elbow plot
 if removeTies == 0
     n_clusters(1) = 3; % HUP64
     n_clusters(2) = 2; %HUP065
@@ -284,7 +292,7 @@ for whichPt = whichPts
         close(gcf)
         end
         
-        %
+        %{
         % Silhouette method
         all_ES = [];
         for i = 1:10

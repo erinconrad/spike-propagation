@@ -1,6 +1,6 @@
 %% longRunTimes
 
-% This file, meant to be ported to Borel, loops through all the patients in
+% This file loops through all the patients in
 % the json file containing basic patient info, and fills up a structure
 % with desired times to calculate spikes, as well as output file locations
 % for the future spike files

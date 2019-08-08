@@ -45,6 +45,8 @@ for i = 1:31
     % load the info about which detector, the tmul, and the absthresh
     thresh =  pt(i).thresh;
 
+    % This says that I should only be using spike detector 7 (which is
+    % confusingly fspk6.m)
     if thresh.whichDetector ~= 7
         error('look!');
     end
