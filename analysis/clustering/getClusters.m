@@ -7,20 +7,16 @@ sequences for each cluster.
 %}
 
 %% Parameters
-% Should we skip patients that are already done and merge the new patients
-% with the existing cluster?
+% Should we save the cluster struct?
 saveStruct = 0;
 
-% Merge with existing cluster struct?
+% Merge with existing cluster struct (if 0, it will overwrite it)?
 merge = 0; 
 
 % get optimal cluster numbers? Set this to 1 if, instead of running the
 % clustering algorithm, you instead want to run the algorithm to detect the
 % optimal cluster number.
 clustOpt = 1; 
-
-% Plot spikes over time? Can be 0 if doing as part of regular pipeline
-doPlots = 0;
 
 % Plot example sequences? Should be 1 if doing as part of regular pipeline
 doLongPlots = 1;
@@ -292,31 +288,31 @@ for whichPt = whichPts
         close(gcf)
         end
         
-        %{
-        % Silhouette method
-        all_ES = [];
-        for i = 1:10
-            tic
-            E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
-            t = toc;
-            all_ES = [all_ES;E_S.OptimalK,t];
+        if 0
+            % Silhouette method
+            all_ES = [];
+            for i = 1:10
+                tic
+                E_S = evalclusters(all_locs,'kmeans','silhouette','klist',[1:10]);
+                t = toc;
+                all_ES = [all_ES;E_S.OptimalK,t];
+            end
+
+            % Gap method
+            all_EG = [];
+            for i = 1:10
+                tic
+                E_G = evalclusters(all_locs,'kmeans','gap','KList',[1:10]);
+                t = toc;
+                all_EG = [all_EG;E_G.OptimalK,t];
+            end
+
+            all_ES
+            all_EG
+
+            error('look\n');
+        
         end
-        
-        % Gap method
-        all_EG = [];
-        for i = 1:10
-            tic
-            E_G = evalclusters(all_locs,'kmeans','gap','KList',[1:10]);
-            t = toc;
-            all_EG = [all_EG;E_G.OptimalK,t];
-        end
-        
-        all_ES
-        all_EG
-        
-        error('look\n');
-        
-        %}
             
         all_sse = [all_sse;SSE'];
         
@@ -403,169 +399,53 @@ for whichPt = whichPts
         end
     end
     
-    %% Plot the changing cluster over time
-    if doPlots == 1
-        % Assign the sequence a color based on its cluster index
-        colors = [0 0 1;1 0 0;0 1 0; 0.5 0.5 1; 1 0.5 0.5; 0.5 1 0.5; 0.4 0.7 0.4];
-        c_idx = zeros(size(idx,1),3);
-        for i = 1:length(idx)
-           c_idx(i,:) = colors(idx(i),:); 
-        end
-        
-        figure
-        set(gcf,'Position',[50 100 1200 1200])
-        
-        %% Subplot 1: Plot the x, y, z over time
-        subplot(3,1,1)
-        ttext = {'x','y','z'};
-        toAdd = 0;
-        if allSpikes == 1
-            plot_thing = all_locs;
-            plot_times = all_times_all;
+  
+end
+
+
+
+if clustOpt == 1
+    %% Plot the elbow plots for all patients
+    n_clusters=n_clusters(whichPts);
+
+
+    figure
+    set(gcf,'position',[821 0 1113 800]);
+    [ha, pos] = tight_subplot(4, 5, [0.05 0.03], [0.08 0.04], [0.04 0.01])
+    for i = 1:length(names)
+        axes(ha(i))
+        plot(1:10,all_sse(i,:),'k','linewidth',2)
+        hold on
+        if i == 1
+            plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
+                'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
+            text(n_clusters(i) - 0.8, all_sse(i,n_clusters(i)) - 3.5e4,...
+                sprintf('%d',n_clusters(i)),'fontsize',20);
         else
-            plot_thing = lead_locs;
-            plot_times = lead_times';
+            plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
+                'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
+            text(n_clusters(i) - 0.8, all_sse(i,n_clusters(i)) - 7e4,...
+                sprintf('%d',n_clusters(i)),'fontsize',20);
         end
-        
-        for i = 1:3
-            % Plot each coordinate over time, offset from each other
-            scatter(plot_times/3600,plot_thing(:,i)+...
-                repmat(toAdd,size(plot_thing,1),1),20,c_idx)
-            hold on
-            text(plot_times(1)/3600-0.3,toAdd+median(plot_thing(:,i)),...
-                sprintf('%s',ttext{i}),'FontSize',30);
-            if i ~=3
-                % Define the offset for each coordinate
-                toAdd = toAdd + 10+(max(plot_thing(:,i)) - ...
-                    min(plot_thing(:,i+1)));
-            end
+        title(sprintf('%s',names{i}))
+        xlim([1,10])
+        yticklabels([])
+
+        xticks([1 10])
+
+
+        if i == 18
+            xlabel('Cluster number')
         end
-        
-        % Plot the seizure times
-        for j = 1:size(szTimes,1) 
-            yl = ylim;
-            plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
+
+        if i==11
+            ylabel('                              Sum squared error')
         end
-        
-        set(gca,'ytick',[]);
-        xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
-        title(sprintf('X, y, z coordinates of all spikes for %s',...
-            pt(whichPt).name));
-        set(gca,'FontSize',15);
-        
-        %% Subplot 2: Plot the cluster distribution over time
-        
-        % Get the times for spikes in each cluster
-        for i = 1:n_clusters(whichPt)
-            clust{i} = plot_times(idx == i);
-        end
-        
-        
-        window = 3600;
-        
-        % NEED TO CHECK THIS SCRIPT - ALSO IT's SUUUPER SLOW
-        %{
-        [sum_c,sum_times] = movingSumCounts(clust,plot_times,window);
-        totalSum = zeros(1,size(sum_times,2));
-        for i = 1:n_clusters(whichPt)
-            totalSum = totalSum + sum_c(i,:);
-        end
-        prop_c = sum_c./totalSum;
-        %}
-        
-        
-        % alternate method - try non-moving window
-        
-        % enough bins so that it's essentially 10 minute windows
-        nbins = round((max(plot_times)-min(plot_times))/(window/3));
-        [Y,E] = discretize(plot_times,nbins);
-        new_times = E(2:end);
-        new_counts = zeros(nbins,n_clusters(whichPt));
-        for bb = 1:nbins
-            for k = 1:n_clusters(whichPt)
-                new_counts(bb,k) = sum(Y==bb & idx==k);
-            end
-        end
-        new_prop = new_counts./sum(new_counts,2);
-        sum_times = new_times;
-        prop_c = new_prop';
-        
-        subplot(3,1,2)
-        pl = zeros(n_clusters(whichPt),1);
-        for i = 1:n_clusters(whichPt)
-            pl(i)= plot(sum_times/3600,prop_c(i,:),...
-                'color',colors(i,:),'LineWidth',2);
-        hold on
-        end
-        
-        for j = 1:size(szTimes,1) 
-            yl = ylim;
-            plot([szTimes(j,1) szTimes(j,1)]/3600,yl,'k','LineWidth',2);
-        end
-        xlim([plot_times(1)/3600-1 plot_times(end)/3600+1])
-        title(sprintf(['Proportion of sequences in given cluster, moving'...
-        ' average %d s, %s'],window,pt(whichPt).name));
-        set(gca,'FontSize',15);
-        
-        %% Subplot 3: Plot locations of centroids
-        subplot(3,1,3)
-        scatter3(locs(:,1),locs(:,2),locs(:,3),60,'k');
-        hold on
-        for k = 1:size(C,1)
-            scatter3(C(k,1),C(k,2),C(k,3),60,colors(k,:),'filled');
-        end
-        title(sprintf('Spike location centroids for each cluster for %s',...
-            pt(whichPt).name))
-        set(gca,'FontSize',15);
-        set(gca,'xticklabel',[])
-        set(gca,'yticklabel',[])
-        set(gca,'zticklabel',[])
-        pause
-        close(gcf)
-        
+        set(gca,'fontsize',20)
     end
-    
+    print([destFolder,'elbows'],'-depsc')
+
+
 end
-
-n_clusters=n_clusters(whichPts);
-
-
-figure
-set(gcf,'position',[821 0 1113 800]);
-[ha, pos] = tight_subplot(4, 5, [0.05 0.03], [0.08 0.04], [0.04 0.01])
-for i = 1:length(names)
-    axes(ha(i))
-    plot(1:10,all_sse(i,:),'k','linewidth',2)
-    hold on
-    if i == 1
-        plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
-            'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
-        text(n_clusters(i) - 0.8, all_sse(i,n_clusters(i)) - 3.5e4,...
-            sprintf('%d',n_clusters(i)),'fontsize',20);
-    else
-        plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
-            'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
-        text(n_clusters(i) - 0.8, all_sse(i,n_clusters(i)) - 7e4,...
-            sprintf('%d',n_clusters(i)),'fontsize',20);
-    end
-    title(sprintf('%s',names{i}))
-    xlim([1,10])
-    yticklabels([])
-   
-    xticks([1 10])
-    
-    
-    if i == 18
-        xlabel('Cluster number')
-    end
-    
-    if i==11
-        ylabel('                              Sum squared error')
-    end
-    set(gca,'fontsize',20)
-end
-print([destFolder,'elbows'],'-depsc')
-
-fprintf('look\n');
 
 end

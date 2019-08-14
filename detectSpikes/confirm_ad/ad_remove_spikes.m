@@ -1,7 +1,14 @@
 function ad_remove_spikes(whichPts)
 
+%{
+This is a new analysis to check whether the calculation of the alpha delta
+ratio changes when I remove times surrounding spikes. This file generates
+the alpha delta ratios, and then ad_check_analysis will compare the
+alpha-delta ratios for removing spikes to those keeping spikes.
+%}
+
 %% Parameters
-do_save = 1;
+do_save = 0;
 alpha_freq = [8 13];
 delta_freq = [1 4];
 sp_surround = [-0.5 1]; % seconds surrounding spike to remove
@@ -27,6 +34,7 @@ end
 
 
 if isempty(whichPts) == 1
+    % The patients I studied in the paper
     whichPts = [1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31];
 end
 
@@ -70,7 +78,7 @@ for whichPt = whichPts
         if power(whichPt).finished(tt) == 1
             fprintf('Already did chunk %d for %s, skipping\n',...
                 tt,pt(whichPt).name);
-            continue
+          %  continue
         end
         
         fprintf('Doing chunk %d of %d for %s\n',tt,...
@@ -143,16 +151,18 @@ for whichPt = whichPts
             alpha_power = alpha.^2;
             delta_power = delta.^2;
             
-            % Get spike exclusion indices
-           
-            
+            % Get spike exclusion indices (indices corresponding to time
+            % surrounding spike that I will remove)
             sp_exclusion_idx = zeros(size(spikes_in_ch,1),round((sp_surround(2)-sp_surround(1))*fs+1));
+            
             for i = 1:size(spikes_in_ch,1)
 
                 % Add times surrounding spikes
                 times_I_want = (round(spikes_in_ch(i,2) + ...
                     sp_surround(1)*fs)): (round(spikes_in_ch(i,2) + ...
                     sp_surround(2)*fs));
+                
+                % Correction for rounding error
                 if size(times_I_want,2) == size(sp_exclusion_idx,2) - 1
                     times_I_want = [times_I_want,times_I_want(end) + 1];
                 end
@@ -168,8 +178,10 @@ for whichPt = whichPts
            
 
             
-            % Look at the signal and plot the spike exclusion times
-            if 0
+            % Look at the signal and plot the spike exclusion times to
+            % check that I am getting reasonable times surrounding the
+            % spikes
+            if 1
                 figure
                 Y = X;
                 plot(Y,'k')
@@ -191,8 +203,8 @@ for whichPt = whichPts
             
             % Sum the power
             
-            alpha_power_sum_ex = sum(alpha_power(keep_idx));
-            alpha_power_sum_in = sum(alpha_power);
+            alpha_power_sum_ex = sum(alpha_power(keep_idx)); % sum it over non-spikey bits
+            alpha_power_sum_in = sum(alpha_power); % sum it over everything
             
             delta_power_sum_in = sum(delta_power);
             delta_power_sum_ex = sum(delta_power(keep_idx));

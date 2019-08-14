@@ -1,5 +1,14 @@
 function power = alphaDelta(whichPts)
 
+%{
+this will load a pt struct with
+spike sequence info (although it will really only use the run times from
+this struct) and it will grab ieeg data and calculate the alpha delta power
+ratio in 2000 second bins). It calls innerAlphaDelta to do the actual work
+(which is in the same folder). This will output a power struct with the
+alpha delta power ratio.
+%}
+
 %% Load file paths, etc.
 [~,~,scriptFolder,resultsFolder,pwfile] = fileLocations;
 p1 = genpath(scriptFolder);
@@ -103,7 +112,7 @@ for whichPt = whichPts
         indices = max(round(desiredTimes(1)*fs),1):round(desiredTimes(2)*fs);
         
         
-        
+        % Run the code that actually calculates the alpha delta ratio
         power(whichPt).alpha(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,3);
         power(whichPt).delta(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,4);
         power(whichPt).finished(tt) = 1;

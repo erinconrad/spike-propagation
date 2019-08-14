@@ -2,7 +2,9 @@ function CNewStats(pt,cluster,whichPts)
 
 %% CNewStats
 %{
-I get statistics on spike cluster data
+This function tests the hypothesis that there is a pre- or post-ictal
+change in spike spatial distribution. It also tests whether the spike
+spatial distribution changes from hour to hour.
 %}
 
 %% Parameters
@@ -10,8 +12,12 @@ I get statistics on spike cluster data
 % The post-ictal time period (how many hours after the seizure I am
 % defining to be post-ictal) (4 for most analyses, but 1 as a sensitivity
 % analysis)
-intericTime = 1;
-preIcTime = 4;
+intericTime = 4;
+
+% The pre-ictal time period (how many hours before the seizure, excluding
+% the post-ictal times of prior seizures, am I defining to be pre-ictal).
+% (1 for most analyses, but 4 as a sensitivity analysis)
+preIcTime = 1;
 
 % Plot the time periods to see what I am defining to be pre-, post-, and
 % interictal. Also do some quality checks for the coverage of the
@@ -39,7 +45,6 @@ addpath(p1);
 mkdir(destFolder);
 
 %% Define which patients I am doing
-
 if isempty(whichPts) == 1
     for i = 1:length(pt)
         if isempty(pt(i).seq_matrix) == 0

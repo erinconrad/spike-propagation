@@ -176,7 +176,7 @@ for whichPt = whichPts
     plot(chunk_times,prop_pop)
     %}
     
-    
+    % Get the 95% proportion of spiks in most popular cluster
     true_range_old = [min(prop_pop) max(prop_pop)];
     true_range = [prctile(prop_pop,100-percVarTrue),prctile(prop_pop,percVarTrue)];
     

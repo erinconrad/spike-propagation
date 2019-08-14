@@ -2,7 +2,12 @@ function CInfluence(pt,cluster,whichPts)
 
 %{
 
-My area of influence analysis
+My area of influence analysis.
+
+this take a pt struct, a cluster struct, and calculates
+distances of various electrodes of interest, including the area with the
+largest area of influence, from the nearest SOZ.
+
 %}
 
 % Parameters
@@ -10,7 +15,7 @@ doPoster = 1;
 doPlots = 0; %0 = no, 1=normal, 2=pretty
 plotConn = 0;
 removeTies = 1;
-doBootstrap = 1;
+doBootstrap = 0;
 alpha1 = 95;
 map_text = 'jet';
 fh_map = str2func(map_text);
@@ -256,10 +261,6 @@ for whichPt = whichPts
     
     if whichPt == 8, exampleChCh = chCh; end
     
-    %% Do a test of symmetry
-    % If spikes are randomly oriented, then chCh should be symmetric, which
-    % is to say that for all i and j, chCh(i,j) ~= chCh(j,i)
-    
     
     
     %% Get significant connections
@@ -317,7 +318,7 @@ for whichPt = whichPts
             
         end
         
-        if 1 == 1
+        if 1 == 0
             figure
             imagesc(squeeze(mean(chCh_all,1)))
             colorbar
@@ -338,7 +339,8 @@ for whichPt = whichPts
         
     end
     
-    % Assume poisson distribution
+    % Assume poisson distribution (produces same result as permutation
+    % test)
     ncons = sum(sum(chCh));
     lambda = ncons/nchs^2;
     X = poissinv(alpha1/100,lambda);
@@ -350,7 +352,7 @@ for whichPt = whichPts
     
     if whichPt == 8, exampleX = X; end
     
-    %% Now find channels with more spikes than expected by chance.
+    %% Now find connections that are more frequent by chance
     n_spikes = length(all_spike_times);
     lambda_spikes = n_spikes/nchs;
     X_spikes = poissinv(alpha1/100,lambda_spikes);
@@ -395,7 +397,7 @@ for whichPt = whichPts
     allMaxSAs = [allMaxSAs;(max(sa))];
     
     %% Make AAN plot
-    if 1
+    if 0
     figure
     scatter3(locs(:,1),locs(:,2),locs(:,3),200,'k');
     %parula_c = parula(2);

@@ -1,5 +1,11 @@
 function r_stats(pt,cluster)
 
+%{
+take the data returned from the R script r_stats.r and do aggregate level analyses
+to determine if there is overall a significant correlation between sleep
+and spike spatial distribution
+%}
+
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 p1 = genpath(scriptFolder);
 addpath(p1);

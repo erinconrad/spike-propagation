@@ -102,6 +102,16 @@ whether there is a relationship between the proportion of spikes in the
 predominant cluster and the alpha delta ratio, assuming a GLM model for the
 relationship, rather than a GLARMA model (for which you would need to use R).
 
+- ad_remove_spikes.m (in detectSpikes/confirm_ad): this script is the first
+part of the analysis to test if the alpha/delta ratio is affected by
+spikes. It recalculates the alpha/delta ratio removing spike times from the
+calculation over each electrode.
+
+- ad_check_analysis.m (in detectSpikes/confirm_ad): this is the second part
+of the analysis to test the effect of spikes on the alpha/delta ratio. It
+takes the new and old alpha-delta ratios (keeping and removing spikes) and
+performs a Pearson correlation coefficient between the two.
+
 %}
 
 %% 5: Area of influence analysis
@@ -142,9 +152,6 @@ detected and reorder ties
 - spatialConstraint: called by getSequencesErin to remove spikes that are
 too far away
 - decideIfIctal: decide if the sequences are ictal or interictal
-
-Sequence cleaning files (in sequenceCleaning in getSequences):
-- a bunch...
 
 %}
 
