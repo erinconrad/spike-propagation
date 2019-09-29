@@ -16,7 +16,10 @@ following steps:
 
 Note that the electrode locations and clinical info for the patients in the
 Spike location project can be found in the example patient structure
-example_pt.mat.
+example_pt.mat. If you wish to run a truncated version of the pipeline on
+short example data, see the section below.
+
+The code can be found on https://github.com/erinconrad/spike-propagation
 
 %}
 
@@ -32,6 +35,7 @@ your Matlab path. Then call the script run_example_data.m, located in the
 folder prepare_example/. Specifically, run the following code:
 
 >> load example_pt.mat
+>> addpath(genpath(**path containing spike propagation scripts**))
 >> run_example_data
 
 I would recommend opening the run_example_data.m
