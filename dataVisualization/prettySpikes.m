@@ -87,13 +87,16 @@ names = dir([giftiFolder,'*pial.gii']);
 fname2 = names(1).name;
 g = gifti([giftiFolder,fname2]);
 
-circSize = 130;
+circSize = 350;
 p = plotGIFTI(g);
 hold on
 view(-120,-11);
 %alpha(p,0.4)
 scatter3(newlocs(:,1),newlocs(:,2),newlocs(:,3),circSize,'k','filled');
 hold on
+scatter3(newlocs(:,1),newlocs(:,2),newlocs(:,3),circSize-100,'w','filled');
+hold on
+
 
 for i = 1:length(times)
     scatter3(newlocs(chs(i),1),newlocs(chs(i),2),newlocs(chs(i),3),circSize,...

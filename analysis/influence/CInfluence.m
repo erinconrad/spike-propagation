@@ -638,6 +638,8 @@ scatter(allSAs(allSpikers==1),allAllDist(allSpikers==1));
 [rho,pval] = corr(allSAs(allSpikers==1),allAllDist(allSpikers==1),'Type','Spearman')
 %}
 
+aes_plot_aoi(allAllDist,allSADist,allFreqDist)
+
 %% Make AAN plots
 figure
 np = size(allAllDist,1);

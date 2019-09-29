@@ -27,6 +27,9 @@ allAllDist = [];
 allPredDist = [];
 allNClust = [];
 
+dist_most_freq = [];
+dist_other = [];
+
 for whichPt = whichPts
     
     fprintf('Doing %s\n',pt(whichPt).name);
@@ -97,6 +100,7 @@ for whichPt = whichPts
     %clusters that has the most popular cluster (instead of the cluster
     %number)
     popular = find(clusters == mode(idx)); 
+    pop_ind = clusters == mode(idx);
     
     if size(C,1) <2, continue; end
     
@@ -141,7 +145,8 @@ for whichPt = whichPts
     %}
     allNClust = [allNClust;size(C,1)];
     
-   
+    dist_most_freq = [dist_most_freq;soz_dist(pop_ind)];
+    dist_other = [dist_other;soz_dist(~pop_ind)];
  
 end
 
@@ -149,6 +154,7 @@ end
 num_closest = sum(highest_rank_closest);
 
 %% Permutation test
+if 0
 % for each permutation, for each patient, randomly pick one of them
 % clusters to identify as the most predominant cluster. Calculate the
 % number of patiens where most popular cluster is closest. Do 1000 times
@@ -198,6 +204,7 @@ hold on
 plot([num_closest num_closest],...
     get(gca,'ylim'));
 text(sum(highest_rank_closest)+0.3,200,sprintf('%1.3f',p))
+end
 
 
 %% Second way - assume bernoulli random variable
@@ -211,5 +218,33 @@ var_num_closest = sum(1./(allNClust).*(1-1./allNClust));
 %z = (num_closest-exp_num_closest)/sqrt(var_num_closest);
 
 p = normcdf(num_closest,exp_num_closest,sqrt(var_num_closest),'upper')
+
+
+%% Make plot
+col1 = [0, 0.4470, 0.7410];
+col2 = [0.8500 0.3250 0.0980];
+figure
+n = length(dist_most_freq);
+xdata1 = ones(n,1).*rand(n,1)/2;
+scatter(xdata1,dist_most_freq,150,col1,'filled')
+hold on
+plot([min(xdata1)-0.1 max(xdata1)+0.1],[median(dist_most_freq) median(dist_most_freq)],...
+    'color',col1,'linewidth',3)
+n2 = length(dist_other);
+xdata2 = ones(n2,1).*rand(n2,1)/2+ones(n2,1);
+scatter(xdata2,dist_other,150,col2,'filled')
+plot([min(xdata2)-0.1 max(xdata2)+0.1],[median(dist_other) median(dist_other)],...
+    'color',col2,'linewidth',3)
+plot([(min(xdata1)+max(xdata1))/2,(min(xdata2)+max(xdata2))/2],...
+    [max([dist_most_freq;dist_other])+10 max([dist_most_freq;dist_other])+10],...
+    'k','linewidth',2)
+text(((min(xdata1)+max(xdata1))/2+(min(xdata2)+max(xdata2))/2)/2-0.1,...
+    max([dist_most_freq;dist_other])+15,'ns','fontsize',25)
+ylim([-10 max([dist_most_freq;dist_other])+20]);
+xlim([-0.2 1.7])
+xticks([(min(xdata1)+max(xdata1))/2,(min(xdata2)+max(xdata2))/2]);
+xticklabels({'Most frequent cluster','Other clusters'})
+ylabel('Distance from seizure onset zone (mm)')
+set(gca,'fontsize',20)
 
 end

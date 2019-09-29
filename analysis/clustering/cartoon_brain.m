@@ -1,6 +1,8 @@
-function cluster_loc(pt,cluster,whichPt)
+function cartoon_brain(pt,cluster)
+
 
 %% Parameters
+whichPt = 8;
 window = 3600;
 colors = [0 0 1;1 0 0;0.9290 0.540 0.1250];
 
@@ -27,6 +29,13 @@ end
 szTimes = pt(whichPt).newSzTimes;
 soz = pt(whichPt).newSOZChs;
 chs = 1:size(locs,1);
+
+% Load gifti
+brainFolder = '/Users/erinconrad/Desktop/residency stuff/R25/actual work/data/brains/';
+giftiFolder = [brainFolder,pt(whichPt).name,'/'];
+names = dir([giftiFolder,'*pial.gii']);
+fname2 = names(1).name;
+g = gifti([giftiFolder,fname2]);
 
 %% Reorder seizure times if out of order
 oldSzTimes = szTimes;
@@ -218,6 +227,9 @@ for tt = 1:nbins
     fig = figure;
     set(gcf,'color','white');
     
+    p = plotGIFTI(g);
+    hold on
+    
     % Get counts per channel in this time
     alpha_lin_time = linspace(1,0,max(ch_counts(tt,:)));
     alpha_lin_time_yellow = [linspace(1,0.9290,max(ch_counts(tt,:))); ...
@@ -318,3 +330,4 @@ end
 end
 
 end
+

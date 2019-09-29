@@ -14,6 +14,26 @@ following steps:
 4) Alpha/delta analysis
 5) Area of influence analysis
 
+Note that the electrode locations and clinical info for the patients in the
+Spike location project can be found in the example patient structure
+example_pt.mat.
+
+%}
+
+
+%% RUN COMPLETE PIPELINE ON EXAMPLE DATA
+%{
+To illustrate the steps of this project, we included a single script
+run_example_data, which completes the entire pipeline from spike detection 
+through clustering by spike location for a 500 second sample of EEG data 
+for a single patient (Study 029). To run this pipeline, load the .mat file
+example_pt.mat. Then call the script run_example_data.m, located in the
+folder prepare_example/. Because this contains such a short duration of
+data, time series analyses cannot meaningfully be performed on it. However,
+a longer duration of data, structured according to this data structure,
+could be run with the same pipeline. Alternatively, analysis can be run on
+ieeg data using the steps described above.
+
 %}
 
 

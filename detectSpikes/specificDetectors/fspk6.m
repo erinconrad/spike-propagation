@@ -71,7 +71,7 @@ for dd = 1:n_chans
      
         
         out     = [];
-        data    = alldata(time_points(1):time_points(2),dd);
+        data    = alldata(round(time_points(1)):round(time_points(2)),dd);
         
   
         

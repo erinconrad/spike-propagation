@@ -1,32 +1,34 @@
-function cluster_loc(pt,cluster,whichPt)
+function aes_brain_gif(pt,cluster)
 
-%% Parameters
+% This is for HUP078
+whichPt = 8;
+offset = [-3 27 7.7653];
 window = 3600;
-colors = [0 0 1;1 0 0;0.9290 0.540 0.1250];
 
-%% Save file location
-[~,~,~,resultsFolder,~] = fileLocations;
-destFolder = [resultsFolder,'clustering/plots/'];
-mkdir(destFolder);
+%% Get stuff
+[electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile,other] = fileLocations;
+addpath(other.gifti)
+outputFolder = [resultsFolder,'pretty_plots/aes_gif/'];
+mkdir(outputFolder)
+other_file_out = [outputFolder,'elecs_aes.gif'];
 
 
-
-    
-fprintf('Doing %s\n',pt(whichPt).name);
-
-saveFolder = [destFolder,pt(whichPt).name,'/clust_locs/'];
-mkdir(saveFolder);
-
-%% Get patient parameters
 locs = pt(whichPt).electrodeData.locs(:,2:4);
-if whichPt == 8
-    A = makeNewElecData(pt,whichPt);
-    offset = [-3 27 7.7653];
-    locs = A*locs-offset;
-end
-szTimes = pt(whichPt).newSzTimes;
+
+% Get transformation matrix to get new coordinate locations
+A = makeNewElecData(pt,whichPt);
+%offset = [-10 30 0]; % bs
+locs = A*locs-offset;
 soz = pt(whichPt).newSOZChs;
+szTimes = pt(whichPt).newSzTimes;
 chs = 1:size(locs,1);
+
+%% Load gifti
+brainFolder = '/Users/erinconrad/Desktop/residency stuff/R25/actual work/data/brains/';
+giftiFolder = [brainFolder,pt(whichPt).name,'/'];
+names = dir([giftiFolder,'*pial.gii']);
+fname2 = names(1).name;
+g = gifti([giftiFolder,fname2]);
 
 %% Reorder seizure times if out of order
 oldSzTimes = szTimes;
@@ -90,54 +92,6 @@ for i = 1:length(clusters)
 end
 
 
-
-%% plot figure showing locations of spikes and clusters
-fig = figure;
-
-for k = 1:length(chs)
-    % get the appropriate cluster
-    for cl = 1:length(cl_locs)
-        if ismember(k,cl_locs{cl}) == 1
-            which_clust = cl;
-        end
-    end
-
-        if which_clust == 1
-            this_col = [0 0 1];
-        elseif which_clust == 2
-            this_col = [1 0 0];
-        elseif which_clust == 3
-            this_col = [0.9290 0.540 0.1250];
-        end
-
-        scatter3(locs(k,1),locs(k,2),locs(k,3),350,this_col,'filled');
-        hold on
-
-end
-scatter3(locs(:,1),locs(:,2),locs(:,3),350,'k','linewidth',2);
-if whichPt == 31
-    view(75.6,-4.2)
-elseif whichPt == 9
-    view(104.4,14.2)
-elseif whichPt == 8
-    view(-120,-11);
-end
-xticklabels([])
-yticklabels([])
-zticklabels([])
-%xlabel('X')
-%ylabel('Y')
-%zlabel('Z')
-title(sprintf('%s cluster assignments',pt(whichPt).name))
-set(gca,'fontsize',25)
-grid off
-%set(gca,'visible','off')
-%pause
-print(fig,[saveFolder,'main_locs'],'-depsc');
-close(fig)
-
-
-
 plot_times = all_times_all;
 
 %% Find if data is broken into chunks (like for HUP080)
@@ -198,6 +152,90 @@ for bb = 1:nbins
     bin_times(bb,:) = [E(bb),E(bb+1)];
 end
 
+
+if 0
+    %% Plot single time
+    tt = 10;
+    
+    fig = figure;
+    set(gcf,'color','white');
+    
+    p = plotGIFTI(g);
+    hold on
+    
+    % Get counts per channel in this time
+    alpha_lin_time = linspace(1,0,max(ch_counts(tt,:)));
+    alpha_lin_time_yellow = [linspace(1,0.9290,max(ch_counts(tt,:))); ...
+        linspace(1,0.540,max(ch_counts(tt,:))); linspace(1,0.1250,max(ch_counts(tt,:)))];
+    
+    scatter3(locs(:,1),locs(:,2),locs(:,3),350,'k','linewidth',2);
+    hold on
+    %view(75.6 - tt*3,-4.2)
+    if whichPt == 31
+        view(75.6,-4.2)
+    elseif whichPt == 9
+        view(104.4,14.2)
+    elseif whichPt == 17
+        view(-196.3,1.2)
+    elseif whichPt == 8
+        view(-120,-11);
+    end
+    
+    
+    for k = 1:length(chs)
+        
+        % get the appropriate cluster
+        for cl = 1:length(cl_locs)
+            if ismember(k,cl_locs{cl}) == 1
+                which_clust = cl;
+            end
+        end
+        
+        % Get appropriate color
+        n_counts = ch_counts(tt,k);
+        
+        %{
+        if which_clust == 1
+            this_col = [alpha_lin_time(max(1,n_counts)) ...
+                alpha_lin_time(max(1,n_counts)) 1];
+        elseif which_clust == 2
+            this_col = [1 alpha_lin_time(max(1,n_counts)) alpha_lin_time(max(1,n_counts))];
+        elseif which_clust == 3
+            this_col = [alpha_lin_time(max(1,n_counts)) 1 ...
+                alpha_lin_time(max(1,n_counts))];
+        end
+        %}
+        
+        if which_clust == 1
+            this_col = [alpha_lin_time(max(1,n_counts)) ...
+                alpha_lin_time(max(1,n_counts)) 1];
+        elseif which_clust == 2
+            this_col = [1 alpha_lin_time(max(1,n_counts)) alpha_lin_time(max(1,n_counts))];
+        elseif which_clust == 3
+            this_col = alpha_lin_time_yellow(:,max(1,n_counts))';
+        end
+        
+        
+        %alpha_temp = alpha_lin_time(max(1,n_counts));
+
+        
+        scatter3(locs(k,1),locs(k,2),locs(k,3),350,this_col,'filled');
+        %alpha(p,alpha_temp);
+        
+        
+    end
+    xticklabels([])
+    yticklabels([])
+    zticklabels([])
+    %xlabel('X')
+    %ylabel('Y')
+    %zlabel('Z')
+    grid off
+    
+end
+
+
+if 0
 for tt = 1:nbins
     
     if sum(ch_counts(tt,:)) == 0
@@ -217,6 +255,9 @@ for tt = 1:nbins
     
     fig = figure;
     set(gcf,'color','white');
+    
+    p = plotGIFTI(g);
+    hold on
     
     % Get counts per channel in this time
     alpha_lin_time = linspace(1,0,max(ch_counts(tt,:)));
@@ -305,16 +346,26 @@ for tt = 1:nbins
     ax.Position = [left bottom ax_width ax_height];
     %}
     
-    print([saveFolder,sprintf('clust_locs_hour_%d-%d',...
-        round((bin_times(tt,1)-bin_times(1,1)+additive_time)/3600),...
-        round((bin_times(tt,2)-bin_times(1,1)+additive_time)/3600))],'-dpng');
-    %pause
-    close(gcf)
+    F(tt) = getframe(fig);
+    im = frame2im(F(tt));
+    [imind,cm] = rgb2ind(im,256);
+    
+    if tt == 1
+        imwrite(imind,cm,other_file_out,'gif', 'Loopcount',inf,'DelayTime',0.1);
+    else
+        imwrite(imind,cm,other_file_out,'gif','WriteMode','append','DelayTime',0.1);
+    end
+
+    close(fig)
     
     
 end
 
 
 end
+
+end
+
+
 
 end

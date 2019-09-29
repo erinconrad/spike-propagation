@@ -1,4 +1,4 @@
-function cluster = getClusters(pt,whichPts)
+function cluster = getClusters(pt,whichPts,clustOpt,example,saveStruct,merge,chosen_k)
 
 %{
 This function clusters spikes using k-means clustering based on their XYZ
@@ -7,16 +7,15 @@ sequences for each cluster.
 %}
 
 %% Parameters
-% Should we save the cluster struct?
-saveStruct = 0;
+% saveStruct: Should we save the cluster struct?
 
-% Merge with existing cluster struct (if 0, it will overwrite it)?
-merge = 0; 
 
-% get optimal cluster numbers? Set this to 1 if, instead of running the
+% merge: Merge with existing cluster struct (if 0, it will overwrite it)?
+
+% clustOpt: get optimal cluster numbers? Set this to 1 if, instead of running the
 % clustering algorithm, you instead want to run the algorithm to detect the
 % optimal cluster number.
-clustOpt = 1; 
+
 
 % Plot example sequences? Should be 1 if doing as part of regular pipeline
 doLongPlots = 1;
@@ -110,15 +109,19 @@ elseif removeTies == 1
 end
 
 % Save file location
-[~,~,scriptFolder,resultsFolder,~] = fileLocations;
-p1 = genpath(scriptFolder);
-addpath(p1);
-destFolder = [resultsFolder,'clustering/validation/'];
-mkdir(destFolder)
+if example == 0
+    [~,~,scriptFolder,resultsFolder,~] = fileLocations;
+    p1 = genpath(scriptFolder);
+    addpath(p1);
+    destFolder = [resultsFolder,'clustering/validation/'];
+    mkdir(destFolder)
 
-if merge == 1 && exist([destFolder,'cluster.mat'],'file') ~= 0
-    temp = load([destFolder,'cluster.mat']);
-    cluster = temp.cluster;
+    if merge == 1 && exist([destFolder,'cluster.mat'],'file') ~= 0
+        temp = load([destFolder,'cluster.mat']);
+        cluster = temp.cluster;
+    end
+elseif example == 1
+    destFolder = './';
 end
 
 names = {};
@@ -141,7 +144,12 @@ for whichPt = whichPts
     fprintf('Doing %s\n',pt(whichPt).name);
     locs = pt(whichPt).electrodeData.locs(:,2:4);
     szTimes = pt(whichPt).newSzTimes;
-    saveFolder = [destFolder,pt(whichPt).name,'/'];
+    
+    if example == 0
+        saveFolder = [destFolder,pt(whichPt).name,'/'];
+    else
+        saveFolder = './';
+    end
     
     
     % I can skip doing a patient if I already did them
@@ -281,11 +289,14 @@ for whichPt = whichPts
             SSE(k) = min(SSE_temp);
         end
         
-        if 0
+        if example == 1
         figure
-        plot(1:10,SSE)
-        pause
-        close(gcf)
+        set(gcf,'position',[440 274 984 524])
+        plot(1:10,SSE,'k','linewidth',2)
+        xlabel('Number of clusters')
+        ylabel('Sum squared error (SSE)')
+        title('Elbow plot: SSE as a function of cluster number')
+        set(gca,'fontsize',20)
         end
         
         if 0
@@ -320,8 +331,13 @@ for whichPt = whichPts
         
         
         
-        continue
+        return
  
+    end
+    
+    if example == 1
+        % replace the real cluster number with the one chosen by the user
+        n_clusters(whichPt) = chosen_k;
     end
      
     %% Do clustering algorithm
@@ -374,9 +390,14 @@ for whichPt = whichPts
                 % the indices of the spikes in this cluster
                 spike_clust = find(idx==i); 
 
-                % Take 50 of these indices randomly
+                % Take 50 of these indices randomly, 10 if just example
+                if example == 0
+                    n_exs = 50;
+                elseif example == 1
+                    n_exs = 10;
+                end
                 whichSpikes = spike_clust(randperm(length(spike_clust),...
-                    min(50,length(spike_clust))));
+                    min(n_exs,length(spike_clust))));
 
                 % Get the sequences these spikes belong to
                 whichSeqs = seq_index(whichSpikes);
@@ -389,13 +410,13 @@ for whichPt = whichPts
             
             % Plot the sequences
             outputFolder = [saveFolder,sprintf('seqs_cluster_%d',i),'/'];
-            showSequences(pt,whichPt,rep_seq{i},[],0,outputFolder)
+            showSequences(pt,whichPt,rep_seq{i},[],0,outputFolder,i,example)
             
             % Plot gifs
             info(i).cluster = i;
             info(i).name = pt(whichPt).name;
             info(i).outputFile = [outputFolder,'cluster_',sprintf('%d',i),'.gif'];
-            movieSeqs(rep_seq{i}(:,1:10),locs,C(i,:),info(i));
+           % movieSeqs(rep_seq{i}(:,1:10),locs,C(i,:),info(i));
         end
     end
     
@@ -405,45 +426,50 @@ end
 
 
 if clustOpt == 1
-    %% Plot the elbow plots for all patients
-    n_clusters=n_clusters(whichPts);
+    if example == 0
+        %% Plot the elbow plots for all patients
+        n_clusters=n_clusters(whichPts);
 
 
-    figure
-    set(gcf,'position',[821 0 1113 800]);
-    [ha, pos] = tight_subplot(4, 5, [0.05 0.03], [0.08 0.04], [0.04 0.01])
-    for i = 1:length(names)
-        axes(ha(i))
-        plot(1:10,all_sse(i,:),'k','linewidth',2)
-        hold on
-        if i == 1
-            plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
-                'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
-            text(n_clusters(i) - 0.8, all_sse(i,n_clusters(i)) - 3.5e4,...
-                sprintf('%d',n_clusters(i)),'fontsize',20);
-        else
-            plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
-                'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
-            text(n_clusters(i) - 0.8, all_sse(i,n_clusters(i)) - 7e4,...
-                sprintf('%d',n_clusters(i)),'fontsize',20);
+        figure
+        set(gcf,'position',[821 0 1113 800]);
+        [ha, pos] = tight_subplot(4, 5, [0.05 0.03], [0.08 0.04], [0.04 0.01])
+        for i = 1:length(names)
+            axes(ha(i))
+            plot(1:10,all_sse(i,:),'k','linewidth',2)
+            hold on
+            if i == 1
+                plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
+                    'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
+                text(n_clusters(i) - 0.8, all_sse(i,n_clusters(i)) - 3.5e4,...
+                    sprintf('%d',n_clusters(i)),'fontsize',20);
+            else
+                plot(n_clusters(i),all_sse(i,n_clusters(i)),'marker','s',...
+                    'MarkerFaceColor','r','markeredgecolor','r','markersize',10)
+                text(n_clusters(i) - 0.8, all_sse(i,n_clusters(i)) - 7e4,...
+                    sprintf('%d',n_clusters(i)),'fontsize',20);
+            end
+            title(sprintf('%s',names{i}))
+            xlim([1,10])
+            yticklabels([])
+
+            xticks([1 10])
+
+
+            if i == 18
+                xlabel('Cluster number')
+            end
+
+            if i==11
+                ylabel('                              Sum squared error')
+            end
+            set(gca,'fontsize',20)
         end
-        title(sprintf('%s',names{i}))
-        xlim([1,10])
-        yticklabels([])
 
-        xticks([1 10])
+        print([destFolder,'elbows'],'-depsc')
 
-
-        if i == 18
-            xlabel('Cluster number')
-        end
-
-        if i==11
-            ylabel('                              Sum squared error')
-        end
-        set(gca,'fontsize',20)
+    
     end
-    print([destFolder,'elbows'],'-depsc')
 
 
 end

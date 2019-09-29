@@ -1,8 +1,8 @@
-function showSequences(P,pts,whichSeq,nseq,ic,out_folder)
+function showSequences(P,pts,whichSeq,nseq,ic,out_folder,which_cluster,example)
 % This is another function to plot sequences, using the spike times from
 % the inputted structure
 
-save_plots = 1;
+save_plots = 0;
 
 if isempty(pts) == 1
     for i = 1:length(P)
@@ -28,10 +28,12 @@ columns =  5;
 surroundtime = 2;
 
 %% Get paths and load seizure info and channel info
-[electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
-p1 = genpath(scriptFolder);
-addpath(p1);
-ptInfo = loadjson(jsonfile);
+if example == 0
+    [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
+    p1 = genpath(scriptFolder);
+    addpath(p1);
+    ptInfo = loadjson(jsonfile);
+end
 
 
 
@@ -52,8 +54,9 @@ end
 
 
 
-
-dataName = P(pt).ieeg_name;
+if example == 0
+    dataName = P(pt).ieeg_name;
+end
 ptname = P(pt).name;
 
 
@@ -135,14 +138,27 @@ for i = 1:size(seqs,2)
     %% Load EEG data info
     % calling this with 0 and 0 means I will just get basic info like sampling
     % rate and channel labels
-    data = getiEEGData(dataName,0,0,pwfile);  
-    fs = data.fs;
+    if example == 0
+        data = getiEEGData(dataName,0,0,pwfile);  
+        fs = data.fs;
+    
 
-    %% Get the data for these times
-    thresh.tmul = P(pt).thresh.tmul;
-    thresh.absthresh = P(pt).thresh.absthresh;
-    [gdf,extraoutput] = getSpikesSimple(P,pt,times,7,thresh,0);
-    values = extraoutput.values;
+        %% Get the data for these times
+        thresh.tmul = P(pt).thresh.tmul;
+        thresh.absthresh = P(pt).thresh.absthresh;
+        [gdf,extraoutput] = getSpikesSimple(P,pt,times,7,thresh,0);
+        values = extraoutput.values;
+    elseif example == 1
+        gdf = P(pt).gdf;
+        values = P(pt).eeg_data.values;
+        fs = P(pt).fs;
+        
+        % Subsample the values to just be the times of interest
+        example_times = P(pt).eeg_data.times;
+        indices = max(1,round((times(1)-example_times(1))*fs)):...
+            min(size(values,1),round((times(2)-example_times(1))*fs));
+        values = values(indices,:);
+    end
     unignoredChLabels = P(pt).electrodeData.unignoredChs;
     plottimes =  [1:size(values,1)]/fs;
 
@@ -169,6 +185,8 @@ colors = {'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m',...
     'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m',...
     'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m',...
     'b','r','g','c','m','b','r','g','c','m','b','r','g','c','m'};
+
+if example == 0
 for k = 1:length(seq_fig)
     figure
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.4, 0.95, 0.8]);
@@ -254,6 +272,7 @@ for k = 1:length(seq_fig)
     end
 
 end
+end
 
 
 %% Plot again but make it pretty
@@ -308,7 +327,8 @@ for k = 1:length(seq_fig)
         %}
 
     end
-
+    annotation('textbox',[0.45 0.905 0.1 0.1],'String',sprintf('Cluster %d',which_cluster),...
+        'FitBoxToText','on','edgecolor','none','fontsize',20);
 
 
 

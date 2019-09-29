@@ -4,13 +4,11 @@ function brain_movie_aan(pt,cluster,whichPt)
 %% Parameters
 nbins = 49;
 delay = 0.2;
+circ_size = 1000;
 
 [electrodeFolder,jsonfile,scriptFolder,resultsFolder,pwfile] = fileLocations;
 
-outputFolder = [resultsFolder,'pretty_plots/'];
-other_file_out = [outputFolder,'elecs_aan.gif'];
-file_out = [outputFolder,'aan.gif'];
-file_im_out = [outputFolder,'aan_im'];
+
 
 
 
@@ -22,7 +20,13 @@ locs = pt(whichPt).electrodeData.locs(:,2:4);
 chs = 1:size(locs,1);
 szTimes = pt(whichPt).newSzTimes;
 soz = pt(whichPt).newSOZChs;
+name = pt(whichPt).name;
 
+
+outputFolder = [resultsFolder,'pretty_plots/'];
+other_file_out = [outputFolder,'elecs_aan_',sprintf('%s',name),'.gif'];
+file_out = [outputFolder,'aan_',sprintf('%s',name),'.gif'];
+file_im_out = [outputFolder,'aan_im_',sprintf('%s',name)];
 
 %% Load brain file
 %{
@@ -144,8 +148,10 @@ alpha_lin = linspace(0.1,1,max(max(ch_counts)));
 
 
 %% plot figure showing locations of spikes and clusters
+if 0
 fig = figure;
-
+set(gcf,'color','white');
+set(gcf,'position',[10 10 900 900])
 for k = 1:length(chs)
     % get the appropriate cluster
     for cl = 1:length(cl_locs)
@@ -162,12 +168,17 @@ for k = 1:length(chs)
             this_col = [0 1 0];
         end
 
-        scatter3(locs(k,1),locs(k,2),locs(k,3),200,this_col,'filled');
+        scatter3(locs(k,1),locs(k,2),locs(k,3),circ_size,this_col,'filled');
         hold on
 
 end
-scatter3(locs(:,1),locs(:,2),locs(:,3),200,'k','linewidth',2);
-view(75.6,-4.2)
+scatter3(locs(:,1),locs(:,2),locs(:,3),circ_size,'k','linewidth',2);
+%view(75.6,-4.2)
+if whichPt == 31
+    view(24,2.4)
+elseif whichPt == 17
+    view(-6.16,4.59)
+end
 xticklabels([])
 yticklabels([])
 zticklabels([])
@@ -177,15 +188,18 @@ zlabel('Z')
 set(gca,'fontsize',20)
 grid off
 %set(gca,'visible','off')
-pause
+%pause
 print(fig,file_im_out,'-depsc');
 close(fig)
+end
+
 
 %% Movie showing locations
-
+if 1
 for tt = 1:120
     fig = figure;
     set(gcf,'color','white');
+    set(gcf,'position',[10 10 900 900])
     for k = 1:length(chs)
         % get the appropriate cluster
         for cl = 1:length(cl_locs)
@@ -202,18 +216,25 @@ for tt = 1:120
                 this_col = [0 1 0];
             end
 
-            scatter3(locs(k,1),locs(k,2),locs(k,3),200,this_col,'filled');
+            scatter3(locs(k,1),locs(k,2),locs(k,3),circ_size,this_col,'filled');
             hold on
 
     end
-    scatter3(locs(:,1),locs(:,2),locs(:,3),200,'k','linewidth',2);
-    view(135-3*tt,-4.2)
+    scatter3(locs(:,1),locs(:,2),locs(:,3),circ_size,'k','linewidth',2);
+    %view(135-3*tt,-4.2)
+    if whichPt == 31
+        view(24-3*tt,2.4)
+    elseif whichPt == 17
+        view(-6.16-3*tt,4.59)
+    end
+    
+    
     xticklabels([])
     yticklabels([])
     zticklabels([])
-    xlabel('X')
-    ylabel('Y')
-    zlabel('Z')
+    %xlabel('X')
+    %ylabel('Y')
+    %zlabel('Z')
     set(gca,'fontsize',20)
     grid off
     
@@ -230,18 +251,18 @@ for tt = 1:120
     close(fig)
     
 end
+end
 
-F = 0;
+%F = 0;
 
-%% Plot movie
-
-
-for tt = 1:nbins
+%% Plot single time
+if 0
+    tt = 24;
     
     fig = figure;
    % set(fig,'Position',[100 100 
     set(gcf,'color','white');
-    
+    set(gcf,'position',[10 10 900 900])
     %{
     % Plot the brain
     patch('Vertices',V','Faces',F3','FaceColor',[0.9 0.75 0.75],'EdgeColor','None');
@@ -253,9 +274,14 @@ for tt = 1:nbins
     % Get counts per channel in this time
     alpha_lin_time = linspace(1,0,max(ch_counts(tt,:)));
     
-    scatter3(locs(:,1),locs(:,2),locs(:,3),350,'k','linewidth',2);
+    scatter3(locs(:,1),locs(:,2),locs(:,3),circ_size,'k','linewidth',2);
     hold on
-    view(75.6 - tt*3,-4.2)
+   % view(75.6 - tt*3,-4.2)
+    if whichPt == 31
+        view(24,2.4)
+    elseif whichPt == 17
+        view(-6.16,4.59)
+    end
     
     for k = 1:length(chs)
         
@@ -270,20 +296,138 @@ for tt = 1:nbins
         n_counts = ch_counts(tt,k);
         
         if which_clust == 1
-            this_col = [alpha_lin_time(max(1,n_counts)) ...
-                alpha_lin_time(max(1,n_counts)) 1];
+            if n_counts == 0
+                this_col = [1 1 1];
+            else
+                this_col = [alpha_lin_time(max(1,n_counts)) ...
+                    alpha_lin_time(max(1,n_counts)) 1];
+            end
         elseif which_clust == 2
-            this_col = [1 alpha_lin_time(max(1,n_counts)) alpha_lin_time(max(1,n_counts))];
+            if n_counts == 0
+                this_col = [1 1 1];
+            else
+                this_col = [1 alpha_lin_time(max(1,n_counts)) alpha_lin_time(max(1,n_counts))];
+            end
         elseif which_clust == 3
+            if n_counts == 0
+                this_col = [1 1 1];
+            else
             this_col = [alpha_lin_time(max(1,n_counts)) 1 ...
                 alpha_lin_time(max(1,n_counts))];
+            end
         end
         
         
         %alpha_temp = alpha_lin_time(max(1,n_counts));
 
         
-        scatter3(locs(k,1),locs(k,2),locs(k,3),350,this_col,'filled');
+        scatter3(locs(k,1),locs(k,2),locs(k,3),circ_size,this_col,'filled');
+        if 0
+        stars = scatter3(locs(soz,1),locs(soz,2),locs(soz,3),circ_size,'p','markerfacecolor','w',...
+            'markeredgecolor','k','linewidth',2);
+        end
+        %alpha(p,alpha_temp);
+        
+        
+    end
+    if 0
+        l1 = legend(stars,'Seizure onset zone','location','northeast',...
+            'fontsize',30);
+        pause(0.5)
+        for i = 1:length(l1.EntryContainer.NodeChildren)
+            l1.EntryContainer.NodeChildren(i).Icon.Transform.Children.Children.Size = 30;
+        end
+    end
+    xticklabels([])
+    yticklabels([])
+    zticklabels([])
+    %xlabel('X')
+    %ylabel('Y')
+    %zlabel('Z')
+    grid off
+    set(gca,'visible','off')
+    %set(gca,'fontsize',20)
+    %set(gca,'visible','off')
+    %title(sprintf('Hour %d',new_times(tt)),'fontsize',20);
+    ax = gca;
+    outerpos = ax.OuterPosition;
+    ti = ax.TightInset; 
+    left = outerpos(1) + ti(1);
+    bottom = outerpos(2) + ti(2);
+    ax_width = outerpos(3) - ti(1) - ti(3);
+    ax_height = outerpos(4) - ti(2) - ti(4);
+    ax.Position = [left bottom ax_width ax_height];
+    
+end
+
+%% Plot movie
+
+if 0
+for tt = 1:nbins
+    
+    fig = figure;
+   % set(fig,'Position',[100 100 
+    set(gcf,'color','white');
+    set(gcf,'position',[10 10 900 900])
+    %{
+    % Plot the brain
+    patch('Vertices',V','Faces',F3','FaceColor',[0.9 0.75 0.75],'EdgeColor','None');
+    hold on
+    camlight(gca,-80,-10);
+    lighting(gca,'gouraud');
+    %}
+    
+    % Get counts per channel in this time
+    alpha_lin_time = linspace(1,0,max(ch_counts(tt,:)));
+    
+    scatter3(locs(:,1),locs(:,2),locs(:,3),circ_size,'k','linewidth',2);
+    hold on
+   % view(75.6 - tt*3,-4.2)
+    if whichPt == 31
+        view(24,2.4)
+    elseif whichPt == 17
+        view(-6.16,4.59)
+    end
+    
+    for k = 1:length(chs)
+        
+        % get the appropriate cluster
+        for cl = 1:length(cl_locs)
+            if ismember(k,cl_locs{cl}) == 1
+                which_clust = cl;
+            end
+        end
+        
+        % Get appropriate color
+        n_counts = ch_counts(tt,k);
+        
+        if which_clust == 1
+            if n_counts == 0
+                this_col = [1 1 1];
+            else
+                this_col = [alpha_lin_time(max(1,n_counts)) ...
+                    alpha_lin_time(max(1,n_counts)) 1];
+            end
+        elseif which_clust == 2
+            if n_counts == 0
+                this_col = [1 1 1];
+            else
+                this_col = [1 alpha_lin_time(max(1,n_counts)) alpha_lin_time(max(1,n_counts))];
+            end
+        elseif which_clust == 3
+            if n_counts == 0
+                this_col = [1 1 1];
+            else
+            this_col = [alpha_lin_time(max(1,n_counts)) 1 ...
+                alpha_lin_time(max(1,n_counts))];
+            end
+        end
+        
+        
+        %alpha_temp = alpha_lin_time(max(1,n_counts));
+
+        
+        scatter3(locs(k,1),locs(k,2),locs(k,3),circ_size,this_col,'filled');
         %alpha(p,alpha_temp);
         
         
@@ -291,10 +435,11 @@ for tt = 1:nbins
     xticklabels([])
     yticklabels([])
     zticklabels([])
-    xlabel('X')
-    ylabel('Y')
-    zlabel('Z')
+    %xlabel('X')
+    %ylabel('Y')
+    %zlabel('Z')
     grid off
+    set(gca,'visible','off')
     set(gca,'fontsize',20)
     %set(gca,'visible','off')
     %title(sprintf('Hour %d',new_times(tt)),'fontsize',20);
@@ -321,6 +466,6 @@ for tt = 1:nbins
     close(fig)
     
 end
-
+end
 
 end

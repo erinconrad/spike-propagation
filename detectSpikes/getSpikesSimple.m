@@ -1,4 +1,4 @@
-function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thresh,v)
+function [gdf,extraOutput] = getSpikesSimple(pt,whichPt,times,whichDetector,thresh,v,example)
 
 % This is my basic spike detector file which can call one of a number of
 % specific detectors. Detector 7 (fspk6) is the one used for the spike
@@ -20,10 +20,14 @@ multiChTime = 0.4;
 % (I don't use this)
 vtime = [-0.005,0.05];
 
-%% Load file paths, etc.
-[~,~,~,~,pwfile] = fileLocations;
-dataName = pt(whichPt).ieeg_name;
-
+if exist('example','var') == 0 || example ~= 1
+% Not using example data, using ieeg data    
+    
+    %% Load file paths, etc.
+    [~,~,~,~,pwfile] = fileLocations;
+    dataName = pt(whichPt).ieeg_name;
+end
+    
 if exist('thresh','var') == 0
    error('Error, no thresholds entered\n');
 end
@@ -32,6 +36,7 @@ if isempty(thresh.tmul) == 1
    error('Error, no thresholds entered\n');
 end
 
+
 fs = pt(whichPt).fs;
 
 % This is to get the final shorter times if I am requesting less than 60
@@ -39,6 +44,8 @@ fs = pt(whichPt).fs;
 oldtimes = times;
 oldStartEnd = oldtimes*fs;
 
+
+    
 % channel locations
 chLocs = pt(whichPt).electrodeData.locs;
 
@@ -53,13 +60,19 @@ indices = startAndEndIndices(1):startAndEndIndices(2);
 tmul = thresh.tmul;
 absthresh = thresh.absthresh;
 
-%% get the data from those indices and channels (ignoring ignored channels)
-fprintf('Retrieving data for %s time %d...\n',pt(whichPt).name,times(1));
-tic
-if indices(1) == 0, indices=indices(2:end); end
-data = getiEEGData(dataName,channels,indices,pwfile);
-toc
-fprintf('Retrieved data\n');
+if exist('example','var') == 0 || example ~= 1
+    % using ieeg data
+    %% get the data from those indices and channels (ignoring ignored channels)
+    fprintf('Retrieving data for %s time %d...\n',pt(whichPt).name,times(1));
+    tic
+    if indices(1) == 0, indices=indices(2:end); end
+    data = getiEEGData(dataName,channels,indices,pwfile);
+    toc
+    fprintf('Retrieved data\n');
+else
+    % using example data
+    data = pt(whichPt).eeg_data;
+end
 
 % remove nans
 data.values(isnan(data.values)) = 0;
@@ -296,10 +309,10 @@ fprintf('Finished detection\n');
 %% Re-align the spike to be the peak (positive or negative)
 % I don't do this here because now I do it in the actual spike detector
 values = data.values;
-%{
-if 1 == 0
 
-timeToPeak = [-.1,.15]; % Where to look for the peak
+if whichDetector == 6
+
+timeToPeak = [-.15,.15]; % Where to look for the peak
 idxToPeak = timeToPeak*fs;
 
 new_gdf = gdf;
