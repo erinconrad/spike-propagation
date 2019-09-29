@@ -27,8 +27,16 @@ To illustrate the steps of this project, we included a single script
 run_example_data, which completes the entire pipeline from spike detection 
 through clustering by spike location for a 500 second sample of EEG data 
 for a single patient (Study 029). To run this pipeline, load the .mat file
-example_pt.mat. Then call the script run_example_data.m, located in the
-folder prepare_example/. Because this contains such a short duration of
+example_pt.mat. Then make sure the spike-propagation script directory is on
+your Matlab path. Then call the script run_example_data.m, located in the
+folder prepare_example/. Specifically, run the following code:
+
+>> load example_pt.mat
+>> run_example_data
+
+I would recommend opening the run_example_data.m
+script so that you can read the explanation of what it is doing at each 
+step. Because this contains such a short duration of
 data, time series analyses cannot meaningfully be performed on it. However,
 a longer duration of data, structured according to this data structure,
 could be run with the same pipeline. Alternatively, analysis can be run on

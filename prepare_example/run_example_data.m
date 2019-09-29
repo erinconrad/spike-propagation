@@ -25,6 +25,7 @@ fs = pt(whichPt).fs; % Sampling rate
 
 
 %% Run spike detector
+fprintf('Running spike detector...\n');
 [gdf,~] = getSpikesSimple(pt,whichPt,times,whichDetector,thresh,0,example);
 % gdf is an nx2 array, where there are n spikes, and the first column has
 % the spike channel and the second column has the spike time. They are
@@ -53,8 +54,13 @@ xlabel('Time (s)')
 title(sprintf('Spike time: %1.1f s, electrode %s',sp_time,elec_label))
 set(gca,'fontsize',20)
 
+fprintf('\n\nGot spikes. Press any key to continue on to getting spike sequences...\n')
+pause
+
 
 %% Run spike sequence detector
+fprintf('\nDetecting spike sequences...\n');
+
 % This detects multi-channel spike sequences
 pt(whichPt).data = mainSequences(gdf,pt(whichPt).electrodeData, pt(whichPt).fs);
 
@@ -94,8 +100,12 @@ xlim([0,surround_time*2])
 xlabel('Time (s)')
 title(sprintf('First spike time: %1.1f s',times(1)))
 set(gca,'fontsize',20)
+
+fprintf('\n\nGot spike sequences. Press any key to continue on to choosing the ideal cluster number...\n');
+pause
     
 %% Get the optimal cluster number
+fprintf('\nGetting the optimal cluster number...\n');
 % Note that this is imperfect because we are running the clustering
 % algorithm over a short period of data. I tried to pick a section of data
 % in which there seemed to be 3 separate spike clusters for example. When
@@ -104,8 +114,11 @@ set(gca,'fontsize',20)
 % the graph to get the optimal cluster number. (It appears to be 3 for the
 % example data).
 getClusters(pt,whichPt,1,1,0,0); 
+fprintf('\nSelect the cluster number forming the inflection point, and change the code below if needed (default cluster number is 3). Press any key to continue to running the clustering algorithm...\n');
+pause
 
 %% Run the clustering algorithm for K = 3 (looks like the inflection point on the SSE plot)
+fprintf('\n\nRunning the clustering algorithm...\n')
 % This will run the clustering algorithm with a cluster number of 3. It
 % will cluster the spikes based on their spike location. It will output a
 % new structure "cluster" with the cluster identities of each spike. It
@@ -117,24 +130,35 @@ getClusters(pt,whichPt,1,1,0,0);
 % etc. will change each time. It is non-deterministic because of the nature
 % of Matlab's k-means and it is NOT the case that the most populous cluster
 % is cluster 1.
-cluster = getClusters(pt,whichPt,0,1,1,0,3); 
+ideal_cluster_number = 3;
+cluster = getClusters(pt,whichPt,0,1,1,0,ideal_cluster_number); 
+fprintf('\n\nClustered the spikes. The plots show 10 example spike sequences for each cluster. Examine the sequences to see how many appear artifactual. Press any key to show spike cluster locations...\n');
+pause
 
 %% Plot the cluster centroid locations
 locs = pt(whichPt).electrodeData.locs(:,2:4); % Get all electrode locations
 centroid_locs = cluster(whichPt).C; % Get centroid locations for each cluster
 figure
+set(gcf,'position',[440 192 1001 606]);
 colors = [0 0 1;1 0 0;0 1 0];
-scatter3(locs(:,1),locs(:,2),locs(:,3),300,'k') % plot all electrodes
+el = scatter3(locs(:,1),locs(:,2),locs(:,3),300,'k'); % plot all electrodes
 hold on
+cl = zeros(1,size(centroid_locs,1));
 for i = 1:size(centroid_locs,1)
-    scatter3(centroid_locs(i,1),centroid_locs(i,2),centroid_locs(i,3),400,...
-        colors(i,:),'filled') % plot cluster centroids
+   cl(i)=  scatter3(centroid_locs(i,1),centroid_locs(i,2),centroid_locs(i,3),400,...
+        colors(i,:),'filled'); % plot cluster centroids
 end
+xticklabels([])
+yticklabels([])
+zticklabels([])
+legend([el,cl],{'All electrodes','Cluster 1','Cluster 2','Cluster 3'},'fontsize',20)
+title('Cluster centroid locations','fontsize',20);
+fprintf('\nShowing spike cluster locations.\n\n');
 
 %% Plot proportion of sequences in each cluster over time
 % This defaults to not plot because it is likely not meaningful over such a
 % short time period
-if 1 == 1
+if 1 == 0
     
     colors = [0 0 1;1 0 0;0 1 0]; %The colors (will work for up to 3 clusters)
     plot_times = cluster(whichPt).all_times_all; % plot times
