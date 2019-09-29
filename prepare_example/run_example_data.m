@@ -131,7 +131,7 @@ fprintf('\n\nRunning the clustering algorithm...\n')
 % of Matlab's k-means and it is NOT the case that the most populous cluster
 % is cluster 1.
 ideal_cluster_number = 3;
-cluster = getClusters(pt,whichPt,0,1,1,0,ideal_cluster_number); 
+cluster = getClusters(pt,whichPt,0,1,0,0,ideal_cluster_number); 
 fprintf('\n\nClustered the spikes. The plots show 10 example spike sequences for each cluster. Examine the sequences to see how many appear artifactual. Press any key to show spike cluster locations...\n');
 pause
 
