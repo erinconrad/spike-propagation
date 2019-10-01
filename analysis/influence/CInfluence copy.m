@@ -2,17 +2,24 @@ function CInfluence(pt,cluster,whichPts)
 
 %{
 
-My area of influence analysis
+My area of influence analysis.
+
+this take a pt struct, a cluster struct, and calculates
+distances of various electrodes of interest, including the area with the
+largest area of influence, from the nearest SOZ.
+
 %}
 
 % Parameters
+doPoster = 1;
 doPlots = 0; %0 = no, 1=normal, 2=pretty
 plotConn = 0;
 removeTies = 1;
-doBootstrap = 0;
+doBootstrap = 0; % 0 = no, 1 = standard, 2 = permute rows, 3 = permute columns
 alpha1 = 95;
 map_text = 'jet';
 fh_map = str2func(map_text);
+new_bootstrap = 0;
 
 [~,~,scriptFolder,resultsFolder,~] = fileLocations;
 p1 = genpath(scriptFolder);
@@ -37,6 +44,7 @@ temp_lobe_all = [];
 allMeanDist = [];
 sa_resected = [];
 sf_resected = [];
+sa_sf_corr = [];
 
 if isempty(whichPts) == 1
     for i = 1:length(pt)
@@ -53,7 +61,7 @@ elseif whichPts == 300
 end
 
 if isequal(whichPts,[1,4,6,7,8,9,12,14,15,16,17,18,19,20,22,24,25,27,30,31]) == 0
-    error('Warning, not doing correct patients!\n');
+   % error('Warning, not doing correct patients!\n');
 end
 
 for whichPt = whichPts
@@ -75,7 +83,8 @@ for whichPt = whichPts
     seq_matrix = pt(whichPt).seq_matrix;
     
     % outcomes
-    outcome = getOutcome(pt,whichPt);
+    %outcome = getOutcome(pt,whichPt);
+    outcome = str2num(pt(whichPt).clinical.outcome(end));
     outcome_all = [outcome_all;outcome];
     
     % SOZ
@@ -127,6 +136,7 @@ for whichPt = whichPts
     idx = cluster(whichPt).idx; % the cluster index for every spike
     C = cluster(whichPt).C; % the centroids of the clusters
     bad_cluster = cluster(whichPt).bad_cluster; % which clusters are bad
+    
     
     %% Compare number of spikes in cluster array and my data
     if sum(sum(~isnan(seq_matrix))) ~= length(all_times_all)
@@ -247,34 +257,142 @@ for whichPt = whichPts
         colorbar
     end
     
-    if whichPt == 8, exampleChCh = chCh; end
+    spike_count_per_ch = sum(chCh,1);
     
-    %% Do a test of symmetry
-    % If spikes are randomly oriented, then chCh should be symmetric, which
-    % is to say that for all i and j, chCh(i,j) ~= chCh(j,i)
+    if whichPt == 8, exampleChCh = chCh; end
     
     
     
     %% Get significant connections
-    if doBootstrap == 1
+    if doBootstrap == 2
+        % This is a new analysis where I compare the number of connections
+        % to that of a matrix where I randomly permute just the rows of the
+        % connection matrix. In this random matrix, the number of times
+        % downstream electrodes are activated is held constant, but this
+        % set of downstream connections is attributed to a random leader
+        % electrode.
+        
+        nboot = 1e3;
+        boot_con = zeros(nboot,nchs,nchs);
+        for ib = 1:nboot
+            
+            % Get random permutation from 1:nchs
+            p = randperm(nchs);
+            
+            % shuffle the connection matrix according to this permutation
+            temp_chCh =  chCh(p,:);
+            boot_con(ib,:,:) = temp_chCh;
+     
+        end
+        
+        % Now go through each row, and then for each column in that row,
+        % find the 95% number of connections in the bootstrap matrix.
+        % This is the minimum connection number needed to achieve
+        % significance.
+        
+        sig_con = zeros(nchs,nchs);
+        chInfluence = cell(nchs,1);
+        for i = 1:nchs
+            for j = 1:nchs
+                
+                % sort the bootstrap connections for that element
+                boot_element = sort(boot_con(:,i,j));
+                perc = prctile(boot_element,alpha1);
+                
+                % See if the number of connections is higher than this
+                if chCh(i,j) > perc
+                    sig_con(i,j) = 1;
+                    chInfluence{i} = [chInfluence{i},j];
+                end
+                
+            end
+        end
+        
+    elseif doBootstrap == 3
+        
+        % Now permute the columns (so each leader electrode will keep the
+        % same general downstream number of connections, but they will be
+        % assigned to a random permutation of downstream connections).
+        
+        nboot = 1e3;
+        boot_con = zeros(nboot,nchs,nchs);
+        for ib = 1:nboot
+            
+            % Get random permutation from 1:nchs
+            p = randperm(nchs);
+            
+            % shuffle the connection matrix according to this permutation
+            temp_chCh =  chCh(:,p);
+            boot_con(ib,:,:) = temp_chCh;
+     
+        end
+        
+        % Now go through each row, and then for each column in that row,
+        % find the 95% number of connections in the bootstrap matrix.
+        % This is the minimum connection number needed to achieve
+        % significance.
+        
+        sig_con = zeros(nchs,nchs);
+        chInfluence = cell(nchs,1);
+        for i = 1:nchs
+            for j = 1:nchs
+                
+                % sort the bootstrap connections for that element
+                boot_element = sort(boot_con(:,i,j));
+                perc = prctile(boot_element,alpha1);
+                
+                % See if the number of connections is higher than this
+                if chCh(i,j) > perc
+                    sig_con(i,j) = 1;
+                    chInfluence{i} = [chInfluence{i},j];
+                end
+                
+            end
+        end
+    
+    elseif doBootstrap == 1
         
         % Here, for each permutation, I am constructing a chCh matrix where
         % I am distributing the true total number of connections randomly
         % across all elements of the nch by nch matrix.
+        
         ncons = sum(sum(chCh));
         nboot = 1e3;
         max_size = nchs*nchs;
         chCh_all = zeros(nboot,nchs,nchs);
         chCh_diff_all = zeros(nboot,nchs,nchs);
+        chCh_diff = zeros(nchs,nchs);
         for ib = 1:nboot
+            ib
             if mod(ib,100) == 0
                 fprintf('Doing %d of %d\n', ib,nboot);
             end
             chCh_f = zeros(nchs,nchs);
-            for j = 1:ncons
-               chCh_f(randi(max_size)) = chCh_f(randi(max_size)) + 1;
+            if new_bootstrap == 0
+                for j = 1:ncons
+                    chCh_f(randi(max_size)) = chCh_f(randi(max_size)) + 1;
+
+                end
+                chCh_all(ib,:,:) = chCh_f;
+            elseif new_bootstrap == 1
+                % weight the probability of getting a connection by the
+                % spike rate
+               
+                    
+                rows = randsample(nchs,ncons,true,spike_count_per_ch);
+                cols = zeros(ncons,1);
+                for j = 1:ncons
+                    not_allowed = rows(j); % spike can't travel from one channel to same channel
+                    new_weights = spike_count_per_ch; new_weights(not_allowed) = 0;
+                    cols(j) = randsample(nchs,1,true,new_weights);  
+                end
+                
+                for j = 1:ncons
+                   chCh_all(ib,rows(j),cols(j)) = chCh_all(ib,rows(j),cols(j)) + 1;
+                end
+                
+               
             end
-            chCh_all(ib,:,:) = chCh_f;
             
             % Also calculate the difference between i,j and j,i
             for i = 1:size(chCh_f,1)
@@ -286,9 +404,9 @@ for whichPt = whichPts
             
         end
         
-        if 1 == 1
+        if 1 == 0
             figure
-            imagesc(squeeze(mean(chCh_diff_all,1)))
+            imagesc(squeeze(mean(chCh_all,1)))
             colorbar
         end
         
@@ -307,7 +425,11 @@ for whichPt = whichPts
         
     end
     
-    % Assume poisson distribution
+    n_spikes_ch = sum(~isnan(seq_matrix),2);
+    
+    if doBootstrap < 2
+    % Assume poisson distribution (produces same result as permutation
+    % test)
     ncons = sum(sum(chCh));
     lambda = ncons/nchs^2;
     X = poissinv(alpha1/100,lambda);
@@ -315,15 +437,18 @@ for whichPt = whichPts
     fprintf(['By poisson assumption, the number of counts is:\n'...
         '%d\n\n'],X);
     
+    
+    %if perc~=X, error('What\n'); end
+    
     if whichPt == 8, exampleX = X; end
     
-    %% Now find channels with more spikes than expected by chance.
+    %% Now find connections that are more frequent by chance
     n_spikes = length(all_spike_times);
     lambda_spikes = n_spikes/nchs;
     X_spikes = poissinv(alpha1/100,lambda_spikes);
     minCountSpikes = X_spikes;
     
-    n_spikes_ch = sum(~isnan(seq_matrix),2);
+    
     ch_w_spikes = find(n_spikes_ch>minCountSpikes);
     spiker = n_spikes_ch>minCountSpikes;
     allSpikers = [allSpikers;spiker];
@@ -336,6 +461,8 @@ for whichPt = whichPts
                 chInfluence{i} = [chInfluence{i},j];
             end
         end
+    end
+        
     end
     
     %% Get the surface are of influence of each channel
@@ -361,6 +488,34 @@ for whichPt = whichPts
     allSAs = [allSAs;sa];
     allMaxSAs = [allMaxSAs;(max(sa))];
     
+    %% Make AAN plot
+    if 0
+    figure
+    scatter3(locs(:,1),locs(:,2),locs(:,3),200,'k');
+    %parula_c = parula(2);
+    parula_c = [0 0.4470 0.7410;
+    0.8500 0.3250 0.0980];
+    hold on
+    seq_freq = sum(~isnan(seq_matrix),2);
+    [~,temp_max_sf] = max(seq_freq);
+    
+    h_soz = scatter3(locs(soz,1),locs(soz,2),locs(soz,3),200,parula_c(1,:),'filled');
+    h_sf = scatter3(locs(temp_max_sf,1),locs(temp_max_sf,2),...
+        locs(temp_max_sf,3),100,parula_c(2,:),'filled');
+    legend([h_soz,h_sf],{'Seizure onset zone','Max spike frequency'},'location',...
+        'northwest');
+    view(-14.7,30)
+    xlabel('X')
+    ylabel('Y')
+    zlabel('Z')
+    zticklabels([])
+    yticklabels([])
+    xticklabels([])
+    grid off
+    set(gca,'fontsize',25)
+    print(gcf,[destFolder,'brain_ex_AAN'],'-depsc');
+    end
+    
 
     % Distance from electrode with max SA to closest SOZ
     [~,I] = max(sa);
@@ -383,12 +538,14 @@ for whichPt = whichPts
     allAllDist =[allAllDist;mean(allLocs)];
     
     % Distance from electrodes with spikes to closest SOZ electrode
+    if 0 
     spikeLocs = locs(ch_w_spikes,:);
     spikeDist = zeros(size(spikeLocs,1),1);
     for i = 1:size(spikeLocs,1)
         spikeDist(i) = min(vecnorm(spikeLocs(i,:)-locs(soz,:),2,2));
     end
     allSpikeDist = [allSpikeDist;spikeDist];
+    end
     
     % Get distance between electrode with max SA and electrode with max seq
     % freq
@@ -397,6 +554,7 @@ for whichPt = whichPts
     allMeanDist = [allMeanDist;mean(allLocs)];
     
     if whichPt == 8, exampleSA = sa; end
+    if whichPt == 8, exampleSF = seq_freq; end
     if whichPt == 8, exampleChInfluence = chInfluence; end
     
      % Get list of resected electrodes
@@ -412,6 +570,23 @@ for whichPt = whichPts
     [~,sf_max_ident] = max(seq_freq);
     sf_resected = [sf_resected;ismember(sf_max_ident,resec_elecs)];
     
+    %% Calculate spearman rank correlation between SF and SA
+    sa_sf_corr = [sa_sf_corr;corr(seq_freq,sa,'Type','Spearman')];
+    
+    %% Example plot to convince myself I am doing the resection analysis correctly
+%{
+    figure
+    scatter3(locs(:,1),locs(:,2),locs(:,3),100,'k','linewidth',2);
+    hold on
+    scatter3(locs(sa_max_ident,1),locs(sa_max_ident,2),locs(sa_max_ident,3),100,'b','filled');
+    scatter3(locs(sf_max_ident,1),locs(sf_max_ident,2),locs(sf_max_ident,3),100,'r','filled');
+    scatter3(locs(resec_elecs,1),locs(resec_elecs,2),locs(resec_elecs,3),20,'k','filled');
+    fprintf('Was max SA resected? %d\n',ismember(sa_max_ident,resec_elecs));
+    fprintf('Was max SF resected? %d\n\n\n',ismember(sf_max_ident,resec_elecs));
+    pause
+    close(gcf)
+    
+    %}
     
     %{
     
@@ -557,6 +732,48 @@ scatter(allSAs(allSpikers==1),allAllDist(allSpikers==1));
 [rho,pval] = corr(allSAs(allSpikers==1),allAllDist(allSpikers==1),'Type','Spearman')
 %}
 
+aes_plot_aoi(allAllDist,allSADist,allFreqDist)
+
+%% Make AAN plots
+figure
+np = size(allAllDist,1);
+%{
+scatter(ones(np,1) + ones(np,1).*randn(np,1)/15,allFreqDist,100,'filled');
+hold on
+scatter(2*ones(np,1) + ones(np,1).*randn(np,1)/15,allAllDist,100,'filled');
+%}
+h = boxplot([allFreqDist',allAllDist]);
+h2 = h(:);
+for ih = 1:length(h2)
+    set(h2(ih,:),'LineWidth',2);
+end
+hold on
+[pFreqAll,h5,stats5] = signrank(allFreqDist,allAllDist);
+if pFreqAll < 0.001
+    textFreqAll = 'p < 0.001***';
+elseif pFreqAll < 0.01
+    textFreqAll = sprintf('p = %1.3f** (Wilcoxon signed-rank)',pFreqAll);
+elseif pFreqAll < 0.05
+    textFreqAll = sprintf('p = %1.3f*',pFreqAll);
+else
+    textFreqAll = sprintf('p = %1.3f',pFreqAll);
+end
+max_point = max([allFreqDist,allAllDist']);
+plot([1 2],[max_point+2 max_point+2],'k','linewidth',2)
+text(1.5,max_point+7,textFreqAll,'HorizontalAlignment','Center','FontSize',20)
+xticks([1 2])
+xticklabels({'Max spike rate','All electrodes'})
+ylabel({'Distance from nearest','seizure onset zone (mm)'})
+set(gca,'fontsize',20)
+set(gca,'xlim',[0.7 2.3])
+set(gca,'ylim',[0 max_point+10])
+print([destFolder,'aan_soz'],'-depsc')
+
+%% Get average SRC between SA and SF
+% I'll just do a plain average across patients since I am not doing
+% significance testing
+rho_sa_sf_avg = mean(sa_sf_corr);
+
 %% Compare clinical outcome for pts with resected max SA and those without
 [p_sa_resec,h_sa_resec,sa_stats_resec] = ...
     ranksum(outcome_all(sa_resected == 1),outcome_all(sa_resected == 0));
@@ -565,6 +782,17 @@ fprintf(['P value for different outcome between resected max area of influence'.
     'and not is:\n%1.1e, ranksum = %1.1f\n'],...
     p_sa_resec,sa_stats_resec.ranksum);
 
+ilae_sa_resec = outcome_all(sa_resected == 1);%getILAE(outcome_all(sa_resected == 1));
+ilae_sa_noresec = outcome_all(sa_resected == 0);%getILAE(outcome_all(sa_resected == 0));
+
+fprintf('Median ilae for sa resec = %1.1f, for sa no resec %1.1f\n',...
+    median(ilae_sa_resec), median(ilae_sa_noresec));
+
+
+[~,~, u_mat] = ranksum_erin(outcome_all(sa_resected == 1),outcome_all(sa_resected == 0));
+[~,~, u_erin] = ranksum_erin(outcome_all(sa_resected == 1),outcome_all(sa_resected == 0));
+fprintf('Ranksum matlab  = %1.1f, ranksum erin = %1.1f\n',u_mat,u_erin);
+
 %% Compare clinical outcome for pts with resected max SF and those without
 [p_sf_resec,h_sf_resec,stats_sf_resec] = ...
     ranksum(outcome_all(sf_resected == 1),outcome_all(sf_resected == 0));
@@ -572,6 +800,16 @@ fprintf(['P value for different outcome between resected max area of influence'.
 fprintf(['P value for different outcome between resected max spike frequency'...
     'and not is:\n%1.1e, ranksum = %1.1f\n'],...
     p_sf_resec,stats_sf_resec.ranksum);
+
+ilae_sf_resec = outcome_all(sf_resected == 1);%getILAE(outcome_all(sf_resected == 1));
+ilae_sf_noresec = outcome_all(sf_resected == 0);%getILAE(outcome_all(sf_resected == 0));
+
+fprintf('Median ilae for sf resec = %1.1f, for sf no resec %1.1f\n',...
+    median(ilae_sf_resec), median(ilae_sf_noresec));
+
+[~,~, u_mat] = ranksum_erin(outcome_all(sf_resected == 1),outcome_all(sf_resected == 0));
+[u_erin] = getStandardStats(outcome_all(sf_resected == 1),outcome_all(sf_resected == 0),'rs');
+fprintf('Ranksum matlab  = %1.1f, ranksum erin = %1.1f\n',u_mat,u_erin);
 
 %% Does SA do better than chance?
 %{
@@ -583,21 +821,41 @@ fprintf(['P value for different outcome between resected max spike frequency'...
 [pFreqAll,h5,stats5] = ranksum(allFreqDist,allAllDist);
 %}
 
+%% SA vs freq
 [pFreqSA,h3,stats3] = signrank(allFreqDist,allSADist);
-[pAllSA,h4,stats4] = signrank(allSADist',allAllDist);
-[pFreqAll,h5,stats5] = signrank(allFreqDist,allAllDist);
 
 fprintf('P-value for max freq vs max SA is %1.1e, signed-rank = %1.1f\n',...
     pFreqSA,stats3.signedrank);
+
+w_mat = signrank_erin(allFreqDist',allSADist');
+w_erin = getStandardStats(allFreqDist',allSADist','sr');
+fprintf('Signrank matlab  = %1.1f, signrank erin = %1.1f\n',w_mat,w_erin);
+
+
+%% SA vs all
+[pAllSA,h4,stats4] = signrank(allSADist',allAllDist);
+
 fprintf('P-value for max SA vs all is %1.1e, signed-rank = %1.1f\n',...
     pAllSA,stats4.signedrank);
+
+w_mat = signrank_erin(allSADist',allAllDist);
+w_erin = getStandardStats(allSADist',allAllDist,'sr');
+fprintf('Signrank matlab  = %1.1f, signrank erin = %1.1f\n',w_mat,w_erin);
+
+%% Freq vs all
+
+[pFreqAll,h5,stats5] = signrank(allFreqDist,allAllDist);
 fprintf('P-value for max freq vs all is %1.1e, signed-rank = %1.1f\n',...
     pFreqAll,stats5.signedrank);
+w_mat = signrank_erin(allFreqDist',allAllDist);
+w_erin = getStandardStats(allFreqDist',allAllDist,'sr');
+fprintf('Signrank matlab  = %1.1f, signrank erin = %1.1f\n',w_mat,w_erin);
 
 
 
 %% Do Plots
 
+%{
 %% First, plot for poster
 fontsizes = 19;
 figure
@@ -702,38 +960,51 @@ ylim([0 max(prices) + 15]);
 %pause
 print(gcf,[destFolder,'influence_nonAA_poster'],'-depsc');
 eps2pdf([destFolder,'influence_nonAA_poster','.eps'])
-
+%}
 
 
 %% Parameters and plot initialization
-fontsizes = 15;
+fontsizes = 20;
 
 figure
-set(gcf,'Position',[270 12 817 793]);
-[ha,pos] = tight_subplot(3,2,[0.09 0.03],[0.03 0.03],[0.07 0.02]);
-set(ha(5),'Position',[pos{5}(1) pos{5}(2) pos{5}(3)*2 pos{5}(4)]);
-delete(ha(6));
+if doPoster == 1
+    set(gcf,'Position',[107 12 1200 793]);
+    [ha,pos] = tight_subplot(3,3,[0.11 0.05],[0.04 0.04],[0.06 0.04]);
+    set(ha(7),'Position',[pos{7}(1) pos{7}(2) pos{7}(3)*1.5 pos{7}(4)]);
+else
+    set(gcf,'Position',[107 12 946 793]);
+    [ha,pos] = tight_subplot(3,3,[0.09 0.03],[0.03 0.03],[0.07 0.02]);
+    set(ha(7),'Position',[pos{7}(1) pos{7}(2) pos{7}(3)*3 pos{7}(4)]);
+end
+
+
+delete(ha(8));
+delete(ha(9));
 
 %% Plot downstream connections
 axes(ha(1))
 imagesc(exampleChCh)
 colorbar
-title('Number of downstream spike connections');
-xlabel('Downstream electrode #');
-ylabel('Leading electrode #');
+title('HUP078 spike connections');
+xlabel('Downstream electrode');
+ylabel('Leading electrode');
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.02 0.8 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
+if doPoster == 0
+    annotation('textbox',[0.02 0.785 0.2 0.2],'String','A','EdgeColor','none','fontsize',25);
+end
 
 %% Plot significant downstream connections
 axes(ha(2))
 imagesc(exampleChCh > exampleX)
 colormap(ha(2),flipud(gray));
-title('Frequent downstream spike connections');
-xlabel('Downstream electrode #');
+title('Frequent connections');
+xlabel('Downstream electrode');
 %ylabel('Leading electrode #');
 set(gca,'FontSize',fontsizes)
 yticklabels([])
-annotation('textbox',[0.51 0.8 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
+if doPoster == 0
+annotation('textbox',[0.35 0.785 0.2 0.2],'String','B','EdgeColor','none','fontsize',25);
+end
 
 %% Plot downstream connections for single electrode
 axes(ha(3));
@@ -755,9 +1026,11 @@ xticklabels([])
 yticklabels([])
 zticklabels([])
 view(118.1000,2.8000);
-title(sprintf('Downstream electrodes for electrode %d',I));
+title(sprintf('Electrode %d''s downstream electrodes',I));
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.02 0.46 0.2 0.2],'String','C','EdgeColor','none','fontsize',25);
+if doPoster == 0
+    annotation('textbox',[0.67 0.785 0.2 0.2],'String','C','EdgeColor','none','fontsize',25);
+end
 
 %% Plot area of influence for a single electrode
 axes(ha(4));
@@ -778,17 +1051,50 @@ zticklabels([])
 title(sprintf('Area of influence for electrode %d',I));
 view(118.1000,2.8000);
 set(gca,'FontSize',fontsizes)
-annotation('textbox',[0.51 0.46 0.2 0.2],'String','D','EdgeColor','none','fontsize',25);
+if doPoster == 0
+    annotation('textbox',[0.02 0.45 0.2 0.2],'String','D','EdgeColor','none','fontsize',25);
+end
+
+%% Plot area of influence of all electrodes
+axes(ha(5));
+scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,'k','linewidth',2);
+hold on
+scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,exampleSA,'filled')
+xticklabels([])
+yticklabels([])
+zticklabels([])
+title(sprintf('Area of influence, all electrodes'));
+view(118.1000,2.8000);
+set(gca,'FontSize',fontsizes)
+if doPoster == 0
+    annotation('textbox',[0.35 0.45 0.2 0.2],'String','E','EdgeColor','none','fontsize',25);
+end
+
+%% Plot spike frequency of all electrodes
+axes(ha(6));
+scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,'k','linewidth',2);
+hold on
+scatter3(locs(:,1),locs(:,2),locs(:,3),circSize,exampleSF,'filled')
+xticklabels([])
+yticklabels([])
+zticklabels([])
+title(sprintf('Spike frequency, all electrodes'));
+view(118.1000,2.8000);
+set(gca,'FontSize',fontsizes)
+if doPoster == 0
+    annotation('textbox',[0.67 0.45 0.2 0.2],'String','F','EdgeColor','none','fontsize',25);
+end
+
 
 %% Plot bar graph showing overall performance
-axes(ha(5));
+axes(ha(7));
 prices = [mean(allAllDist) mean(allSADist) mean(allFreqDist)];
 bar(prices)
-title(sprintf(['Average distance across patients from electrode of interest\n to closest ',...
+title(sprintf(['All patients: Average distance to closest\n',...
     'seizure onset zone electrode']))
 ylabel(sprintf('Average distance (mm)'));
-
-xticklabels({'All electrodes','Max area of influence','Max spike frequency'})
+set(gca,'xlim',[0.7 3.3]);
+xticklabels({'All electrodes','Max area of influence','Max spike rate'})
 set(gca,'FontSize',fontsizes)
 %fix_xticklabels(gca,0.1,{'FontSize',fontsizes});
 
@@ -831,17 +1137,23 @@ end
 plot([1 3], [max(prices)+8 max(prices)+8],'k');
 text(2,max(prices)+11,textFreqAll,'HorizontalAlignment','center',...
         'fontsize',fontsizes);
-    
+
 ylim([0 max(prices) + 15]);
-annotation('textbox',[0.02 0.11 0.2 0.2],'String','E','EdgeColor','none','fontsize',25);
+if doPoster == 0
+annotation('textbox',[0.02 0.11 0.2 0.2],'String','G','EdgeColor','none','fontsize',25);
+end
 %pause
-print(gcf,[destFolder,'influence_nonAA'],'-depsc');
-eps2pdf([destFolder,'influence_nonAA','.eps'])
+if doPoster == 1
+    print(gcf,[destFolder,'influence_nonAA_poster'],'-depsc');
+else
+    print(gcf,[destFolder,'influence_nonAA'],'-depsc');
+end
+%eps2pdf([destFolder,'influence_nonAA','.eps'])
 
 
 f2= myaa(2);
 %pause
-print(f2,[destFolder,'influence_AA'],'-dpng');
+%print(f2,[destFolder,'influence_AA'],'-dpng');
 %eps2pdf([destFolder,'influence_AA','.eps'])
 
 fprintf('The average largest area of influence was %1.1f cm squared (range %1.1f-%1.1f).\n',...

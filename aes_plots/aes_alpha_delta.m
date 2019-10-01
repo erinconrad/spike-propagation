@@ -184,7 +184,7 @@ axes(ha(1));
 pl = zeros(length(clusters),1);
 for i = 1:length(clusters)
     pl(i)= plot((sum_times-min(plot_times))/3600,prop_c(i,:),...
-        'color',colors((i),:),'LineWidth',2);
+        'color',colors((i),:),'LineWidth',4);
 hold on
 end
 
@@ -198,7 +198,7 @@ title('Proportion of spikes in given cluster (moving average)')
 
 axes(ha(2));
 plot((power(whichPt).times-min(plot_times))/3600,nanmean(all_ad,1),...
-    'k','LineWidth',2);
+    'k','LineWidth',3);
 xlim([(plot_times(1)-min(plot_times))/3600-1 (plot_times(end)-min(plot_times))/3600+1])
 hold on
 

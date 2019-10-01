@@ -4,21 +4,25 @@ function CInfluence(pt,cluster,whichPts)
 
 My area of influence analysis.
 
-this take a pt struct, a cluster struct, and calculates
+This take a pt struct, a cluster struct, and calculates
 distances of various electrodes of interest, including the area with the
 largest area of influence, from the nearest SOZ.
 
 %}
 
-% Parameters
-doPoster = 1;
+%% Parameters
+doBootstrap = 2; % 0 = no, 1 = standard, 2 = permute rows, 3 = permute columns
+doPoster = 0;
 doPlots = 0; %0 = no, 1=normal, 2=pretty
 plotConn = 0;
 removeTies = 1;
-doBootstrap = 0;
-alpha1 = 95;
+alpha1 = 95; % Connections need to exceed this %ile amongst random permutation matrix to be part of the area of influence
+
+% Plotting stuff
 map_text = 'jet';
 fh_map = str2func(map_text);
+
+% old, don't change
 new_bootstrap = 0;
 
 [~,~,scriptFolder,resultsFolder,~] = fileLocations;
@@ -212,6 +216,12 @@ for whichPt = whichPts
     
     
     %% Construct a matrix of channel connections
+    % chCh will be a matrix encoding all leader->downstream connections. It
+    % is nchsxnchs in size (where nchs is the number of electrodes). The
+    % rows indicate which leader electrode we are considering and the
+    % columns indicate which downstream electrode we are considering.
+    % chCh(i,j) encodes the number of times that electrode j appears
+    % downstream in spike sequences led by electrode i.
     chCh = zeros(nchs,nchs);
     all_spike_times = [];
     upDown = zeros(nchs,2);
@@ -232,6 +242,8 @@ for whichPt = whichPts
         B = B(B(:,1) == spike_chs(1),:);
         
         for j = 1:size(B,1)
+            % The row is the leader and the column is the downstream
+            % electrode
             chCh(B(j,1),B(j,2)) = chCh(B(j,1),B(j,2)) + 1;
         end
         
@@ -264,7 +276,144 @@ for whichPt = whichPts
     
     
     %% Get significant connections
-    if doBootstrap == 1
+    if doBootstrap == 2
+        % This is a new analysis where I compare the number of connections
+        % to that of a matrix where I randomly permute just the rows of the
+        % connection matrix. In this random matrix, the number of times
+        % downstream electrodes are activated is held constant, but this
+        % set of downstream connections is attributed to a random leader
+        % electrode. I believe this amounts to testing whether an leader
+        % electrode leads a downstream electrode SIGNIFICANTLY MORE THAN
+        % other leader electrodes.
+        
+        nboot = 1e3; % 1,000 random permutations
+        boot_con = zeros(nboot,nchs,nchs);
+        for ib = 1:nboot
+            
+            % Get random permutation from 1:nchs
+            p = randperm(nchs);
+            
+            % shuffle the connection matrix according to this permutation
+            temp_chCh =  chCh(p,:); % shuffle the rows
+            boot_con(ib,:,:) = temp_chCh;
+     
+        end
+        
+        % Now go through each row, and then for each column in that row,
+        % find the 95% number of connections in the bootstrap matrix.
+        % This is the minimum connection number needed to achieve
+        % significance for that matrix element.
+        
+        sig_con = zeros(nchs,nchs); % initialize matrix of significant connections
+        chInfluence = cell(nchs,1); % initialize cell array holding the electrodes comprising leader's area of influence (significant downstream connections)
+        for i = 1:nchs
+            for j = 1:nchs
+                
+                % sort the bootstrap connections for that element
+                boot_element = sort(boot_con(:,i,j));
+                perc = prctile(boot_element,alpha1); % Find 95%ile
+                
+                % See if the number of connections is higher than this
+                if chCh(i,j) > perc
+                    sig_con(i,j) = 1;
+                    chInfluence{i} = [chInfluence{i},j]; % if it is, add j to the area of influence of i
+                end
+                
+            end
+        end
+        
+        % Plots to better understand what this permutation is doing
+        if 0
+        
+        % Show spike rates in similar matrix
+        sp_rate_dummy_matrix = repmat(nansum(~isnan(seq_matrix),2),1,nchs);
+        figure
+        imagesc(sp_rate_dummy_matrix)
+        title('Spike rates')
+        
+        % Show the average permutation matrix
+        figure
+        imagesc(squeeze(mean(boot_con,1)))
+        title('Average permutation matrix')
+        
+        % Show the significant connection matrix
+        figure
+        imagesc(sig_con)
+        title('Significant connections');
+        
+        fprintf('look\n');
+        end
+        
+    elseif doBootstrap == 3
+        
+        % Now permute the columns (so each leader electrode will keep the
+        % same general downstream number of connections, but they will be
+        % assigned to a random permutation of downstream connections). I
+        % believe this makes it so that a significant connection implies
+        % that the downstream electrode is activated by the leader
+        % electrode SIGNIFICANTLY MORE THAN OTHER DOWNSTREAM ELECTRODES.
+        
+        nboot = 1e3;
+        boot_con = zeros(nboot,nchs,nchs);
+        for ib = 1:nboot
+            
+            % Get random permutation from 1:nchs
+            p = randperm(nchs);
+            
+            % shuffle the connection matrix according to this permutation
+            temp_chCh =  chCh(:,p); % shuffle columns
+            boot_con(ib,:,:) = temp_chCh;
+     
+        end
+        
+        % Now go through each row, and then for each column in that row,
+        % find the 95% number of connections in the bootstrap matrix.
+        % This is the minimum connection number needed to achieve
+        % significance.
+        
+        sig_con = zeros(nchs,nchs);
+        chInfluence = cell(nchs,1);
+        for i = 1:nchs
+            for j = 1:nchs
+                
+                % sort the bootstrap connections for that element
+                boot_element = sort(boot_con(:,i,j));
+                perc = prctile(boot_element,alpha1);
+                
+                % See if the number of connections is higher than this
+                if chCh(i,j) > perc
+                    sig_con(i,j) = 1;
+                    chInfluence{i} = [chInfluence{i},j];
+                end
+                
+            end
+        end
+        
+        % Plots to better understand what this permutation is doing
+        
+        if 0
+        
+        % Show spike rates in similar matrix
+        sp_rate_dummy_matrix = repmat(nansum(~isnan(seq_matrix),2),1,nchs);
+        figure
+        imagesc(sp_rate_dummy_matrix)
+        title('Spike rates')
+        
+        % Show the average permutation matrix
+        figure
+        imagesc(squeeze(mean(boot_con,1)))
+        title('Average permutation matrix')
+        
+        % Show the significant connection matrix
+        figure
+        imagesc(sig_con)
+        title('Significant connections');
+        
+        fprintf('look\n');
+        
+        end
+    
+    elseif doBootstrap == 1
         
         % Here, for each permutation, I am constructing a chCh matrix where
         % I am distributing the true total number of connections randomly
@@ -339,38 +488,44 @@ for whichPt = whichPts
         
     end
     
-    % Assume poisson distribution (produces same result as permutation
-    % test)
-    ncons = sum(sum(chCh));
-    lambda = ncons/nchs^2;
-    X = poissinv(alpha1/100,lambda);
-    minCount = X;
-    fprintf(['By poisson assumption, the number of counts is:\n'...
-        '%d\n\n'],X);
-    
-    %if perc~=X, error('What\n'); end
-    
-    if whichPt == 8, exampleX = X; end
-    
-    %% Now find connections that are more frequent by chance
-    n_spikes = length(all_spike_times);
-    lambda_spikes = n_spikes/nchs;
-    X_spikes = poissinv(alpha1/100,lambda_spikes);
-    minCountSpikes = X_spikes;
-    
     n_spikes_ch = sum(~isnan(seq_matrix),2);
-    ch_w_spikes = find(n_spikes_ch>minCountSpikes);
-    spiker = n_spikes_ch>minCountSpikes;
-    allSpikers = [allSpikers;spiker];
     
-    %% Get the indices of the channels that are influenced by each other
-    chInfluence = cell(nchs,1);
-    for i = 1:length(chInfluence)
-        for j = 1:size(chCh,2)
-            if chCh(i,j) > minCount
-                chInfluence{i} = [chInfluence{i},j];
+    if doBootstrap < 2
+        % Assume poisson distribution (produces same result as permutation
+        % test)
+        ncons = sum(sum(chCh));
+        lambda = ncons/nchs^2;
+        X = poissinv(alpha1/100,lambda);
+        minCount = X;
+        fprintf(['By poisson assumption, the number of counts is:\n'...
+            '%d\n\n'],X);
+
+
+        %if perc~=X, error('What\n'); end
+
+        if whichPt == 8, exampleX = X; end
+
+        %% Now find connections that are more frequent by chance
+        n_spikes = length(all_spike_times);
+        lambda_spikes = n_spikes/nchs;
+        X_spikes = poissinv(alpha1/100,lambda_spikes);
+        minCountSpikes = X_spikes;
+
+
+        ch_w_spikes = find(n_spikes_ch>minCountSpikes);
+        spiker = n_spikes_ch>minCountSpikes;
+        allSpikers = [allSpikers;spiker];
+
+        %% Get the indices of the channels that are influenced by each other
+        chInfluence = cell(nchs,1);
+        for i = 1:length(chInfluence)
+            for j = 1:size(chCh,2)
+                if chCh(i,j) > minCount
+                    chInfluence{i} = [chInfluence{i},j];
+                end
             end
         end
+        
     end
     
     %% Get the surface are of influence of each channel
@@ -406,11 +561,14 @@ for whichPt = whichPts
     hold on
     seq_freq = sum(~isnan(seq_matrix),2);
     [~,temp_max_sf] = max(seq_freq);
+    [~,temp_max_sa] = max(sa);
     
     h_soz = scatter3(locs(soz,1),locs(soz,2),locs(soz,3),200,parula_c(1,:),'filled');
     h_sf = scatter3(locs(temp_max_sf,1),locs(temp_max_sf,2),...
         locs(temp_max_sf,3),100,parula_c(2,:),'filled');
-    legend([h_soz,h_sf],{'Seizure onset zone','Max spike frequency'},'location',...
+    h_sa = scatter3(locs(temp_max_sa,1),locs(temp_max_sa,2),...
+        locs(temp_max_sa,3),200,'p');
+    legend([h_soz,h_sf,h_sa],{'Seizure onset zone','Max spike frequency','Max SA'},'location',...
         'northwest');
     view(-14.7,30)
     xlabel('X')
@@ -421,7 +579,9 @@ for whichPt = whichPts
     xticklabels([])
     grid off
     set(gca,'fontsize',25)
-    print(gcf,[destFolder,'brain_ex_AAN'],'-depsc');
+    pause
+    close(gcf)
+    %print(gcf,[destFolder,'brain_ex_AAN'],'-depsc');
     end
     
 
@@ -446,12 +606,14 @@ for whichPt = whichPts
     allAllDist =[allAllDist;mean(allLocs)];
     
     % Distance from electrodes with spikes to closest SOZ electrode
+    if 0 
     spikeLocs = locs(ch_w_spikes,:);
     spikeDist = zeros(size(spikeLocs,1),1);
     for i = 1:size(spikeLocs,1)
         spikeDist(i) = min(vecnorm(spikeLocs(i,:)-locs(soz,:),2,2));
     end
     allSpikeDist = [allSpikeDist;spikeDist];
+    end
     
     % Get distance between electrode with max SA and electrode with max seq
     % freq
@@ -638,6 +800,7 @@ scatter(allSAs(allSpikers==1),allAllDist(allSpikers==1));
 [rho,pval] = corr(allSAs(allSpikers==1),allAllDist(allSpikers==1),'Type','Spearman')
 %}
 
+if 0
 aes_plot_aoi(allAllDist,allSADist,allFreqDist)
 
 %% Make AAN plots
@@ -674,6 +837,7 @@ set(gca,'fontsize',20)
 set(gca,'xlim',[0.7 2.3])
 set(gca,'ylim',[0 max_point+10])
 print([destFolder,'aan_soz'],'-depsc')
+end
 
 %% Get average SRC between SA and SF
 % I'll just do a plain average across patients since I am not doing
@@ -870,6 +1034,8 @@ eps2pdf([destFolder,'influence_nonAA_poster','.eps'])
 
 
 %% Parameters and plot initialization
+
+if 0
 fontsizes = 20;
 
 figure
@@ -1058,6 +1224,8 @@ end
 
 
 f2= myaa(2);
+
+end
 %pause
 %print(f2,[destFolder,'influence_AA'],'-dpng');
 %eps2pdf([destFolder,'influence_AA','.eps'])
