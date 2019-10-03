@@ -11,7 +11,7 @@ largest area of influence, from the nearest SOZ.
 %}
 
 %% Parameters
-doBootstrap = 2; % 0 = no, 1 = standard, 2 = permute rows, 3 = permute columns
+doBootstrap = 3; % 0 = no, 1 = standard, 2 = permute rows, 3 = permute columns
 doPoster = 0;
 doPlots = 0; %0 = no, 1=normal, 2=pretty
 plotConn = 0;
@@ -1233,8 +1233,8 @@ end
 fprintf('The average largest area of influence was %1.1f cm squared (range %1.1f-%1.1f).\n',...
     mean(allMaxSAs/100),min(allMaxSAs/100),max(allMaxSAs/100));
 
-fprintf('The average distance between biggest SA electrode and nearest SOZ electrode is:\n%1.1f (range %1.1f-%1.1f)\n',...
-    mean(allSADist), min(allSADist), max(allSADist));
+fprintf('The average distance between biggest SA electrode and nearest SOZ electrode is:\n%1.1f (std %1.1f, range %1.1f-%1.1f)\n',...
+    mean(allSADist), std(allSADist), min(allSADist), max(allSADist));
 
 fprintf('The average distance between highest SF electrode and nearest SOZ electrode is:\n%1.1f\n',...
     mean(allFreqDist));

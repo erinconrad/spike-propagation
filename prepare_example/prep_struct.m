@@ -1,3 +1,4 @@
+%{
 pt = rmfield(pt,'ieeg_name');
 pt = rmfield(pt,'dmin');
 pt = rmfield(pt,'elecNotes');
@@ -12,9 +13,16 @@ pt = rmfield(pt,'newSOZNames');
 pt = rmfield(pt,'resecElecs');
 pt = rmfield(pt,'resecLabels');
 
+
 for i = 1:length(pt)
     pt(i).allTimes = [];
     pt(i).runTimes = [];
     pt(i).chunkFiles = {};
     
 end
+
+
+pt = rmfield(pt,'chunkFiles');
+pt = rmfield(pt,'eeg_data');
+
+%}

@@ -4,11 +4,10 @@
 The purpose of this script is to have a complete pipeline for running the
 spike detector, spike sequence detector, and clustering algorithm on a set
 of eeg data. This assumes you have a Matlab pt structure with eeg data. An
-example structure can be downloaded along with this file.
+example structure can be downloaded along with this file from ***.
 
 This script then takes this eeg data and goes through each step in the
 process, finally generating the spike clusters for viewing.
-
 %}
 
 %% Parameters
@@ -34,7 +33,7 @@ fprintf('Running spike detector...\n');
 pt(whichPt).gdf = gdf; % add the spike times to the pt structure
 
 %% Plot an example spike
-sp = 100; % change this to see other spikes
+sp = randi(size(gdf,1)); % change this to a specific number (between 1 and the number of spikes) or re-run to see other spikes
 
 % Get spike time and ch
 sp_time = gdf(sp,2);
@@ -47,11 +46,10 @@ figure
 set(gcf,'position',[110 452 987 352])
 plot((plot_indices-plot_indices(1))/fs,pt(whichPt).eeg_data.values(plot_indices,sp_ch),'k') % plot the eeg data for the ch with the spike
 hold on
-scatter((sp_idx-plot_indices(1))/fs,pt(whichPt).eeg_data.values(sp_idx,sp_ch),80,'k','filled') % mark the spike time
 yticklabels([])
 xlim([0,surround_time*2])
 xlabel('Time (s)')
-title(sprintf('Spike time: %1.1f s, electrode %s',sp_time,elec_label))
+title(sprintf('RANDOM SPIKE\nSpike time: %1.1f s, electrode %s',sp_time,elec_label))
 set(gca,'fontsize',20)
 
 fprintf('\n\nGot spikes. Press any key to continue on to getting spike sequences...\n')
@@ -72,7 +70,7 @@ pt(whichPt).seq_matrix = ...
         makeSeqMatrix(pt(whichPt).data.sequences,length(pt(whichPt).channels),0);
     
 %% Plot an example sequence
-s = 5; % change this to see other sequences
+s = randi(size(pt(whichPt).seq_matrix,2)); % change this to a specific number (between 1 and the number of sequences) or re-run to see other sequences
 
 seq = pt(whichPt).seq_matrix(:,s); % get which sequence
 chs = find(~isnan(seq)); % get the spike channels in the sequence
@@ -91,17 +89,16 @@ for i = 1:length(times)
     curr_sp_idx = round((times(i)- pt(whichPt).eeg_data.times(1))*fs); % get index of current spike
     plot((plot_indices-plot_indices(1))/fs,pt(whichPt).eeg_data.values(plot_indices,chs(i))+to_add,'k') % plot the data in that channel
     hold on
-    scatter((curr_sp_idx-plot_indices(1))/fs,pt(whichPt).eeg_data.values(curr_sp_idx,chs(i))+to_add,'k') % show the spike
     text(6,to_add,sprintf('%s',elec_label),'fontsize',20)
     to_add = to_add - 2000; % to offset the lines so they don't blur into one another
 end
 yticklabels([])
 xlim([0,surround_time*2])
 xlabel('Time (s)')
-title(sprintf('First spike time: %1.1f s',times(1)))
+title(sprintf('RANDOM SPIKE SEQUENCE\nFirst spike time: %1.1f s',times(1)))
 set(gca,'fontsize',20)
 
-fprintf('\n\nGot spike sequences. Press any key to continue on to choosing the ideal cluster number...\n');
+fprintf('\n\nGot spike sequences.\nPress any key to continue on to choosing the ideal cluster number...\n');
 pause
     
 %% Get the optimal cluster number
@@ -114,7 +111,7 @@ fprintf('\nGetting the optimal cluster number...\n');
 % the graph to get the optimal cluster number. (It appears to be 3 for the
 % example data).
 getClusters(pt,whichPt,1,1,0,0); 
-fprintf('\nSelect the cluster number forming the inflection point, and change the code below if needed (default cluster number is 3). Press any key to continue to running the clustering algorithm...\n');
+fprintf('\nSelect the cluster number forming the inflection point,\nand change the code below if needed\n(default cluster number is 3).\nPress any key to continue to running the clustering algorithm...\n');
 pause
 
 %% Run the clustering algorithm for K = 3 (looks like the inflection point on the SSE plot)
@@ -132,7 +129,7 @@ fprintf('\n\nRunning the clustering algorithm...\n')
 % is cluster 1.
 ideal_cluster_number = 3;
 cluster = getClusters(pt,whichPt,0,1,0,0,ideal_cluster_number); 
-fprintf('\n\nClustered the spikes. The plots show 10 example spike sequences for each cluster. Examine the sequences to see how many appear artifactual. Press any key to show spike cluster locations...\n');
+fprintf('\n\nClustered the spikes.\nThe plots show 10 example spike sequences for each cluster.\nExamine the sequences to see how many appear artifactual.\nPress any key to show spike cluster locations...\n');
 pause
 
 %% Plot the cluster centroid locations

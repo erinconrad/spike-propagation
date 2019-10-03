@@ -42,7 +42,7 @@ for pt = pts
 if isempty(out_folder) ==1
     out_folder = [resultsFolder,'plots/exampleSeqs/'];
 end
-mkdir(out_folder);
+%mkdir(out_folder);
 
 if isfield(P(pt),'sz') == 0
     continue
@@ -242,7 +242,7 @@ for k = 1:length(seq_fig)
 
 
     
-
+if 0
     if save_plots == 1
         if isempty(whichSeq) == 0
             outputFile = [ptname,sprintf('_%d_%d_%d_%d-%d',...
@@ -270,6 +270,7 @@ for k = 1:length(seq_fig)
         saveas(gcf,[out_folder,outputFile,'.png'])
         close(gcf)
     end
+end
 
 end
 end
@@ -299,7 +300,7 @@ for k = 1:length(seq_fig)
 
             spikeamp = amps(round(fs*spiketimes));
 
-            scatter(spiketimes,spikeamp,80,'k','filled');
+            %scatter(spiketimes,spikeamp,80,'k','filled');
             range = range + max(seq(s).values(:,ch)) - min(seq(s).values(:,ch));
         end
         legnames = unignoredChLabels(seq(s).whichCh);

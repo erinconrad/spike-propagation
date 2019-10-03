@@ -15,16 +15,18 @@ following steps:
 5) Area of influence analysis
 
 Note that the electrode locations and clinical info for the patients in the
-Spike location project can be found in the example patient structure
-example_pt.mat. If you wish to run a truncated version of the pipeline on
-short example data, see the section below.
+Spike location project can be found in 'electrode_and_clinical.mat'. See
+section 6 below for more information.
+
+Pipeline steps 1) and 2) can be run in entirety using example data by
+following section 0 below.
 
 The code can be found on https://github.com/erinconrad/spike-propagation
 
 %}
 
 
-%% RUN COMPLETE PIPELINE ON EXAMPLE DATA
+%% 0: RUN COMPLETE PIPELINE ON EXAMPLE DATA
 %{
 To illustrate the steps of this project, we included a single script
 run_example_data, which completes the entire pipeline from spike detection 
@@ -43,8 +45,10 @@ script so that you can read the explanation of what it is doing at each
 step. Because this contains such a short duration of
 data, time series analyses cannot meaningfully be performed on it. However,
 a longer duration of data, structured according to this data structure,
-could be run with the same pipeline. Alternatively, analysis can be run on
-ieeg data using the steps described above.
+could be run with the same pipeline. And then subsequent time series
+analysis can be performed by following steps 3-5 below.
+
+Alternatively, analysis can be run on ieeg data using the steps described above.
 
 %}
 
@@ -154,6 +158,23 @@ This is a single script in analysis/influence:
 distances of various electrodes of interest, including the area with the
 largest area of influence, from the nearest SOZ.
 
+%}
+
+%% 6: Electrode and clinical information
+%{
+The electrode locations and clinical info for the patients in the
+Spike location project can be found in 'electrode_and_clinical.mat'. This
+is a Matlab structure with the following fields:
+- name: the patient ID
+- sz: a substructure with seizure onset and offset times and electrodes
+- fs: sampling rate
+- electrodeData: a substructure containing electrode locations.
+Specifically, these are in electrodeData.electrodes(i), where i is the
+electrode number. This substructure contains the x, y, and z coordinates as
+well as the electrode label and whether it is a grid, strip, or depth
+electrode
+- clinical: a substructure containing various pieces of clinical
+information.
 %}
 
 %% Dependency 1: SPIKE DETECTION FILES (in detectSpikes)
