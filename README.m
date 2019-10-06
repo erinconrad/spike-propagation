@@ -5,8 +5,11 @@
 %% OVERVIEW
 %{
 To run the full spike location analysis, you will need access to the
-electrode locations, the clinical info, and the ieeg portal. Then, do the
-following steps:
+electrode locations, the clinical info, and the ieeg portal. You must make
+an account with the ieeg portal and request access to the "Virtual Cortical
+Resection" dataset.
+
+Then, do the following steps:
 
 1) Detect spikes and spike sequences
 2) Cluster spikes according to location
@@ -31,7 +34,10 @@ The code can be found on https://github.com/erinconrad/spike-propagation
 To illustrate the steps of this project, we included a single script
 run_example_data, which completes the entire pipeline from spike detection 
 through clustering by spike location for a 500 second sample of EEG data 
-for a single patient (Study 029). To run this pipeline, load the .mat file
+for a single patient (Study 029). 
+
+The example data is called example_pt.mat and is hosted on Penn+Box at ***.
+This file should first be downloaded. Then, to run this pipeline, load the .mat file
 example_pt.mat. Then make sure the spike-propagation script directory is on
 your Matlab path. Then call the script run_example_data.m, located in the
 folder prepare_example/. Specifically, run the following code:

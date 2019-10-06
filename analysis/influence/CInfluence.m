@@ -286,7 +286,7 @@ for whichPt = whichPts
         % electrode leads a downstream electrode SIGNIFICANTLY MORE THAN
         % other leader electrodes.
         
-        nboot = 1e4; % 10,000 random permutations (need more for this analysis to converge)
+        nboot = 1e3; % 1,000 random permutations 
         boot_con = zeros(nboot,nchs,nchs);
         for ib = 1:nboot
             
@@ -353,7 +353,7 @@ for whichPt = whichPts
         % that the downstream electrode is activated by the leader
         % electrode SIGNIFICANTLY MORE THAN OTHER DOWNSTREAM ELECTRODES.
         
-        nboot = 1e4; %10,000 permutations (need more for this analysis to converge)
+        nboot = 1e3; %1,000 permutations 
         boot_con = zeros(nboot,nchs,nchs);
         for ib = 1:nboot
             
@@ -391,13 +391,18 @@ for whichPt = whichPts
         
         % Plots to better understand what this permutation is doing
         
-        if 0
+        if 1
         
         % Show spike rates in similar matrix
         sp_rate_dummy_matrix = repmat(nansum(~isnan(seq_matrix),2),1,nchs);
         figure
         imagesc(sp_rate_dummy_matrix)
         title('Spike rates')
+        
+        % Show connection matrix
+        figure
+        imagesc(chCh)
+        title('True connection matrix')
         
         % Show the average permutation matrix
         figure
