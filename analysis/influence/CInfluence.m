@@ -11,7 +11,10 @@ largest area of influence, from the nearest SOZ.
 %}
 
 %% Parameters
-doBootstrap = 3; % 0 = no, 1 = randomly distribute total number of true connections, 2 = permute rows, 3 = permute columns, 4 = permute entries
+doBootstrap = 6; 
+% 0 = no, 1 = randomly distribute total number of true connections, 
+%b 2 = permute rows, 3 = permute columns, 4 = permute entries, 5 = take 95%
+%amongst rows, 6 = take 95% amongst columns
 doPoster = 0;
 doPlots = 0; %0 = no, 1=normal, 2=pretty
 plotConn = 0;
@@ -353,7 +356,7 @@ for whichPt = whichPts
         % that the downstream electrode is activated by the leader
         % electrode SIGNIFICANTLY MORE THAN OTHER DOWNSTREAM ELECTRODES.
         
-        nboot = 1e3; %1,000 permutations 
+        nboot = 1e4; %10,000 permutations 
         boot_con = zeros(nboot,nchs,nchs);
         for ib = 1:nboot
             
@@ -373,12 +376,14 @@ for whichPt = whichPts
         
         sig_con = zeros(nchs,nchs);
         chInfluence = cell(nchs,1);
+        all_perc = zeros(nchs,nchs);
         for i = 1:nchs
             for j = 1:nchs
                 
                 % sort the bootstrap connections for that element
                 boot_element = sort(boot_con(:,i,j));
                 perc = prctile(boot_element,alpha1);
+                all_perc(i,j) = perc;
                 
                 % See if the number of connections is higher than this
                 if chCh(i,j) > perc
@@ -389,9 +394,67 @@ for whichPt = whichPts
             end
         end
         
-        % Plots to better understand what this permutation is doing
+      
+    elseif doBootstrap == 5
+        % avoids the messy non-convergence of the row bootstrap test to
+        % confirm non-significance of the final result
+        chInfluence = cell(nchs,1);
+        sig_con = zeros(nchs,nchs);
+        for j = 1:nchs % look at each column
+            
+            % for each column, take the 95% value amongst the rows
+            perc = prctile(chCh(:,j),alpha1);
+            
+            % loop through each row and see if number of connections is
+            % higher
+            
+            for i =1:nchs
+                if chCh(i,j) > perc
+                    sig_con(i,j) = 1;
+                    chInfluence{i} = [chInfluence{i},j];
+                end
+            end
+            
+        end
         
-        if 1
+        
+    elseif doBootstrap == 6
+        % avoids the messy non-convergence of the column bootstrap test to
+        % confirm non-significance of the final result
+        
+        chInfluence = cell(nchs,1);
+        sig_con = zeros(nchs,nchs);
+        for i = 1:nchs % look at each row
+            
+            % for each row, take the 95% value amongst the columns
+            perc = prctile(chCh(i,:),alpha1);
+            
+            % loop through each columns and see if number of connections is
+            % higher
+            
+            for j =1:nchs
+                if chCh(i,j) > perc
+                    sig_con(i,j) = 1;
+                    chInfluence{i} = [chInfluence{i},j];
+                end
+            end
+            
+        end
+        
+        
+        
+        if 0
+            
+            
+            fprintf('look\n');
+            
+            figure
+        plot(chCh(45,:),'o','markersize',7)
+        hold on
+        plot(all_perc(45,:)+0.1,'o','markersize',7)
+        legend({'True connections','Minimum for significance'})
+        
+       
         
         % Show spike rates in similar matrix
         sp_rate_dummy_matrix = repmat(nansum(~isnan(seq_matrix),2),1,nchs);
@@ -409,12 +472,17 @@ for whichPt = whichPts
         imagesc(squeeze(mean(boot_con,1)))
         title('Average permutation matrix')
         
+        % show percentile matrix
+        figure
+        imagesc(all_perc)
+        title('Minimum number needed to be significant')
+        
         % Show the significant connection matrix
         figure
         imagesc(sig_con)
         title('Significant connections');
         
-        fprintf('look\n');
+        
         
         end
     
