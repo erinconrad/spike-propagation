@@ -11,7 +11,7 @@ largest area of influence, from the nearest SOZ.
 %}
 
 %% Parameters
-doBootstrap = 3; % 0 = no, 1 = standard, 2 = permute rows, 3 = permute columns
+doBootstrap = 3; % 0 = no, 1 = randomly distribute total number of true connections, 2 = permute rows, 3 = permute columns, 4 = permute entries
 doPoster = 0;
 doPlots = 0; %0 = no, 1=normal, 2=pretty
 plotConn = 0;
@@ -286,7 +286,7 @@ for whichPt = whichPts
         % electrode leads a downstream electrode SIGNIFICANTLY MORE THAN
         % other leader electrodes.
         
-        nboot = 1e3; % 1,000 random permutations
+        nboot = 1e4; % 10,000 random permutations (need more for this analysis to converge)
         boot_con = zeros(nboot,nchs,nchs);
         for ib = 1:nboot
             
@@ -353,7 +353,7 @@ for whichPt = whichPts
         % that the downstream electrode is activated by the leader
         % electrode SIGNIFICANTLY MORE THAN OTHER DOWNSTREAM ELECTRODES.
         
-        nboot = 1e3;
+        nboot = 1e4; %10,000 permutations (need more for this analysis to converge)
         boot_con = zeros(nboot,nchs,nchs);
         for ib = 1:nboot
             
@@ -417,7 +417,8 @@ for whichPt = whichPts
         
         % Here, for each permutation, I am constructing a chCh matrix where
         % I am distributing the true total number of connections randomly
-        % across all elements of the nch by nch matrix.
+        % across all elements of the nch by nch matrix. (The main analysis
+        % used in the paper).
         
         ncons = sum(sum(chCh));
         nboot = 1e3;
@@ -426,7 +427,6 @@ for whichPt = whichPts
         chCh_diff_all = zeros(nboot,nchs,nchs);
         chCh_diff = zeros(nchs,nchs);
         for ib = 1:nboot
-            ib
             if mod(ib,100) == 0
                 fprintf('Doing %d of %d\n', ib,nboot);
             end
@@ -486,6 +486,46 @@ for whichPt = whichPts
         s_diff = sort(chCh_diff_all(:));
         perc_diff = prctile(s_diff,alpha1);
         
+    elseif doBootstrap == 4
+        % an alternate way where I permute the entries
+        
+        nboot = 1e3;
+        boot_con = zeros(nboot,nchs,nchs);
+        for ib = 1:nboot
+            
+            % Get random permutation from 1:nchs*nchs
+            p = randperm(nchs*nchs);
+            
+            % shuffle the connection matrix according to this permutation
+            temp_chCh =  reshape(chCh(p),nchs,nchs); % shuffle all entries
+            boot_con(ib,:,:) = temp_chCh;
+     
+        end
+        
+        % Now go through each row, and then for each column in that row,
+        % find the 95% number of connections in the bootstrap matrix.
+        % This is the minimum connection number needed to achieve
+        % significance.
+        
+        sig_con = zeros(nchs,nchs);
+        chInfluence = cell(nchs,1);
+        for i = 1:nchs
+            for j = 1:nchs
+                
+                % sort the bootstrap connections for that element
+                boot_element = sort(boot_con(:,i,j));
+                perc = prctile(boot_element,alpha1);
+                
+                % See if the number of connections is higher than this
+                if chCh(i,j) > perc
+                    sig_con(i,j) = 1;
+                    chInfluence{i} = [chInfluence{i},j];
+                end
+                
+            end
+        end
+        
+    
     end
     
     n_spikes_ch = sum(~isnan(seq_matrix),2);
