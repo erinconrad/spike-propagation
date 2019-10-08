@@ -46,7 +46,7 @@ figure
 set(gcf,'position',[110 452 987 352])
 plot((plot_indices-plot_indices(1))/fs,pt(whichPt).eeg_data.values(plot_indices,sp_ch),'k') % plot the eeg data for the ch with the spike
 hold on
-yticklabels([])
+set(gca,'yticklabels','')
 xlim([0,surround_time*2])
 xlabel('Time (s)')
 title(sprintf('RANDOM SPIKE\nSpike time: %1.1f s, electrode %s',sp_time,elec_label))
@@ -92,7 +92,7 @@ for i = 1:length(times)
     text(6,to_add,sprintf('%s',elec_label),'fontsize',20)
     to_add = to_add - 2000; % to offset the lines so they don't blur into one another
 end
-yticklabels([])
+set(gca,'yticklabels','')
 xlim([0,surround_time*2])
 xlabel('Time (s)')
 title(sprintf('RANDOM SPIKE SEQUENCE\nFirst spike time: %1.1f s',times(1)))
@@ -145,9 +145,9 @@ for i = 1:size(centroid_locs,1)
    cl(i)=  scatter3(centroid_locs(i,1),centroid_locs(i,2),centroid_locs(i,3),400,...
         colors(i,:),'filled'); % plot cluster centroids
 end
-xticklabels([])
-yticklabels([])
-zticklabels([])
+set(gca,'xticklabels','')
+set(gca,'yticklabels','')
+set(gca,'zticklabels','')
 legend([el,cl],{'All electrodes','Cluster 1','Cluster 2','Cluster 3'},'fontsize',20)
 title('Cluster centroid locations','fontsize',20);
 fprintf('\nShowing spike cluster locations.\n\n');

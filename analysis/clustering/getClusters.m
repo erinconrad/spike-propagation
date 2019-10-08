@@ -225,8 +225,16 @@ for whichPt = whichPts
     end
     
     % Remove ictal spikes and spikes within 1 minute of seizure start
+    %{
     t = find(any(all_times_all >= (szTimes(:,1)-repmat(60,size(szTimes,1),1))' ...
         & all_times_all <= szTimes(:,2)',2));
+    %}
+   
+    t = find(any(repmat(all_times_all,1,size(szTimes,1)) >= ...
+        repmat((szTimes(:,1)-repmat(60,size(szTimes,1),1))',size(all_times_all,1),1) ...
+        & repmat(all_times_all,1,size(szTimes,1)) <=...
+        repmat(szTimes(:,2)',size(all_times_all,1),1),2));    
+    
     all_times_all(t) = [];
     all_spikes(t) = [];
     seq_index(t) = [];
