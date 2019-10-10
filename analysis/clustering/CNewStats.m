@@ -1,4 +1,4 @@
-function CNewStats(pt,cluster,whichPts)
+function stats = CNewStats(pt,cluster,whichPts)
 
 %% CNewStats
 %{
@@ -8,6 +8,12 @@ spatial distribution changes from hour to hour.
 %}
 
 %% Parameters
+
+% save stats structure to file?
+doSave = 0; 
+
+% patient group level stats
+doSummaryStats = 0;
 
 % The post-ictal time period (how many hours after the seizure I am
 % defining to be post-ictal) (4 for most analyses, but 1 as a sensitivity
@@ -217,6 +223,7 @@ for whichPt = whichPts
     end
     
     % Save information into patient struct
+    stats(whichPt).hour.info = 'test whether cluster distribution changes over time'; 
     stats(whichPt).hour.tbl = tbl_1;
     stats(whichPt).hour.chi2 = chi2_1;
     stats(whichPt).hour.p = p_1;
@@ -687,7 +694,7 @@ for whichPt = whichPts
             
         end
 
-        if plotQI == 1
+        if doPermPlot == 1
         % Plot a histogram to see if I have equal coverage of start times
         figure
         histogram(time_boot_pre/3600,500)
@@ -746,6 +753,7 @@ for whichPt = whichPts
         stats(whichPt).preIc.chi2 = chi2_real;
         chi_tables_plot{whichPt} = tbl_2;
         p_plot(whichPt) = p_2;
+        stats(whichPt).preIc.info = 'test whether different preictal cluster distribution'; 
         
         
         %% Get difference in distance from SOZ from pre-ic and interic
@@ -1015,7 +1023,7 @@ for whichPt = whichPts
             
         end
         
-        if plotQI == 1
+        if doPermPlot == 1
         % Plot a histogram to see if I have equal coverage
         figure
         histogram(time_boot_post/3600,500)
@@ -1071,6 +1079,7 @@ for whichPt = whichPts
         stats(whichPt).postIc.chi2 = chi2_real;
         chi_tables_postIc{whichPt} = tbl_3;
         p_postIc(whichPt) = p_3;
+        stats(whichPt).postIc.info = 'test whether different postictal cluster distribution'; 
         
         
         %% Distance analysis
@@ -1144,7 +1153,7 @@ for whichPt = whichPts
    
     
 end
-
+if doSave == 1
 if intericTime == 4
     if preIcTime == 4
         save([destFolder,'stats4_preic4.mat'],'stats');
@@ -1158,6 +1167,9 @@ elseif intericTime == 1
         save([destFolder,'stats1_preic1.mat'],'stats');
     end
 end
+end
+
+if doSummaryStats == 1
 
 %% Fisher's method to combine p values for change over time
 all_p_change = [];
@@ -1376,7 +1388,8 @@ if doLongStuff == 1
 
     end
    
-
+end
+    
 end
 
 

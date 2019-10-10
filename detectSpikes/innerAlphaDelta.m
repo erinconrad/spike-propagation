@@ -1,15 +1,19 @@
-function ad_rat = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,whichVer)
+function ad_rat = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,whichVer,pt,whichPt)
 
 %{
 Calculates the alpha delta ratio
 %}
 
+if isempty(dataName) == 1
+    data = pt(whichPt).eeg_data;
+else
 % Get the data
 tic
 data = getiEEGData(dataName,channels,indices,pwfile);
 %pause(10)
 toc
 fprintf('Retrieved data, doing analysis.\n');
+end
 
 
 % remove nans

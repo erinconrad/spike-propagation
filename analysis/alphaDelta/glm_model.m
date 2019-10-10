@@ -152,7 +152,12 @@ end
 
 all_b_glm_text = num2str(all_b_glm,3);
 all_p_glm_text = num2str(all_p_glm,3);
-table(char(names),char(all_b_glm_text),char(all_p_glm_text),'VariableNames',...
+
+if length(whichPts) > 1
+    table(char(names),char(all_b_glm_text),char(all_p_glm_text),'VariableNames',...
     {'Patient','Model_coefficient','p_value'})
+else
+    fprintf('Model coefficient correlating proportion of spikes in\npredominant cluster with alpha delta ratio is\n%s and p value is %1.3e\n',char(all_b_glm_text),all_p_glm);
+end
 
 end

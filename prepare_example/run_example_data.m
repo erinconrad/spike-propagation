@@ -132,6 +132,12 @@ cluster = getClusters(pt,whichPt,0,1,0,0,ideal_cluster_number);
 fprintf('\n\nClustered the spikes.\nThe plots show 10 example spike sequences for each cluster.\nExamine the sequences to see how many appear artifactual.\nPress any key to show spike cluster locations...\n');
 pause
 
+%% Label bad clusters
+% If there are any clusters for which >50% of the example sequences appear
+% artifactual (in the paper we used 50 example sequences) then update the
+% array cluster(**pt number**).bad_cluster to include the cluster indices
+% that are artifactual and not to be included in time series analyses.
+
 %% Plot the cluster centroid locations
 locs = pt(whichPt).electrodeData.locs(:,2:4); % Get all electrode locations
 centroid_locs = cluster(whichPt).C; % Get centroid locations for each cluster
@@ -152,10 +158,19 @@ legend([el,cl],{'All electrodes','Cluster 1','Cluster 2','Cluster 3'},'fontsize'
 title('Cluster centroid locations','fontsize',20);
 fprintf('\nShowing spike cluster locations.\n\n');
 
-%% Plot proportion of sequences in each cluster over time
-% This defaults to not plot because it is likely not meaningful over such a
-% short time period
+
+%% Run time series analyses (only for longer datasets, not for example data)
 if 1 == 0
+    % The following code cannot meaningfully be run on the example data
+    % because it requires hours of data. However, one could run this
+    % entire script, including the code below, on a matlab structure with the
+    % same format as the example data, but containing hours of data. The
+    % following parts of the code are for running the time series analysis.
+
+    %% Plot proportion of sequences in each cluster over time
+    % This defaults to not plot because it is likely not meaningful over such a
+    % short time period
+
     
     colors = [0 0 1;1 0 0;0 1 0]; %The colors (will work for up to 3 clusters)
     plot_times = cluster(whichPt).all_times_all; % plot times
@@ -201,4 +216,25 @@ if 1 == 0
     legend({'Cluster 1','Cluster 2','Cluster 3'})
     set(gca,'fontsize',20)
     end
+    
+    
+    %% Test for hour-to-hour change and peri-ictal change in cluster distribution
+    % stats.hour contains statistics testing for an hour-to-hour change,
+    % stats.preIc contains statistics testing for a pre-ictal change, and
+    % stats.postIc contains statistics testing for a post-ictal change.
+    stats = CNewStats(pt,cluster,whichPt);
+    
+    
+    %% Get alpha delta ratios
+    % power.alpha is an nch x ntimes array of alpha power and power.delta is
+    % an nch x ntimes array of delta power, where nch is the number of
+    % channels and ntimes is the number of time bins (where each time bin
+    % is 2000 seconds in the paper).
+    power = alphaDelta(whichPt,pt);
+    
+    %% Test correlation between cluster distribution and alpha delta ratio
+    % This script uses a GLM model rather than a GLARMA model. R would be
+    % required to perform the GLARMA model. (See ReadMe for details).
+    glm_model(pt,cluster,power,whichPt);
+    
 end

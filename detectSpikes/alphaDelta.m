@@ -1,4 +1,4 @@
-function power = alphaDelta(whichPts)
+function power = alphaDelta(whichPts,pt)
 
 %{
 this will load a pt struct with
@@ -9,6 +9,8 @@ ratio in 2000 second bins). It calls innerAlphaDelta to do the actual work
 alpha delta power ratio.
 %}
 
+if exist('pt','var') == 0
+    example = 0;
 %% Load file paths, etc.
 [~,~,scriptFolder,resultsFolder,pwfile] = fileLocations;
 p1 = genpath(scriptFolder);
@@ -36,6 +38,11 @@ if isempty(whichPts) == 1
     end
 end
 
+else
+    example = 1;
+    power = struct;
+end
+
 for whichPt = whichPts
     fprintf('Doing %s\n',pt(whichPt).name)
     
@@ -51,9 +58,13 @@ for whichPt = whichPts
     
     end
     %}
-    
+    if example == 0
+        dataName = pt(whichPt).ieeg_name;
+    else
+        dataName = [];
+        pwfile = [];
+    end
     fs = pt(whichPt).fs;
-    dataName = pt(whichPt).ieeg_name;
     channels = pt(whichPt).channels;
     nch = length(channels);
     
@@ -84,6 +95,7 @@ for whichPt = whichPts
             size(pt(whichPt).runTimes,1),pt(whichPt).name);
         
         
+        if example == 0
         % Add a button push to the desmond file (for the purpose of
         % restarting the program if it crashes due to java heap errors (I
         % think the ieeg toolbox creates a memory leak...))
@@ -92,6 +104,7 @@ for whichPt = whichPts
         fid = fopen('/tmp/desmond.txt','wt');
         fprintf(fid,allwrite);
         fclose(fid);
+        end
         
         
         % Get the desired indices
@@ -113,10 +126,12 @@ for whichPt = whichPts
         
         
         % Run the code that actually calculates the alpha delta ratio
-        power(whichPt).alpha(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,3);
-        power(whichPt).delta(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,4);
+        power(whichPt).alpha(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,3,pt,whichPt);
+        power(whichPt).delta(:,tt) = innerAlphaDelta(dataName,channels,indices,pwfile,indicesToClip,fs,4,pt,whichPt);
         power(whichPt).finished(tt) = 1;
+        if example == 0
         save([structFolder,power_file],'power')
+        end
         %fprintf('Finished analysis\n');
         
         
@@ -131,11 +146,13 @@ for whichPt = whichPts
     
 end
 
+if example == 0
 % Make a new document if I make it here
 fid2 = fopen('/tmp/ok.txt','wt');
 fprintf(fid2,'Done\n');
 %fflush(fid2);
 fclose(fid2);
+end
 
 
 end
