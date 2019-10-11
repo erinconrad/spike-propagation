@@ -182,7 +182,7 @@ for whichPt = whichPts
     
     
     %% Analysis 1: Does cluster distribution change from hour to hour? 
-    test_t = 3600; % 60 minute chunks
+    test_t = 3600;%3600; % 60 minute chunks
     
     % Divide run into 60 minute chunks
     % This may result in some chunks that are empty because there was low
@@ -217,6 +217,8 @@ for whichPt = whichPts
         if k == length(bad_cluster) + 1
             p_1 = 1;
             fprintf('Only one cluster, defining p-value to be 1\n');
+        elseif length(unique(which_chunk)) == 1
+            error('Less than one hour of data. This can only be run on longer datasets');
         else
             error('What\n');
         end
@@ -229,10 +231,16 @@ for whichPt = whichPts
     stats(whichPt).hour.p = p_1;
     stats(whichPt).hour.labels = labels_1;
     
+    %{
     fprintf(['For %s, regarding whether 60 minute chunks\n have different cluster'...
     ' distributions,\n the p-value is %1.1e\n\n\n'],pt(whichPt).name,p_1);
+    %}
     
     p_change_time(whichPt) = p_1;
+    
+    if isfield(pt(whichPt),'allTimes') == 0
+        return
+    end
     
     if doLongStuff == 1
     
@@ -468,7 +476,11 @@ for whichPt = whichPts
         end
         
         % Remove interic times not in allRunTImes
-        allRunTimes = pt(whichPt).allTimes;
+        if isfield(pt(whichPt),'allTimes') == 1
+            allRunTimes = pt(whichPt).allTimes;
+        else
+            allRunTimes = pt(whichPt).runTimes;
+        end
         newInterIcTimes = [];
         for i = 1:size(interIcTimesQI,1)
             for j = 1:size(allRunTimes,1)

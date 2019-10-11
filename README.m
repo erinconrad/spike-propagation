@@ -51,8 +51,9 @@ script so that you can read the explanation of what it is doing at each
 step. Because this contains such a short duration of
 data, time series analyses cannot meaningfully be performed on it. However,
 a longer duration of data, structured according to this data structure,
-could be run with the same pipeline. And then subsequent time series
-analysis can be performed by following steps 3-5 below.
+could be run with the same pipeline. Run_example_data then contains the
+time series analyses as subsequent steps wrapped in a "if 1==0" statement,
+which can be flipped to 1==1 to run the time series analysis.
 
 Alternatively, analysis can be run on ieeg data using the steps described above.
 

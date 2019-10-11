@@ -4,13 +4,20 @@
 The purpose of this script is to have a complete pipeline for running the
 spike detector, spike sequence detector, and clustering algorithm on a set
 of eeg data. This assumes you have a Matlab pt structure with eeg data. An
-example structure can be downloaded along with this file from ***.
+example structure can be downloaded along with this file from ***. It is
+called ***.
 
 This script then takes this eeg data and goes through each step in the
 process, finally generating the spike clusters for viewing.
+
+There are time series analyses wrapped in a 1==0 statement. These should
+not be run on the example data because this dataset is too short to yield
+meaningful results, and will produce errors. However, longer data (several hours)
+structured in the same format as the example_pt.mat structure can be used
+to run these time series scripts.
 %}
 
-%% Parameters
+%% Step 0: Parameters
 whichPt = 31; % This is the patient who has example data
 surround_time = 3; % Seconds before and after the spike to plot
 
@@ -22,8 +29,7 @@ example = 1; % a flag that we are using example data (otherwise this will try to
 fs = pt(whichPt).fs; % Sampling rate
 
 
-
-%% Run spike detector
+%% Step 1: Run spike detector
 fprintf('Running spike detector...\n');
 [gdf,~] = getSpikesSimple(pt,whichPt,times,whichDetector,thresh,0,example);
 % gdf is an nx2 array, where there are n spikes, and the first column has
@@ -32,7 +38,7 @@ fprintf('Running spike detector...\n');
 
 pt(whichPt).gdf = gdf; % add the spike times to the pt structure
 
-%% Plot an example spike
+%% Step 2: Plot an example spike
 sp = randi(size(gdf,1)); % change this to a specific number (between 1 and the number of spikes) or re-run to see other spikes
 
 % Get spike time and ch
@@ -56,7 +62,7 @@ fprintf('\n\nGot spikes. Press any key to continue on to getting spike sequences
 pause
 
 
-%% Run spike sequence detector
+%% Step 3: Run spike sequence detector
 fprintf('\nDetecting spike sequences...\n');
 
 % This detects multi-channel spike sequences
@@ -69,7 +75,7 @@ pt(whichPt).data = mainSequences(gdf,pt(whichPt).electrodeData, pt(whichPt).fs);
 pt(whichPt).seq_matrix = ...
         makeSeqMatrix(pt(whichPt).data.sequences,length(pt(whichPt).channels),0);
     
-%% Plot an example sequence
+%% Step 4: Plot an example sequence
 s = randi(size(pt(whichPt).seq_matrix,2)); % change this to a specific number (between 1 and the number of sequences) or re-run to see other sequences
 
 seq = pt(whichPt).seq_matrix(:,s); % get which sequence
@@ -101,7 +107,7 @@ set(gca,'fontsize',20)
 fprintf('\n\nGot spike sequences.\nPress any key to continue on to choosing the ideal cluster number...\n');
 pause
     
-%% Get the optimal cluster number
+%% Step 5: Get the optimal cluster number
 fprintf('\nGetting the optimal cluster number...\n');
 % Note that this is imperfect because we are running the clustering
 % algorithm over a short period of data. I tried to pick a section of data
@@ -114,7 +120,7 @@ getClusters(pt,whichPt,1,1,0,0);
 fprintf('\nSelect the cluster number forming the inflection point,\nand change the code below if needed\n(default cluster number is 3).\nPress any key to continue to running the clustering algorithm...\n');
 pause
 
-%% Run the clustering algorithm for K = 3 (looks like the inflection point on the SSE plot)
+%% Step 6: Run the clustering algorithm for K = 3 (looks like the inflection point on the SSE plot)
 fprintf('\n\nRunning the clustering algorithm...\n')
 % This will run the clustering algorithm with a cluster number of 3. It
 % will cluster the spikes based on their spike location. It will output a
@@ -132,13 +138,13 @@ cluster = getClusters(pt,whichPt,0,1,0,0,ideal_cluster_number);
 fprintf('\n\nClustered the spikes.\nThe plots show 10 example spike sequences for each cluster.\nExamine the sequences to see how many appear artifactual.\nPress any key to show spike cluster locations...\n');
 pause
 
-%% Label bad clusters
+%% Step 7: Label bad clusters
 % If there are any clusters for which >50% of the example sequences appear
 % artifactual (in the paper we used 50 example sequences) then update the
-% array cluster(**pt number**).bad_cluster to include the cluster indices
+% array cluster(whichPt).bad_cluster to include the cluster indices
 % that are artifactual and not to be included in time series analyses.
 
-%% Plot the cluster centroid locations
+%% Step 8: Plot the cluster centroid locations
 locs = pt(whichPt).electrodeData.locs(:,2:4); % Get all electrode locations
 centroid_locs = cluster(whichPt).C; % Get centroid locations for each cluster
 figure
@@ -167,11 +173,7 @@ if 1 == 0
     % same format as the example data, but containing hours of data. The
     % following parts of the code are for running the time series analysis.
 
-    %% Plot proportion of sequences in each cluster over time
-    % This defaults to not plot because it is likely not meaningful over such a
-    % short time period
-
-    
+    %% Plot proportion of sequences in each cluster over time    
     colors = [0 0 1;1 0 0;0 1 0]; %The colors (will work for up to 3 clusters)
     plot_times = cluster(whichPt).all_times_all; % plot times
     k = cluster(whichPt).k; % the number of clusters 
@@ -184,7 +186,7 @@ if 1 == 0
     for i = 1:length(clusters)
         clust{i} = plot_times(idx == clusters(i));
     end
-    window = 30; % 30 second window over which to calculate moving average
+    window = 50; % 50 second window over which to calculate moving average
 
     [sum_c,sum_times] = movingSumCounts(clust,plot_times,window); % get moving average
     totalSum = zeros(1,size(sum_times,2));
@@ -205,7 +207,6 @@ if 1 == 0
 
     % plot moving average of proportion of spikes in each cluster
     figure
-    set(gcf,'position',[110 452 987 352])
     set(gcf,'position',[1 409 1440 320]);
     for i = 1:length(clusters)
         pl(i)= plot((sum_times-min(plot_times)),prop_c(i,:),...
@@ -213,6 +214,7 @@ if 1 == 0
     hold on
     xlabel('Time (s)')
     ylabel(sprintf('Proportion in each cluster\n(moving average)'))
+    title('Moving average of proportion of spikes in each cluster')
     legend({'Cluster 1','Cluster 2','Cluster 3'})
     set(gca,'fontsize',20)
     end
@@ -226,7 +228,7 @@ if 1 == 0
     
     
     %% Get alpha delta ratios
-    % power.alpha is an nch x ntimes array of alpha power and power.delta is
+    % power(whichPt).alpha is an nch x ntimes array of alpha power and power(whichPt).delta is
     % an nch x ntimes array of delta power, where nch is the number of
     % channels and ntimes is the number of time bins (where each time bin
     % is 2000 seconds in the paper).
