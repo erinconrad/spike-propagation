@@ -18,8 +18,8 @@ Then, do the following steps:
 5) Area of influence analysis
 
 Note that the electrode locations and clinical info for the patients in the
-Spike location project can be found in 'electrode_and_clinical.mat'. See
-section 6 below for more information.
+Spike location project can be found in 'electrode_and_clinical.mat' in the
+folder data_files/. See section 6 below for more information.
 
 Pipeline steps 1) and 2) can be run in entirety using example data by
 following section 0 below.
@@ -36,8 +36,8 @@ run_example_data, which completes the entire pipeline from spike detection
 through clustering by spike location for a 500 second sample of EEG data 
 for a single patient (Study 029). 
 
-The example data is called example_pt.mat and is hosted on Penn+Box at ***.
-This file should first be downloaded. Then, to run this pipeline, load the .mat file
+The example data is called example_pt.mat and is located in the folder
+data_files in the github repository. Then, to run this pipeline, load the .mat file
 example_pt.mat. Then make sure the spike-propagation script directory is on
 your Matlab path. Then call the script run_example_data.m, located in the
 folder prepare_example/. Specifically, run the following code:

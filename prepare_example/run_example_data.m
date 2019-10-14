@@ -4,8 +4,8 @@
 The purpose of this script is to have a complete pipeline for running the
 spike detector, spike sequence detector, and clustering algorithm on a set
 of eeg data. This assumes you have a Matlab pt structure with eeg data. An
-example structure can be downloaded along with this file from ***. It is
-called ***.
+example structure is located in the folder data_files/ in the github 
+repository. It is called example_pt.mat.
 
 This script then takes this eeg data and goes through each step in the
 process, finally generating the spike clusters for viewing.
