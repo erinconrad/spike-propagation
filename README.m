@@ -21,10 +21,12 @@ Note that the electrode locations and clinical info for the patients in the
 Spike location project can be found in 'electrode_and_clinical.mat' in the
 folder data_files/. See section 6 below for more information.
 
+The code can be found on https://github.com/erinconrad/spike-propagation.
+The full download size of the repository, when expanded, is 84 Mb. This
+large size is primarily because it contains a 73 Mb example dataset
+containing 500 seconds of EEG data for the purpose of running example code.
 Pipeline steps 1) and 2) can be run in entirety using example data by
 following section 0 below.
-
-The code can be found on https://github.com/erinconrad/spike-propagation
 
 %}
 
