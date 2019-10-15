@@ -11,7 +11,7 @@ largest area of influence, from the nearest SOZ.
 %}
 
 %% Parameters
-doBootstrap = 6; 
+doBootstrap = 0; 
 % 0 = no, 1 = randomly distribute total number of true connections, 
 %b 2 = permute rows, 3 = permute columns, 4 = permute entries, 5 = take 95%
 %amongst rows, 6 = take 95% amongst columns
