@@ -88,7 +88,7 @@ plot_indices = max(1,round(sp_idx - surround_time*fs)):...
     min(length(pt(whichPt).eeg_data.times),round(sp_idx + surround_time*fs)); % center plot around the first spike
 
 figure
-set(gcf,'position',[110 452 987 352])
+set(gcf,'position',[110 452 600 600])
 to_add = 0;
 for i = 1:length(times)
     elec_label = pt(whichPt).electrodeData.electrodes(chs(i)).name;
@@ -238,5 +238,8 @@ if 1 == 0
     % This script uses a GLM model rather than a GLARMA model. R would be
     % required to perform the GLARMA model. (See ReadMe for details).
     glm_model(pt,cluster,power,whichPt);
+    
+    %% Area of influence analysis
+    CInfluence(pt,cluster,whichPt,1)
     
 end

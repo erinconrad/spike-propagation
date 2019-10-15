@@ -1,4 +1,4 @@
-function CInfluence(pt,cluster,whichPts)
+function CInfluence(pt,cluster,whichPts,example)
 
 %{
 
@@ -718,6 +718,26 @@ for whichPt = whichPts
     end
     allAllDist =[allAllDist;mean(allLocs)];
     
+    
+    %% Print info for example
+    if example == 1
+        fprintf(['On average, electrodes are %1.2f mm from the nearest SOZ electrode.\n'...
+            'The electrode with most spike sequences is %1.2f mm from the nearest SOZ electrode.\n'...
+            'The electrode with the largest area of influence is %1.2f mm from the nearest SOZ electrode.\n'],...
+            mean(allLocs),freqDist,SADist);
+        figure
+        scatter3(locs(:,1),locs(:,2),locs(:,3),300,'k','linewidth',2)
+        hold on      
+        l_freq = scatter3(locs(most_freq,1),locs(most_freq,2),locs(most_freq,3),300,'g','filled');
+        l_sa = scatter3(SALoc(1),SALoc(2),SALoc(3),300,'b','filled');
+        l_soz = scatter3(locs(soz,1),locs(soz,2),locs(soz,3),300,'p','filled');
+        legend([l_soz,l_freq,l_sa],{'SOZ','Most frequent spikes','Highest area of influence'},...
+            'location','northeast','fontsize',20)
+        set(gca,'xticklabels','')
+        set(gca,'yticklabels','')
+        set(gca,'zticklabels','')
+    end
+    
     % Distance from electrodes with spikes to closest SOZ electrode
     if 0 
     spikeLocs = locs(ch_w_spikes,:);
@@ -738,6 +758,7 @@ for whichPt = whichPts
     if whichPt == 8, exampleSF = seq_freq; end
     if whichPt == 8, exampleChInfluence = chInfluence; end
     
+    if example == 0
      % Get list of resected electrodes
     resec_elecs = pt(whichPt).resecElecs;
     
@@ -750,6 +771,7 @@ for whichPt = whichPts
     % Get electrode with max SF
     [~,sf_max_ident] = max(seq_freq);
     sf_resected = [sf_resected;ismember(sf_max_ident,resec_elecs)];
+    end
     
     %% Calculate spearman rank correlation between SF and SA
     sa_sf_corr = [sa_sf_corr;corr(seq_freq,sa,'Type','Spearman')];
@@ -951,6 +973,8 @@ set(gca,'xlim',[0.7 2.3])
 set(gca,'ylim',[0 max_point+10])
 print([destFolder,'aan_soz'],'-depsc')
 end
+
+if length(whichPts) > 1
 
 %% Get average SRC between SA and SF
 % I'll just do a plain average across patients since I am not doing
@@ -1373,5 +1397,10 @@ fprintf(['When ILAE 1-3 considered, difference between most spikey and biggest S
 [p,~,stats] = ranksum(allSADist(good_outcome),allSADist(bad_outcome));
 fprintf('SA dist between good outcome versus bad outcome is:\n%1.1e and ranksum %1.1f\n',...
     p,stats.ranksum);
+
+
+end
+
+
 
 end

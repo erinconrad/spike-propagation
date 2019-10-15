@@ -7,7 +7,8 @@
 To run the full spike location analysis, you will need access to the
 electrode locations, the clinical info, and the ieeg portal. You must make
 an account with the ieeg portal and request access to the "Virtual Cortical
-Resection" dataset.
+Resection" dataset. This dataset has the electrode locations, the clinical
+info, and the EEG data.
 
 Then, do the following steps:
 
